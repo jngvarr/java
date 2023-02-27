@@ -17,10 +17,11 @@ import java.util.*;
 
 public class brackets {
     public static void main(String[] args) {
-        String sourceString = "((({})))";
-        String[] parseString = sourceString.split("");
-        System.out.println(Arrays.toString(parseString));
-        System.out.println(isCorrectParentheses(sourceString));
+        System.out.println(isCorrectParentheses("()"));
+        System.out.println(isCorrectParentheses("[]{}((<>))"));
+        System.out.println(isCorrectParentheses(")"));
+        System.out.println(isCorrectParentheses("[)"));
+        System.out.println(isCorrectParentheses("[]{}(<)>"));
     }
 
     private static boolean isCorrectParentheses(String parentheses) {
@@ -29,23 +30,30 @@ public class brackets {
 //        brackets.put('}', '{');
 //        brackets.put(']', '[');
 //        brackets.put('>', '<');
-//        ArrayList<String> leftBrackets =new ArrayList<>();
-//        ArrayList<String> rightBrackets =new ArrayList<>();
 
-        String [] leftBrackets = {"(", "[", "{", "<"};
-        String [] rightBrackets = {"(", "[", "{", "<"};
-
+        String[] leftBrackets = {"(","[","{","<"};
+        String[] rightBrackets = {")","]","}",">"};
         Deque<Character> stack = new LinkedList<>();
         for (char character : parentheses.toCharArray()) {
-            if ((Arrays.toCharacter(leftBrackets).contains(character)) {
-                stack.push(character);
-            } else if ((Arrays.asList(rightBrackets).contains(character))) {
-                if (stack.isEmpty() || stack.pop() != character) {
+            if (Arrays.toString(leftBrackets).contains("" + character)) {
+//                System.out.println(Arrays.toString(leftBrackets));
+//                System.out.println("" + character);
+//                System.out.println(Arrays.toString(leftBrackets).contains("" + character));
+                stack.add(character);
+            } else if ((Arrays.toString(rightBrackets).contains("" + character))) {
+                if (stack.isEmpty()) {
+                    return false;
+                } else if ((character == ')') && !(stack.pollLast().equals('('))) {
+                    return false;
+                } else if ((character == ']') && !(stack.pollLast()).equals('[')) {
+                    return false;
+                } else if ((character == '}') && !(stack.pollLast()).equals('{')) {
+                    return false;
+                } else if ((character == '>') && !(stack.pollLast()).equals('<')) {
                     return false;
                 }
             }
         }
-
         return stack.isEmpty();
     }
 }
