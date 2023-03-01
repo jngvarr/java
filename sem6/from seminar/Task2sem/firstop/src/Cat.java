@@ -4,7 +4,7 @@ public class Cat {
 
     private String name;
     private int appetite;
-    private volatile boolean satiety = false;
+    private volatile int satiety = 0;
 
     public Cat(String name) {
         this(name, 10);
@@ -16,30 +16,33 @@ public class Cat {
     public Cat(String name, int appetite) {
         this.name = name;
         this.appetite = appetite;
-//        satiety = false;
-
-        Thread backgroundSatietyManagement = new Thread(() -> {
-            while (true) {
-                satiety = false;
-                try {
-                    Thread.sleep(5 * 1000L);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        backgroundSatietyManagement.setDaemon(true);
-        backgroundSatietyManagement.start();
+        // this.satiety = 0;
     }
 
     public void eat(Plate plate) {
-        if (!satiety) {
-            satiety = plate.decreaseFood(appetite);
+        int tempAppetite = appetite;
+        if (satiety < 0) appetite *= 2;
+        boolean ableToEat = plate.decreaseFood(appetite);
+        if (satiety <= 0 && ableToEat) {
+            satiety += appetite;
+            appetite = tempAppetite;
+            Thread backgroundSatietyManagement = new Thread(() -> {
+                while (true) {
+                    satiety--;
+                    try {
+                        Thread.sleep(5000L);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            backgroundSatietyManagement.setDaemon(true);
+            backgroundSatietyManagement.start();
         }
     }
 
-    public void makeHungry() {
-        satiety = false;
+
+    public void makeALittleBitHungry() {
     }
 
     @Override
