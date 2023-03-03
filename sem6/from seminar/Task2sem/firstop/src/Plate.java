@@ -13,7 +13,6 @@ public class Plate {
             food = food - foodToDecrease;
             return true;
         }
-
         return false;
     }
 

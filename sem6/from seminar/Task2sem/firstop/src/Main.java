@@ -17,27 +17,26 @@ public class Main {
         // 3. * Доработать поток thread в классе Cat, чтобы он каждую секунду уменьшал сытость кота на 1.
 
         Cat murzik = new Cat("Murzik", 15);
-        Cat barsik = new Cat("Barsik"); // appetite = 10
-        Cat vaska = new Cat("Vaska"); //appetite = 10
+        Cat barsik = new Cat("Barsik",10); // appetite = 10
+        Cat vaska = new Cat("Vaska",10); //appetite = 10
         Cat dymka = new Cat("Dymka", 7);
-        Cat pushistik = new Cat("Pushstik", 5);
         Cat milka = new Cat("Milka", 4);
+        Cat pushistik = new Cat("Pushstik", 5);
         Cat kitty = new Cat("Kitty", 4);
 
 
         Cat[] Cats = new Cat[]{murzik, barsik, vaska, dymka, milka, pushistik, kitty};
 
-        Plate plate = new Plate(200, 200);
+        Plate plate = new Plate(100, 100);
 
         while (true) {
             for (Cat cat : Cats) {
-                System.out.println("Еды в тарелке: " + plate);
-                cat.makeHungry();
+                System.out.println(plate);
+//                cat.makeALittleBitHungry();
                 cat.eat(plate);
                 System.out.println(cat);
-                System.out.println(plate);
-                Thread.sleep(1000);
-                plate.increaseFood(40);
+//                Thread.sleep(1000);
+                plate.increaseFood(20);
                 System.out.println(plate);
             }
         }
