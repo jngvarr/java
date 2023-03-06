@@ -42,8 +42,8 @@ public class BaseHero {
         // else { die(); }
     }
 
-//    public void Attack(BaseHero target) {
-//        int damage = BaseHero.r.nextInt(10, 20);
-//        target.GetDamage(damage);
-//    }
+    public  void Attack(BaseHero target) {
+        int damage = BaseHero.r.nextInt(10, 20);
+        target.GetDamage(damage);
+    }
 }

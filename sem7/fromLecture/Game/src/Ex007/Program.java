@@ -60,7 +60,8 @@ public class Program {
         System.out.printf("magicalCount: %d priestCount: %d warrior: %d \n\n\n", magicianCount, priestCount, warriorCount);
 
         for (int i = 0; i < teams.size(); i++) {
-            teams.get(i).GetDamage(teams.get(BaseHero.r.nextInt(1, teams.size())).Attack());
+            teams.get(1).GetDamage(teams.get(2).Attack());
+//            teams.get(1).GetDamage(teams.get(BaseHero.r.nextInt(1, teams.size()).Attack()));
             System.out.println(teams.get(i).getInfo());
         }
 
