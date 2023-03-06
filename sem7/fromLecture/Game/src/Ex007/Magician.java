@@ -24,9 +24,10 @@ public class Magician extends BaseHero {
     public int Heal(BaseHero target) {
         int heal = BaseHero.r.nextInt(20) * this.mana / 2 / 100;
         this.mana -= mana;
-        target.GetDamage(heal);
+        target.GetHealed(heal);
         if (mana < 0) return 0;
         else return heal;
+
     }
 
     public String getInfo() {

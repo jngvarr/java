@@ -60,11 +60,21 @@ public class Program {
         System.out.printf("magicalCount: %d priestCount: %d warrior: %d \n\n\n", magicianCount, priestCount, warriorCount);
 
         for (int i = 0; i < teams.size(); i++) {
+<<<<<<< HEAD
             teams.get(1).GetDamage(teams.get(2).Attack());
 //            teams.get(1).GetDamage(teams.get(BaseHero.r.nextInt(1, teams.size()).Attack()));
+=======
+//            teams.get(i).GetDamage(teams.get(BaseHero.r.nextInt(1, teams.size())).Attack());
+            BaseHero hero1 = teams.get(i);
+            BaseHero hero2 = teams.get(BaseHero.r.nextInt(1, teams.size()));
+            System.out.printf("%s get damage from %s", hero1.name, hero2.name);
+            hero1.GetDamage(hero2.Attack());
+            System.out.println();
+>>>>>>> 24b035e0bd48d49b1e16f5ba6c14dd557a982321
             System.out.println(teams.get(i).getInfo());
         }
-
+        teams.get(2).GetHealed(teams.get(1).Heal(teams.get(2)));
+        System.out.println(teams.get(2).getInfo());
 
         // attack
 

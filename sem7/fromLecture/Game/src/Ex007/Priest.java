@@ -23,9 +23,9 @@ public class Priest extends BaseHero {
     }
 
     public int Heal(BaseHero target) {
-        int heal = BaseHero.r.nextInt(20) * this.elixir / 2 / 100;
+        int heal = BaseHero.r.nextInt(20) * this.elixir * 2 / 100;
         this.elixir -= elixir;
-        target.GetDamage(heal);
+        target.GetHealed(heal);
         if (elixir < 0) return 0;
         else return heal;
     }
