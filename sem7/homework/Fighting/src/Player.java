@@ -12,8 +12,10 @@ public class Player {
     protected static Random rnd;
     protected static Long id;
     protected String name;
-    protected Double damage;
-    protected Double hp;
+    protected Integer damage;
+    protected Integer hp;
+    protected Integer agility;
+    protected Integer defence;
 
     static {
         Player.id = 0L;
@@ -29,22 +31,34 @@ public class Player {
     }
 
     public String getInfo() {
-        return String.format("Name: %s, Hp: %.2f, Power: %.2f, Type: %s.",
+        return String.format("Name: %s, Hp: %d, Power: %d, Type: %s.",
                 this.name, this.hp, this.damage, this.getClass().getSimpleName());
     }
+
     public void Attack(Player target) {
-        int damage = Player.rnd.nextInt();
+        int damage = this.damage;
+        damage = target.Defense(damage) + this.agility * rnd.nextInt(0, 2);
+        System.out.format("%s hit %s on %dhp\n", this.name, target.name, damage);
         target.GetDamage(damage);
+        System.out.println(target.getInfo());
     }
+
+    public int Defense(int damage) {
+        int reducedDamage = damage - this.defence - this.agility * rnd.nextInt(0, 3);
+        return reducedDamage < 0 ? 0 : reducedDamage;
+    }
+
     public void GetDamage(int damage) {
         if (this.hp - damage > 0) {
             this.hp -= damage;
         } else {
+            this.hp -= damage;
             Die(this.name);
         }
     }
-    public void Die(String name){
-        System.out.printf("%s died in the battle. RIP.", name);
+
+    public void Die(String name) {
+        System.out.printf("%s died in the battle. RIP.\n", name);
     }
 }
 
