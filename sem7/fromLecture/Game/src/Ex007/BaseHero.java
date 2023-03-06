@@ -31,8 +31,12 @@ public class BaseHero {
                 this.name, this.hp, this.getClass().getSimpleName());
     }
 
-    public void getHealed(int Hp) {
+    public void GetHealed(int Hp) {
         this.hp = Hp + this.hp > this.maxHp ? this.maxHp : Hp + this.hp;
+    }
+
+    public int Heal(BaseHero target) {
+        return 0;
     }
 
     public void GetDamage(int damage) {
@@ -42,8 +46,10 @@ public class BaseHero {
         // else { die(); }
     }
 
+    public int Attack() {
 //    public void Attack(BaseHero target) {
 //        int damage = BaseHero.r.nextInt(10, 20);
 //        target.GetDamage(damage);
-//    }
+        return 0;
+    }
 }
