@@ -40,7 +40,9 @@ public class Player {
         damage = target.Defense(damage) + this.agility * rnd.nextInt(0, 2);
         System.out.format("%s hit %s on %dhp\n", this.name, target.name, damage);
         target.GetDamage(damage);
-        System.out.println(target.getInfo());
+        if (target.hp<=0) {
+            System.out.printf("%s WIN!!!\n", this.name);
+        }
     }
 
     public int Defense(int damage) {
@@ -51,6 +53,7 @@ public class Player {
     public void GetDamage(int damage) {
         if (this.hp - damage > 0) {
             this.hp -= damage;
+            System.out.println(this.getInfo());
         } else {
             this.hp -= damage;
             Die(this.name);
@@ -58,7 +61,9 @@ public class Player {
     }
 
     public void Die(String name) {
-        System.out.printf("%s died in the battle. RIP.\n", name);
+        System.out.printf("%s was defeated in battle. RIP.\n", name);
     }
+
+
 }
 
