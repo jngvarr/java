@@ -46,16 +46,17 @@ public class BaseHero {
         // else { die(); }
     }
 
-<<<<<<< HEAD
-    public  void Attack(BaseHero target) {
+    //
+    public void Attack(BaseHero target) {
         int damage = BaseHero.r.nextInt(10, 20);
         target.GetDamage(damage);
-=======
+    }
+
     public int Attack() {
 //    public void Attack(BaseHero target) {
 //        int damage = BaseHero.r.nextInt(10, 20);
 //        target.GetDamage(damage);
         return 0;
->>>>>>> 24b035e0bd48d49b1e16f5ba6c14dd557a982321
     }
 }
+

@@ -9,4 +9,5 @@ public class Elves extends Player {
         this.defence = 50;
         this.agility = 30;
     }
+
 }

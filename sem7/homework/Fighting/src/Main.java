@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
@@ -87,14 +86,13 @@ public class Main {
                 Player attacktedWarrior = warriors.get(Player.rnd.nextInt(0, warriors.size()));
                 warriors.get(i).Attack(attacktedWarrior);
                 if (attacktedWarrior.hp <= 0) warriors.remove(attacktedWarrior);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
             }
         }
-        System.out.println(warriors.get(0).name + "The KUCHAMALA WINNER!!");
+        System.out.println(warriors.get(0).name + "the KUCHAMALA WINNER!!");
     }
 }
