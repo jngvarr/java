@@ -1,11 +1,8 @@
-import ru.gb.lesson2.hw.HomeworkMain;
+
 
 public class Building extends Object implements Object.HasHealthPoint {
 
-    private final int maxHealthPoint;
-    private int currentHealthPoint;
-
-    public Building(int maxHealthPoint, int currentHealthPoint) {
+        public Building(int maxHealthPoint, int currentHealthPoint) {
         this.maxHealthPoint = maxHealthPoint;
         this.currentHealthPoint = currentHealthPoint;
     }

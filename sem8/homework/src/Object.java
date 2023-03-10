@@ -1,4 +1,10 @@
 abstract class Object {
+
+    protected int currentEnergy;
+    protected int maxEnergy;
+    protected int maxHealthPoint;
+    protected int currentHealthPoint;
+
     interface HasHealthPoint {
         int getMaxHealthPoint();
 
@@ -7,10 +13,10 @@ abstract class Object {
     }
 
     interface Tiredness {
-        // Максимальное значение уровеня бодрости объекта
+        // Максимальное значение уровня бодрости объекта
         int getMaxEnergy();
 
-        // Текущее значение уровеня бодрости объекта
+        // Текущее значение уровня бодрости объекта
         int getCurrentEnergy();
     }
 }
