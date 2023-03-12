@@ -3,10 +3,10 @@
 public class Render {
     public void render(Object object) {
 
-        if (object instanceof Building) {
+        if (!(object instanceof Object.Tiredness)){
             System.out.print(object.getClass()+"\nHealth: " );
             display(object.currentHealthPoint,object.maxHealthPoint);
-        } else if (object instanceof Creature) {
+        } else if (object instanceof Object.Tiredness) {
             System.out.print(object.getClass()+"\nHealth: " );
             display(object.currentHealthPoint, object.maxHealthPoint);
             System.out.print("Energy: ");
