@@ -27,8 +27,6 @@ public class Render {
         }
         System.out.println(color + "[" + health + "]" + "\u001B[0m");
     }
-
-
 }
 
 
