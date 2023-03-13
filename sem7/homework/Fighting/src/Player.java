@@ -23,16 +23,21 @@ public class Player {
     }
 
     public Player(String name) {
+
         this.name = name;
     }
 
     public Player() {
+
         this(String.format("Player № %d", ++Player.id));
     }
 
     public String getInfo() {
         return String.format("Name: %s, Hp: %d, Power: %d, Type: %s.",
-                this.name, this.hp, this.damage, this.getClass().getSimpleName());
+                this.name,
+                this.hp,
+                this.damage,
+                this.getClass().getSimpleName());
     }
 
     public void Attack(Player target) {
