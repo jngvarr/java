@@ -3,8 +3,7 @@ package Lesson_09.Ex004.ExBeverage;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Beverage 
-            implements Iterable<Ingredient> {
+public abstract class Beverage implements Iterable<Ingredient> {
     public List<Ingredient> components;
     int index;
     public Beverage() {
