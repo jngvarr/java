@@ -8,10 +8,7 @@ public class Worker implements Iterator<String> {
     public int age;
     public int salary;
 
-    public Worker(String firstName,
-            String lastName,
-            int age,
-            int salary) {
+    public Worker(String firstName, String lastName, int age,int salary) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
@@ -20,6 +17,7 @@ public class Worker implements Iterator<String> {
     }
 
     public String fullName() {
+
         return String.format("%s %s", firstName, lastName);
     }
 
