@@ -1,11 +1,16 @@
-public class Creature extends Object implements Object.HasHealthPoint, Object.Tiredness{
-    public Creature(int maxEnergy, int currentEnergy, int maxHealthPoint, int currentHealthPoint ){
-        this.currentEnergy=currentEnergy;
-        this.maxEnergy=maxEnergy;
-        this.maxHealthPoint=maxHealthPoint;
-        this.currentHealthPoint= currentHealthPoint;
+public class Creature implements Tiredness, HasHealthPoint  {
+    private final int currentEnergy;
+    private final int maxEnergy;
+    private final int maxHealthPoint;
+    private final int currentHealthPoint;
 
+    public Creature(int maxEnergy, int currentEnergy, int maxHealthPoint, int currentHealthPoint) {
+        this.currentEnergy = currentEnergy;
+        this.maxEnergy = maxEnergy;
+        this.maxHealthPoint = maxHealthPoint;
+        this.currentHealthPoint = currentHealthPoint;
     }
+
     @Override
     public int getMaxHealthPoint() {
         return maxHealthPoint;

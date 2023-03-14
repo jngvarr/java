@@ -3,22 +3,22 @@
 public class Render {
     public void render(Object object) {
 
-        if (!(object instanceof Object.Tiredness)){
-            System.out.print(object.getClass()+"\nHealth: " );
-            display(object.currentHealthPoint,object.maxHealthPoint);
-        } else if (object instanceof Object.Tiredness) {
-            System.out.print(object.getClass()+"\nHealth: " );
-            display(object.currentHealthPoint, object.maxHealthPoint);
+        if (object instanceof Tiredness anybody) {
+            System.out.print(object.getClass() + "\nHealth: ");
+            display(anybody.getCurrentHealthPoint(), anybody.getMaxHealthPoint());
             System.out.print("Energy: ");
-            display(object.currentEnergy, object.maxEnergy);
+            display(anybody.getCurrentEnergy(), anybody.getMaxEnergy());
+        } else if (object instanceof HasHealthPoint anybody) {
+            System.out.print(object.getClass() + "\nHealth: ");
+            display(anybody.getCurrentHealthPoint(), anybody.getMaxHealthPoint());
         }
     }
 
     private void display(int currentValue, int maxValue) {
         String color;
-        if ((currentValue*1.0/maxValue)*100 < 25) {
+        if ((currentValue * 1.0 / maxValue) * 100 < 25) {
             color = "\u001B[31m";  // RED
-        } else if ((currentValue*1.0/maxValue)*100 > 50) {
+        } else if ((currentValue * 1.0 / maxValue) * 100 > 50) {
             color = "\u001B[32m"; // GREEN
         } else color = "\u001B[33m"; // YELLOW
         String health = "";

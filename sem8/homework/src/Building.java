@@ -1,8 +1,10 @@
 
 
-public class Building extends Object implements Object.HasHealthPoint {
+public class Building implements HasHealthPoint {
+    private final int maxHealthPoint;
+    private int currentHealthPoint;
 
-        public Building(int maxHealthPoint, int currentHealthPoint) {
+    public Building(int maxHealthPoint, int currentHealthPoint) {
         this.maxHealthPoint = maxHealthPoint;
         this.currentHealthPoint = currentHealthPoint;
     }
