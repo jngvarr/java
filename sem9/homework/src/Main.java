@@ -15,14 +15,32 @@ import java.util.stream.IntStream;
 public class Main {
     static Random rnd = new Random();
 
+    public static Comparator<Notebook> twoPositionComparator = new Comparator<Notebook>() {
+        @Override
+        public int compare(Notebook n1, Notebook n2) {
+            if (n1.ram < n2.ram) {
+                return 1;
+            } else if (n2.price == n1.price) {
+                if (n1.price == n2.price) {
+                    return 0;
+                } else if (n1.price < n2.price) {
+                    return 1;
+                }
+            }
+            return -1;
+        }
+    };
+
     public static void main(String[] args) {
+        Comparator<Notebook> notebookComparator = (o1, o2) -> o2.price - o1.price;
 
         int[] ram = {8, 12, 16, 24, 32, 64, 128};
         List<Notebook> notebooks = new ArrayList<>();
-        for (int i = 0; i < rnd.nextInt(5, 10); i++) {
+        for (int i = 0; i < rnd.nextInt(10, 15); i++) {
             notebooks.add(new Notebook(rnd.nextInt(50000, 100000), ram[rnd.nextInt(ram.length)]));
         }
-        Comparator<Notebook> notebookComparator = (o1, o2) -> o2.getPrice() - o1.getPrice();
+        Notebook book = new Notebook();
+        book.addParameters();
 
         System.out.println(notebooks);
 //      notebooks.sort(Notebook::compareTo);
@@ -33,16 +51,8 @@ public class Main {
 //        notebooks.sort(twoPositionsComparator);
         notebooks.sort(notebookComparator.reversed());
         System.out.println(notebooks);
-
-        Comparator<Notebook> notebookComparatorByTwoPositions = new Comparator<Notebook>() {
-            @Override
-            public int compare(Notebook o1, Notebook o2) {
-                if (o1.getPrice() == o2) {
-
-                }
-                return 0;
-            }
-        }
+        notebooks.sort(twoPositionComparator);
+        System.out.println(notebooks);
 
 
 //        for (Notebook n : notebooks) {
