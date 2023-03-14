@@ -1,6 +1,6 @@
 package ru.gb.lesson3;
 
-import ru.gb.lesson2.Color;
+
 
 public class Main {
 
@@ -16,7 +16,7 @@ public class Main {
 
         String text = "My Text value";
         System.out.println(text);
-        System.out.println(Color.GREEN.paint(text));
+      //  System.out.println(Color.GREEN.paint(text));
         System.out.println(text);
     }
 

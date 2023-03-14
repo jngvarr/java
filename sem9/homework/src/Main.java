@@ -1,9 +1,8 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+package ru.gb.homework.src;
+
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
-import java.util.Random;
 
 // Создать класс Notebook с полями:
 // 1. Стоимость (int)
@@ -22,13 +21,29 @@ public class Main {
         List<Notebook> notebooks = new ArrayList<>();
         for (int i = 0; i < rnd.nextInt(5, 10); i++) {
             notebooks.add(new Notebook(rnd.nextInt(50000, 100000), ram[rnd.nextInt(ram.length)]));
-
         }
+        Comparator<Notebook> notebookComparator = (o1, o2) -> o2.getPrice() - o1.getPrice();
+
         System.out.println(notebooks);
-        notebooks.sort(Notebook::compareTo);
+//      notebooks.sort(Notebook::compareTo);
+//      Collections.sort(notebooks,notebookComparator);
+//      notebooks.sort(notebookComparator);
+        Collections.sort(notebooks, Notebook::compareTo);
         System.out.println(notebooks);
-        notebooks.sort(Notebook::reverseCompareTo);
+//        notebooks.sort(twoPositionsComparator);
+        notebooks.sort(notebookComparator.reversed());
         System.out.println(notebooks);
+
+        Comparator<Notebook> notebookComparatorByTwoPositions = new Comparator<Notebook>() {
+            @Override
+            public int compare(Notebook o1, Notebook o2) {
+                if (o1.getPrice() == o2) {
+
+                }
+                return 0;
+            }
+        }
+
 
 //        for (Notebook n : notebooks) {
 //            System.out.println(n.getClass() + ", " + n.getInfo());
