@@ -38,10 +38,10 @@ public class Program {
        
         //#region Beverage Iterator
 
-         Beverage latte = new Coffee();
-         latte.addComponent(new Water("Вода"));
-         latte.addComponent(new Вeans("Зёрна"));
-         latte.addComponent(new Milk("Молоко"));
+//         Beverage latte = new Coffee();
+//         latte.addComponent(new Water("Вода"));
+//         latte.addComponent(new Вeans("Зёрна"));
+//         latte.addComponent(new Milk("Молоко"));
         
          Iterator<Ingredient> iterator = latte;
          while (iterator.hasNext()) {

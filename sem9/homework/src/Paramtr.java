@@ -1,9 +1,9 @@
 package ru.gb.homework.src;
 
-public abstract class Parameter {
+public abstract class Paramtr {
     public String name;
 
-    public Parameter(String name) {
+    public Paramtr(String name) {
         this.name = name;
     }
 
