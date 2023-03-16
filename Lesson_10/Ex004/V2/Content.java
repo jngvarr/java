@@ -1,9 +1,9 @@
-package ru.gb.homework.src;
+package Lesson_10.Ex004.V2;
 
-public abstract class Parameter {
+public abstract class Content {
     public String name;
 
-    public Parameter(String name) {
+    public Content(String name) {
         this.name = name;
     }
 

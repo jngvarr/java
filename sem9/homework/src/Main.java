@@ -32,28 +32,41 @@ public class Main {
     };
 
     public static void main(String[] args) {
-        Comparator<Notebook> notebookComparator = (o1, o2) -> o2.price - o1.price;
+        Comparator<Notebook> notebookPriceComparator = (o1, o2) -> o2.price - o1.price;
+        Comparator<Notebook> notebookScDiagComparator = (o1, o2) -> (int)((o1.screenDiagonal - o2.screenDiagonal)*10);
+
 
         int[] ram = {8, 12, 16, 24, 32, 64, 128};
+        double[] diagonalSize = {13.3, 14.0, 15.6, 16.1, 17.3};
         List<Notebook> notebooks = new ArrayList<>();
-        for (int i = 0; i < rnd.nextInt(10, 15); i++) {
-            notebooks.add(new Notebook(rnd.nextInt(50000, 100000), ram[rnd.nextInt(ram.length)]));
+        for (int i = 0; i < rnd.nextInt(3, 10); i++) {
+            notebooks.add(new Notebook(rnd.nextInt(50000, 100000), ram[rnd.nextInt(ram.length)],
+                    diagonalSize[rnd.nextInt(diagonalSize.length)]));
         }
-        Notebook book = new Notebook();
-        book.addParameters();
-
+        for (Notebook n : notebooks) {
+            Iterator<String> notebookParameters = n; //приведение экземпляра n к типу Iterator
+            while (notebookParameters.hasNext()) {
+                System.out.println(n.next());
+            }
+            System.out.println("--------------------------------------------------------");
+        }
         System.out.println(notebooks);
 //      notebooks.sort(Notebook::compareTo);
-//      Collections.sort(notebooks,notebookComparator);
-//      notebooks.sort(notebookComparator);
+//      Collections.sort(notebooks,notebookPriceComparator);
+//      notebooks.sort(notebookPriceComparator);
         Collections.sort(notebooks, Notebook::compareTo);
+        System.out.println("Сортировка по возрастанию цены:");
         System.out.println(notebooks);
 //        notebooks.sort(twoPositionsComparator);
-        notebooks.sort(notebookComparator.reversed());
+        notebooks.sort(notebookPriceComparator.reversed());
+        System.out.println("Сортировка по убыванию цены");
         System.out.println(notebooks);
         notebooks.sort(twoPositionComparator);
+        System.out.println("Сортировка по по убыванию RAM. Если RAM равны - по убыванию цены:");
         System.out.println(notebooks);
-
+        System.out.println("Сортировка по увеличению диагонали экрана:");
+        notebooks.sort(notebookScDiagComparator);
+        System.out.println(notebooks);
 
 //        for (Notebook n : notebooks) {
 //            System.out.println(n.getClass() + ", " + n.getInfo());
@@ -69,4 +82,5 @@ public class Main {
 //            System.out.println(n.getClass() + ", " + n.getInfo());
 //        }
     }
+   CharSequence
 }

@@ -7,20 +7,26 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-public class Notebook implements Comparable<Notebook>, Iterable<Parameter> {
+public class Notebook implements Comparable<Notebook>, Iterator<String>{//, Iterable<Paramtr>{
+    protected static int number;
     protected int price;
     protected int ram;
     protected String brand;
     protected double screenDiagonal;
+    protected String id;
 
+    static {
+        Notebook.number = 0;
+    }
 
-    public Notebook(int price, int ram) {
+    public Notebook(int price, int ram, double screenDiagonal) {
+        id = "Notebook id: #" + ++Notebook.number;
         this.price = price;
         this.ram = ram;
         brand = "HP";
-        screenDiagonal = 17.3;
-
+        this.screenDiagonal = screenDiagonal;
     }
+
 
     public List<Parameter> parameters;
     int index;
@@ -40,16 +46,16 @@ public class Notebook implements Comparable<Notebook>, Iterable<Parameter> {
 
     @Override
     public String toString() {
-        return String.valueOf("Price =\t" + price + ", Ram =\t" + ram + "\n");
+        return String.valueOf(id + ", Manufacturer: \t" + brand + ", Screen diagonal: \t" + screenDiagonal + ", RAM :\t" + ram + ", Price :\t" + price + "\n");
     }
 
     @Override
     public int compareTo(Notebook n) {
-        return n.price - this.price;
+        return this.price - n.price;
     }
 
     public int reverseCompareTo(Notebook n) {
-        return this.price - n.price;
+        return n.price - this.price;
     }
 
     public int getPrice() {
@@ -61,8 +67,35 @@ public class Notebook implements Comparable<Notebook>, Iterable<Parameter> {
     }
 
     @Override
-    public Iterator<Parameter> iterator() {
-        return null;
+    public boolean hasNext() {
+        return index++ < 5;
     }
+
+    @Override
+    public String next() {
+        switch (index) {
+            case 1:
+                return String.format("%s", id);
+            case 2:
+                return String.format("Manufacturer: %s", brand);
+            case 3:
+                return String.format("Screen diagonal: %s", screenDiagonal);
+            case 4:
+                return String.format("RAM, GB %d", ram);
+        }
+        return String.format("Price: %d", price);
+    }
+
+//    @Override
+//    public Iterator<Paramtr> iterator() {
+//        return null;
+//    }
+
+//    @Override
+//    public Iterator<Parameter> iterator() {
+//        return null;
+//    }
+
+//
 }
 
