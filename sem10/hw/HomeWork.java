@@ -17,31 +17,31 @@ public class HomeWork {
         // Пересыпать из коробки с золотыми яблоками в коробку с яблоками можно!
         // 3.* Реализовать итерируемость по коробке
 
-        //Box<String> stringBox = new Box(); // не должно работать
+//        Box<String> stringBox = new Box(); // не должно работать
         Box<Apple> appleBox = new Box(); // работает
         Box<Orange> orangeBox = new Box(); // работает
         Box<GoldenApple> goldenAppleBox = new Box(); // работает
 
-        //orangeBox.add(new Apple(1)); // Не работает. не было в задании
+//        orangeBox.add(new Apple(1)); // Не работает. не было в задании
+        orangeBox.add(new Orange(2)); // работает. не было в задании
         appleBox.add(new Apple(1)); // работает
-        //appleBox.add(new Orange(1)); // не работает
+//        appleBox.add(new Orange(1)); // не работает
         appleBox.add(new GoldenApple(4)); // работает
-//        System.out.println(appleBox.getWeight()); // 5
-//
-//        //goldenAppleBox.add(new Apple(2)); // не работает
-//        goldenAppleBox.add(new GoldenApple(2)); // работает
-//        System.out.println(goldenAppleBox.getWeight()); // 2
-//
-//        goldenAppleBox.moveTo(appleBox); // работает
-//        System.out.println(goldenAppleBox.getWeight()); // 0
-//        System.out.println(appleBox.getWeight()); // 7
+        System.out.println(appleBox.getWeight()); // 5
 
+//        goldenAppleBox.add(new Apple(2)); // не работает
+        goldenAppleBox.add(new GoldenApple(2)); // работает
+        System.out.println(goldenAppleBox.getWeight()); // 2
+
+        goldenAppleBox.moveTo(appleBox); // работает
+        System.out.println(goldenAppleBox.getWeight()); // 0
+        System.out.println(appleBox.getWeight()); // 7
 
 
         // 3.*
-//        for (GoldenApple apple: goldenAppleBox) { // должно работать
+//     for (GoldenApplee apple: goldenAppleBox) { // должно работать
 //
-//        }
+       }
     }
 
 }
