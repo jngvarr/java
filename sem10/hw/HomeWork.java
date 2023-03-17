@@ -1,6 +1,7 @@
 package ru.gb.lesson4.hw;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class HomeWork {
@@ -22,14 +23,14 @@ public class HomeWork {
         Box<Orange> orangeBox = new Box(); // работает
         Box<GoldenApple> goldenAppleBox = new Box(); // работает
 
-//        orangeBox.add(new Apple(1)); // Не работает. не было в задании
-        orangeBox.add(new Orange(2)); // работает. не было в задании
+        //orangeBox.add(new Apple(1)); // Не работает. проверка апельсинов
+        orangeBox.add(new Orange(2)); // работает.
         appleBox.add(new Apple(1)); // работает
-//        appleBox.add(new Orange(1)); // не работает
+        //appleBox.add(new Orange(1)); // не работает
         appleBox.add(new GoldenApple(4)); // работает
         System.out.println(appleBox.getWeight()); // 5
 
-//        goldenAppleBox.add(new Apple(2)); // не работает
+        //goldenAppleBox.add(new Apple(2)); // не работает
         goldenAppleBox.add(new GoldenApple(2)); // работает
         System.out.println(goldenAppleBox.getWeight()); // 2
 
@@ -39,9 +40,10 @@ public class HomeWork {
 
 
         // 3.*
-//     for (GoldenApplee apple: goldenAppleBox) { // должно работать
-//
-       }
+        for (GoldenApple apple : goldenAppleBox) { // должно работать
+            goldenAppleBox.iterator();
+
+        }
     }
 
 }

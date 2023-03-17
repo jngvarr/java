@@ -82,5 +82,4 @@ public class Main {
 //            System.out.println(n.getClass() + ", " + n.getInfo());
 //        }
     }
-   CharSequence
 }

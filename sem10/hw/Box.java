@@ -1,19 +1,20 @@
 package ru.gb.lesson4.hw;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
-public class Box<T extends Fruit> implements Iterable{
+public class Box<F extends Fruit> implements Iterable<F> {
+
     int boxWeight;
-//    private List<T> fruitBoxesList = new ArrayList<>();
+    //    public Box(){
+//
+//    }
+    private List<F> fruitBoxesList = new ArrayList<>();
 
     /* TODO: Тут должен быть дженерик */
-    public void add(T fruit) {
+    public void add(F fruit) {
         // добавляем фрукт в коробку
-//        fruitBoxesList.add(fruit);
-        this.boxWeight+= fruit.getWeight();
+        fruitBoxesList.add(fruit);
+        this.boxWeight += fruit.getWeight(1);
     }
 
     public int getWeight() {
@@ -25,12 +26,23 @@ public class Box<T extends Fruit> implements Iterable{
     public void moveTo(Box<Apple> target) {
 // пересыпаем фрукты отсюда в target
         int tempBoxWeight = this.boxWeight;
-        target.boxWeight+=this.boxWeight;
-        this.boxWeight-=tempBoxWeight;
+        target.boxWeight += this.boxWeight;
+        this.boxWeight -= tempBoxWeight;
+    }
+
+    public boolean hasNext() {
+        return boxWeight != 0;
+    }
+
+    public String next() {
+        return "";
     }
 
     @Override
-    public Iterator <T> iterator() {
-        return 0;
+    public Iterator<F> iterator() {
+        hasNext();
+        return boxWeight--;
     }
 }
+
+
