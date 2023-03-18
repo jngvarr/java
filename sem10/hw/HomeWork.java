@@ -18,7 +18,7 @@ public class HomeWork {
         // Пересыпать из коробки с золотыми яблоками в коробку с яблоками можно!
         // 3.* Реализовать итерируемость по коробке
 
-//        Box<String> stringBox = new Box(); // не должно работать
+        //Box<String> stringBox = new Box(); // не должно работать
         Box<Apple> appleBox = new Box(); // работает
         Box<Orange> orangeBox = new Box(); // работает
         Box<GoldenApple> goldenAppleBox = new Box(); // работает
@@ -41,9 +41,10 @@ public class HomeWork {
 
         // 3.*
         for (GoldenApple apple : goldenAppleBox) { // должно работать
-            goldenAppleBox.iterator();
-
+            System.out.print(apple + ", ");
         }
+        System.out.println();
     }
-
 }
+
+

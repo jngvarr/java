@@ -8,7 +8,13 @@ public class Fruit {
         this.weight = weight;
     }
 
-    public int getWeight(int i) {
+    public int getWeight() {
         return weight;
+    }
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" +
+                "weight=" + weight +
+                '}';
     }
 }

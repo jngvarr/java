@@ -1,47 +1,60 @@
 package ru.gb.lesson4.hw;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Spliterator;
 
 public class Box<F extends Fruit> implements Iterable<F> {
 
-    int boxWeight;
-    //    public Box(){
-//
-//    }
-    private List<F> fruitBoxesList = new ArrayList<>();
+    private final List<F> contents = new ArrayList<>();
 
-    /* TODO: Тут должен быть дженерик */
     public void add(F fruit) {
         // добавляем фрукт в коробку
-        fruitBoxesList.add(fruit);
-        this.boxWeight += fruit.getWeight(1);
+        contents.add(fruit);
     }
 
     public int getWeight() {
         // TODO: 13.03.2023 Сумма весов всех фруктов
-        return boxWeight;
+        int result = 0;
+        for (F f : contents) {
+            result += f.getWeight();
+        }
+        return result;
     }
 
-    //
-    public void moveTo(Box<Apple> target) {
-// пересыпаем фрукты отсюда в target
-        int tempBoxWeight = this.boxWeight;
-        target.boxWeight += this.boxWeight;
-        this.boxWeight -= tempBoxWeight;
+    // пересыпаем фрукты отсюда в target
+    public void moveTo2(Box<? super F> target) {
+        for (F f: contents) {
+            target.add(f);
+        }
+        contents.clear();
     }
 
-    public boolean hasNext() {
-        return boxWeight != 0;
+    public void moveTo(Box<? super F> target) {
+        Iterator<F> i = contents.iterator();
+        while (i.hasNext()) {
+            target.add(i.next());
+        }
+        i.remove();
     }
 
-    public String next() {
-        return "";
-    }
 
     @Override
     public Iterator<F> iterator() {
-        hasNext();
-        return boxWeight--;
+        return contents.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super F> action) {
+        contents.forEach(action);
+    }
+
+    @Override
+    public Spliterator<F> spliterator() {
+        return contents.spliterator();
     }
 }
 
