@@ -40,7 +40,7 @@ public class HomeWork {
 
 
         // 3.*
-        for (GoldenApple apple : goldenAppleBox) { // должно работать
+        for (Apple apple : appleBox) { // должно работать
             System.out.print(apple + ", ");
         }
         System.out.println();
