@@ -32,33 +32,39 @@ public class Main {
         // change-direction id LEFT
         boolean game = true;
         Scanner sc = new Scanner(System.in);
-        System.out.println("Введите команду для создания карты:");
+        System.out.println("Введите команду \"create-map n m\" для создания карты:");
         RobotMap map = null;
-        while (game == true) {
-            while (true) {
-                String command = sc.nextLine();
-//            switch (command){
-                if (command.startsWith("create-map")) {
-                    String[] split = command.split(" "); // [create-map 3 5]
-                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [3 5]
-
-                    try {
-                        map = new RobotMap(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1]));
-                        break;
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("При создании карты возникло исключение: " + e.getMessage() + "." +
-                                " Попробуйте еще раз");
-                    }
-                } else {
-                    System.out.println("Команда не найдена. Попробуйте еще раз");
+        while (true) {
+            String command = sc.nextLine();
+            if (command.startsWith("create-map")) {
+                String[] split = command.split(" "); // [create-map 3 5]
+                String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [3 5]
+                try {
+                    map = new RobotMap(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1]));
+                    break;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("При создании карты возникло исключение: " + e.getMessage() + "." +
+                            " Попробуйте еще раз");
                 }
+            } else {
+                System.out.println("Команда не найдена. Попробуйте еще раз");
             }
-            if (map != null) {
-                while (true) {
-                    System.out.println("Введите команду для создания робота:");
-                    String command = sc.nextLine();
-                    if (command.startsWith("create-robot")) {
-                        String[] split = command.split(" "); // [create-robot 2 7]
+        }
+
+        System.out.println("ИГРАЕМ...");
+
+        while (game == true) {
+            int action = 0;
+            System.out.println("Введите команду по образцу: \n" +
+                    "1. Для создания нового робота  - \"create-robot 3 3\".\n" +
+                    "2. Сменить направление движения робота - \"change-direction id LEFT\".\n" +
+                    "3. Походить роботом - \"move-robot id\"\n" +
+                    "4. Закончить игру - \"stop\"");
+            String command = sc.nextLine();
+            String[] split = command.split(" ");
+            switch (split[0]) {
+                case "create-robot" -> {
+                    while (true) {
                         String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
                         try {
                             RobotMap.Robot robot = map.createRobot(new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
@@ -69,22 +75,37 @@ public class Main {
                         }
                     }
                 }
+                case "change-direction" -> {
+                    while (true) {
+                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
+                        try {
+                            RobotMap.Robot robot = Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
+                            break;
+                        } catch (PositionException e) {
+                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
+                                    " Попробуйте еще раз");
+                        }
+                    }
+                }
+                case "move-robot" -> {
+                    while (true) {
+                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
+                        try {
+                            RobotMap.Robot robot = (new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
+                            break;
+                        } catch (PositionException e) {
+                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
+                                    " Попробуйте еще раз");
+                        }
+                    }
+                }
+                case "stop" -> {
+                    game = false;
+                }
             }
-            System.out.println("ИГРАЕМ...");
-            while (true){
 
-            }
-            int action = 0;
-            System.out.println("Выберите действие: \n" +
-                    "1. Создать нового робота.\n" +
-                    "2. Выбрать робота и походить.");
-            switch (action) {
-                case 1 -> {
-                }
-                case 2 -> {
-                }
-            }
         }
+    }
 
 //        RobotMap.Robot robot1 = null;
 //        RobotMap.Robot robot2 = null;
@@ -106,10 +127,10 @@ public class Main {
 //            }
 //        }
 
-        // create robot (3, 5)
-
-
-    }
+// create robot (3, 5)
 
 
 }
+
+
+
