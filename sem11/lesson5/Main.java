@@ -33,7 +33,7 @@ public class Main {
 
 //        Scanner sc = new Scanner(System.in);
 //        System.out.println("Введите команду для создания карты:");
-        RobotMap map = null;
+         RobotMap map = null;
 //        while (true) {
 //            String command = sc.nextLine();
 //            if (command.startsWith("create-map")) {

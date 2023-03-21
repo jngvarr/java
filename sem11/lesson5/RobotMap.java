@@ -12,7 +12,7 @@ public class RobotMap {
     private final int n;
     private final int m;
 
-    private final Map<UUID, Robot> robots;
+    private final Map<id, Robot> robots;
 
     public RobotMap(int n, int m) {
         if (n < 0 || m < 0) {
@@ -25,7 +25,6 @@ public class RobotMap {
 
     public Robot createRobot(Point position) throws PositionException {
         checkPosition(position);
-
         Robot robot = new Robot(position);
         robots.put(robot.id, robot);
         return robot;
@@ -56,17 +55,20 @@ public class RobotMap {
 
     public class Robot implements KeyListener {
 
-        private final UUID id;
+        private final Long id;
         private Point position;
         private Direction direction;
+        private Long idNum = 0L;
 
         public Robot(Point position) {
-            this.id = UUID.randomUUID();
+
+            this.id = ++idNum;
+//            this.id = UUID.randomUUID();
             this.position = position;
             this.direction = Direction.TOP;
         }
 
-        public UUID getId() {
+        public Long getId() {
             return id;
         }
 
