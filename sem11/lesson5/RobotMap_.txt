@@ -1,5 +1,6 @@
 package ru.gb.lesson5;
 
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
@@ -8,11 +9,10 @@ import java.util.UUID;
 
 public class RobotMap {
 
-    public static Point position;
     private final int n;
     private final int m;
 
-    private final Map<Long, Robot> robots;
+    private final Map<id, Robot> robots;
 
     public RobotMap(int n, int m) {
         if (n < 0 || m < 0) {
@@ -22,12 +22,9 @@ public class RobotMap {
         this.m = m;
         this.robots = new HashMap<>();
     }
-    public Point getPosition() {
-        return position;
-    }
+
     public Robot createRobot(Point position) throws PositionException {
         checkPosition(position);
-
         Robot robot = new Robot(position);
         robots.put(robot.id, robot);
         return robot;
@@ -43,20 +40,30 @@ public class RobotMap {
     }
 
     private boolean isFree(Point position) {
-        return robots.values().stream()
-                .map(Robot::getPosition)
+        return robots.values().stream()  // Robot
+//                .map(robot -> robot.getPosition())
+                .map(Robot::getPosition) // Point
                 .noneMatch(position::equals);
 
+//        for (Robot value : robots.values()) {
+//            if (value.getPosition().equals(position)) {
+//                return false;
+//            }
+//        }
+//        return true;
     }
 
-    public class Robot {
+    public class Robot implements KeyListener {
 
-        private Long id = 0L;
+        private final Long id;
         private Point position;
         private Direction direction;
+        private Long idNum = 0L;
 
         public Robot(Point position) {
-            this.id = ++id;
+
+            this.id = ++idNum;
+//            this.id = UUID.randomUUID();
             this.position = position;
             this.direction = Direction.TOP;
         }
@@ -76,6 +83,7 @@ public class RobotMap {
                 case BOTTOM -> new Point(position.getX() + 1, position.getY());
                 case LEFT -> new Point(position.getX(), position.getY() - 1);
             };
+
             checkPosition(newPosition);
 
             position = newPosition;
@@ -85,9 +93,36 @@ public class RobotMap {
             this.direction = direction;
         }
 
+
         @Override
         public String toString() {
             return String.format("[%s] %s", id.toString(), position.toString());
+        }
+
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyTyped(KeyEvent event) {
+            Point newPosition = switch (event.getKeyCode()) {
+                case KeyEvent.VK_UP -> new Point(position.getX() - 1, position.getY());
+                case KeyEvent.VK_RIGHT -> new Point(position.getX(), position.getY() + 1);
+                case KeyEvent.VK_DOWN -> new Point(position.getX() + 1, position.getY());
+                case KeyEvent.VK_LEFT -> new Point(position.getX(), position.getY() - 1);
+                default -> throw new IllegalStateException("Unexpected value: " + event.getKeyCode());
+            };
+
+            //checkPosition(newPosition);
+
+            position = newPosition;
         }
 
         public enum Direction {
@@ -95,5 +130,6 @@ public class RobotMap {
             TOP, RIGHT, BOTTOM, LEFT
 
         }
+
     }
 }
