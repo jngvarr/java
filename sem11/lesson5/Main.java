@@ -2,6 +2,8 @@ package ru.gb.lesson5;
 
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -54,7 +56,6 @@ public class Main {
         System.out.println("ИГРАЕМ...");
 
         while (game == true) {
-            int action = 0;
             System.out.println("Введите команду по образцу: \n" +
                     "1. Для создания нового робота  - \"create-robot 3 3\".\n" +
                     "2. Сменить направление движения робота - \"change-direction id LEFT\".\n" +
@@ -67,7 +68,10 @@ public class Main {
                     while (true) {
                         String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
                         try {
-                            RobotMap.Robot robot = map.createRobot(new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
+                            RobotMap.Robot robot;
+                            robot = map.createRobot(new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
+                            System.out.println(robot);
+                            System.out.println(robot.getRobots());
                             break;
                         } catch (PositionException e) {
                             System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
@@ -77,33 +81,28 @@ public class Main {
                 }
                 case "change-direction" -> {
                     while (true) {
-                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
-                        try {
-                            RobotMap.Robot robot = Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
-                            break;
-                        } catch (PositionException e) {
-                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
-                                    " Попробуйте еще раз");
-                        }
+                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
+                        System.out.printf(arguments[0]);
+//                        System.out.println(Arrays.asList(map.getRobots(arguments[0])));
+//                            robots.get(arguments[0]).changeDirection(RobotMap.Robot.Direction());
                     }
                 }
-                case "move-robot" -> {
-                    while (true) {
-                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
-                        try {
-                            RobotMap.Robot robot = (new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
-                            break;
-                        } catch (PositionException e) {
-                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
-                                    " Попробуйте еще раз");
-                        }
-                    }
-                }
+//                case "move-robot" -> {
+//                    while (true) {
+//                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
+//                        try {
+//                            RobotMap.Robot robot = (new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
+//                            break;
+//                        } catch (PositionException e) {
+//                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
+//                                    " Попробуйте еще раз");
+//                        }
+//                    }
+//                }
                 case "stop" -> {
                     game = false;
                 }
             }
-
         }
     }
 

@@ -12,7 +12,7 @@ public class RobotMap {
     private final int n;
     private final int m;
 
-    private final Map<Long, Robot> robots;
+    private Map<Long, Robot> robots;
 
     public RobotMap(int n, int m) {
         if (n < 0 || m < 0) {
@@ -22,9 +22,11 @@ public class RobotMap {
         this.m = m;
         this.robots = new HashMap<>();
     }
+
     public Point getPosition() {
         return position;
     }
+
     public Robot createRobot(Point position) throws PositionException {
         checkPosition(position);
 
@@ -46,12 +48,19 @@ public class RobotMap {
         return robots.values().stream()
                 .map(Robot::getPosition)
                 .noneMatch(position::equals);
+    }
 
+    public Map getRobots() {
+        return robots;
     }
 
     public class Robot {
+        Map getRobots() {
+            return robots;
+        }
 
-        private Long id = 0L;
+        static Long id = 0L;
+
         private Point position;
         private Direction direction;
 
