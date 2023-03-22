@@ -1,5 +1,6 @@
 package ru.gb.lesson5;
 
+import java.awt.*;
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public class Main {
         // change-direction id LEFT
         boolean game = true;
         Scanner sc = new Scanner(System.in);
-        System.out.println("Введите команду \"create-map n m\" для создания карты:");
+        System.out.println("Введите команду \"create-map 5 5\" для создания карты:");
         RobotMap map = null;
         while (true) {
             String command = sc.nextLine();
@@ -65,41 +66,37 @@ public class Main {
             String[] split = command.split(" ");
             switch (split[0]) {
                 case "create-robot" -> {
-                    while (true) {
-                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
-                        try {
-                            RobotMap.Robot robot;
-                            robot = map.createRobot(new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
-                            System.out.println(robot);
-                            System.out.println(robot.getRobots());
-                            break;
-                        } catch (PositionException e) {
-                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
-                                    " Попробуйте еще раз");
-                        }
+                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
+                    try {
+                        System.out.println("Создан новый робот:"+ map.createRobot(new Point(Integer.parseInt
+                                (arguments[0]), Integer.parseInt(arguments[1]))));
+                        System.out.println("-------------------------------------------------------------------------");
+                        break;
+                    } catch (PositionException e) {
+                        System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
+                                " Попробуйте еще раз");
                     }
                 }
                 case "change-direction" -> {
-                    while (true) {
-                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
-                        System.out.printf(arguments[0]);
-//                        System.out.println(Arrays.asList(map.getRobots(arguments[0])));
-//                            robots.get(arguments[0]).changeDirection(RobotMap.Robot.Direction());
-                    }
+                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
+                    RobotMap.Robot robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
+                    //System.out.println(robot.getDirection());
+                    System.out.println("Робот до смены направления: "+ robot);
+                    System.out.println("Робот сменил направление: "+ robot.changeDirection(arguments[1]));
+                    System.out.println("-------------------------------------------------------------------------");
                 }
 //                case "move-robot" -> {
 //                    while (true) {
 //                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
 //                        try {
-//                            RobotMap.Robot robot = (new Point(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1])));
-//                            break;
+//                            robot.changeDirection((RobotMap.Robot.Direction) arguments[1]);
 //                        } catch (PositionException e) {
 //                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
 //                                    " Попробуйте еще раз");
 //                        }
 //                    }
 //                }
-                case "stop" -> {
+                case "stop" -> {    //split[0].equalsIgnoreCase("stop");
                     game = false;
                 }
             }
