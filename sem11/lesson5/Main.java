@@ -37,6 +37,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         System.out.println("Введите команду \"create-map 5 5\" для создания карты:");
         RobotMap map = null;
+        RobotMap.Robot robot = null;
         while (true) {
             String command = sc.nextLine();
             if (command.startsWith("create-map")) {
@@ -68,7 +69,7 @@ public class Main {
                 case "create-robot" -> {
                     String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
                     try {
-                        System.out.println("Создан новый робот:"+ map.createRobot(new Point(Integer.parseInt
+                        System.out.println("Создан новый робот:" + map.createRobot(new Point(Integer.parseInt
                                 (arguments[0]), Integer.parseInt(arguments[1]))));
                         System.out.println("-------------------------------------------------------------------------");
                         break;
@@ -78,24 +79,31 @@ public class Main {
                     }
                 }
                 case "change-direction" -> {
-                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
-                    RobotMap.Robot robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
-                    //System.out.println(robot.getDirection());
-                    System.out.println("Робот до смены направления: "+ robot);
-                    System.out.println("Робот сменил направление: "+ robot.changeDirection(arguments[1]));
-                    System.out.println("-------------------------------------------------------------------------");
+                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
+                        robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
+                        //System.out.println(robot.getDirection());
+                    if (robot != null) {
+                        System.out.println("Робот до смены направления: " + robot);
+                        System.out.println("Робот сменил направление: " + robot.changeDirection(arguments[1]));
+                        System.out.println("-------------------------------------------------------------------------");
+                    } else System.out.println("Для начала создайте робота!");
+                    System.out.println("---------------------------------------------------------------------");
                 }
-//                case "move-robot" -> {
-//                    while (true) {
-//                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
-//                        try {
-//                            robot.changeDirection((RobotMap.Robot.Direction) arguments[1]);
-//                        } catch (PositionException e) {
-//                            System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
-//                                    " Попробуйте еще раз");
-//                        }
-//                    }
-//                }
+                case "move-robot" -> {
+                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2]
+                    robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
+                    if (robot != null) {
+                        try {
+                            robot.move();
+                            System.out.printf("Текущее расположение роботов%s: \n", map.getRobots());
+                            System.out.println("---------------------------------------------------------------------");
+                        } catch (PositionException e) {
+                            System.out.println("При попытке передвинуть робота возникло исключение: " + e.getMessage()
+                                    + ". Попробуйте еще раз");
+                        }
+                    } else System.out.println("Для начала создайте робота!");
+                    System.out.println("---------------------------------------------------------------------");
+                }
                 case "stop" -> {    //split[0].equalsIgnoreCase("stop");
                     game = false;
                 }

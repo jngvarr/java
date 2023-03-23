@@ -1,9 +1,10 @@
 package ru.gb.lesson5;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-public class RobotMap {
+public class RobotMap implements Iterable{
 
     public static Point position;
     private final int n;
@@ -59,7 +60,12 @@ public class RobotMap {
         return robots;
     }
 
-    public class Robot {
+    @Override
+    public Iterator iterator() {
+        return null;
+    }
+
+    public class Robot implements Iterable{
         Map getRobots() {
             return robots;
         }
@@ -70,7 +76,7 @@ public class RobotMap {
         private Direction direction;
 
         public Robot(Point position) {
-            this.name = String.format("#%d", + ++id);
+            this.name = String.format("%d", + ++id);
             this.position = position;
             this.direction = Direction.TOP;
         }
@@ -84,12 +90,12 @@ public class RobotMap {
         }
 
 
-        public void move(Robot robot) throws PositionException {
-            Point newPosition = switch (robot.direction) {
-                case TOP -> new Point(robot.position.getX() - 1, robot.position.getY());
-                case RIGHT -> new Point(robot.position.getX(), robot.position.getY() + 1);
-                case BOTTOM -> new Point(robot.position.getX() + 1, robot.position.getY());
-                case LEFT -> new Point(robot.position.getX(), robot.position.getY() - 1);
+        public void move() throws PositionException {
+            Point newPosition = switch (this.direction) {
+                case TOP -> new Point(this.position.getX() - 1, this.position.getY());
+                case RIGHT -> new Point(this.position.getX(), this.position.getY() + 1);
+                case BOTTOM -> new Point(this.position.getX() + 1, this.position.getY());
+                case LEFT -> new Point(this.position.getX(), this.position.getY() - 1);
             };
             checkPosition(newPosition);
 
@@ -114,6 +120,11 @@ public class RobotMap {
         @Override
         public String toString() {
             return String.format("[%s], position=%s, direction=%s", name, position.toString(), direction.toString());
+        }
+
+        @Override
+        public Iterator iterator() {
+            return null;
         }
 
         public enum Direction {
