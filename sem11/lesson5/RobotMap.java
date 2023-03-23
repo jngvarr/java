@@ -92,10 +92,10 @@ public class RobotMap implements Iterable{
 
         public void move() throws PositionException {
             Point newPosition = switch (this.direction) {
-                case TOP -> new Point(this.position.getX() - 1, this.position.getY());
-                case RIGHT -> new Point(this.position.getX(), this.position.getY() + 1);
-                case BOTTOM -> new Point(this.position.getX() + 1, this.position.getY());
-                case LEFT -> new Point(this.position.getX(), this.position.getY() - 1);
+                case TOP -> new Point(position.getX() - 1, position.getY());
+                case RIGHT -> new Point(position.getX(), position.getY() + 1);
+                case BOTTOM -> new Point(position.getX() + 1, position.getY());
+                case LEFT -> new Point(position.getX(), position.getY() - 1);
             };
             checkPosition(newPosition);
 
@@ -106,16 +106,16 @@ public class RobotMap implements Iterable{
             return this.direction;
         }
 
-        public Direction changeDirection(String direction) {
-            if (Direction.valueOf(direction) == Direction.BOTTOM) this.direction = Direction.BOTTOM;
-            if (Direction.valueOf(direction) == Direction.TOP) this.direction = Direction.TOP;
-            if (Direction.valueOf(direction) == Direction.RIGHT) this.direction = Direction.RIGHT;
-            if (Direction.valueOf(direction) == Direction.LEFT) this.direction = Direction.LEFT;
-            return this.direction;
-        }
-//        public void changeDirection(Direction direction) {
-//            this.direction = direction;
+//        public Direction changeDirection(String direction) {
+//            if (Direction.valueOf(direction) == Direction.BOTTOM) this.direction = Direction.BOTTOM;
+//            if (Direction.valueOf(direction) == Direction.TOP) this.direction = Direction.TOP;
+//            if (Direction.valueOf(direction) == Direction.RIGHT) this.direction = Direction.RIGHT;
+//            if (Direction.valueOf(direction) == Direction.LEFT) this.direction = Direction.LEFT;
+//            return this.direction;
 //        }
+        public void changeDirection(Direction direction) {
+            this.direction = direction;
+        }
 
         @Override
         public String toString() {

@@ -84,10 +84,11 @@ public class Main {
                         //System.out.println(robot.getDirection());
                     if (robot != null) {
                         System.out.println("Робот до смены направления: " + robot);
-                        System.out.println("Робот сменил направление: " + robot.changeDirection(arguments[1]));
+                        robot.changeDirection(RobotMap.Robot.Direction.valueOf(arguments[1]));
+                        System.out.println("Робот сменил направление: "+ robot.getDirection());
                         System.out.println("-------------------------------------------------------------------------");
-                    } else System.out.println("Для начала создайте робота!");
-                    System.out.println("---------------------------------------------------------------------");
+                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
+                            "-------------------------------------------------------");
                 }
                 case "move-robot" -> {
                     String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2]
@@ -101,8 +102,8 @@ public class Main {
                             System.out.println("При попытке передвинуть робота возникло исключение: " + e.getMessage()
                                     + ". Попробуйте еще раз");
                         }
-                    } else System.out.println("Для начала создайте робота!");
-                    System.out.println("---------------------------------------------------------------------");
+                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
+                            "-------------------------------------------------------");
                 }
                 case "stop" -> {    //split[0].equalsIgnoreCase("stop");
                     game = false;
