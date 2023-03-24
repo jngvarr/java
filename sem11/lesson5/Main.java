@@ -4,6 +4,7 @@ import java.awt.*;
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -54,6 +55,11 @@ public class Main {
                 System.out.println("Команда не найдена. Попробуйте еще раз");
             }
         }
+        List<CommandHandler> handlers = List.of(
+                new ChangeDirectionCommandHandler(), new CreateRobotCommandHandler(), new MoveComandHandler()
+                // TODO: 20.03.2023 Вписать свои реализации обработчиков
+        );
+        CommandManager commandManager = new CommandManager(map, handlers);
 
         System.out.println("ИГРАЕМ...");
 
@@ -64,54 +70,60 @@ public class Main {
                     "3. Походить роботом - \"move-robot id\"\n" +
                     "4. Закончить игру - \"stop\"");
             String command = sc.nextLine();
-            String[] split = command.split(" ");
-            switch (split[0]) {
-                case "create-robot" -> {
-                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
-                    try {
-                        System.out.println("Создан новый робот:" + map.createRobot(new Point(Integer.parseInt
-                                (arguments[0]), Integer.parseInt(arguments[1]))));
-                        System.out.println("-------------------------------------------------------------------------");
-                        break;
-                    } catch (PositionException e) {
-                        System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
-                                " Попробуйте еще раз");
-                    }
-                }
-                case "change-direction" -> {
-                        String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
-                        robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
-                        //System.out.println(robot.getDirection());
-                    if (robot != null) {
-                        System.out.println("Робот до смены направления: " + robot);
-                        robot.changeDirection(RobotMap.Robot.Direction.valueOf(arguments[1]));
-                        System.out.println("Робот сменил направление: "+ robot.getDirection());
-                        System.out.println("-------------------------------------------------------------------------");
-                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
-                            "-------------------------------------------------------");
-                }
-                case "move-robot" -> {
-                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2]
-                    robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
-                    if (robot != null) {
-                        try {
-                            robot.move();
-                            System.out.printf("Текущее расположение роботов%s: \n", map.getRobots());
-                            System.out.println("---------------------------------------------------------------------");
-                        } catch (PositionException e) {
-                            System.out.println("При попытке передвинуть робота возникло исключение: " + e.getMessage()
-                                    + ". Попробуйте еще раз");
-                        }
-                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
-                            "-------------------------------------------------------");
-                }
-                case "stop" -> {    //split[0].equalsIgnoreCase("stop");
-                    game = false;
-                }
+            if (command.equalsIgnoreCase("stop")) {
+                game = false;
+            } else {
+                commandManager.handleCommand(command);
+//            String command = sc.nextLine();
+//            String[] split = command.split(" ");
+//            switch (split[0]) {
+//                case "create-robot" -> {
+//                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2 7]
+//                    try {
+//                        System.out.println("Создан новый робот:" + map.createRobot(new Point(Integer.parseInt
+//                                (arguments[0]), Integer.parseInt(arguments[1]))));
+//                        System.out.println("-------------------------------------------------------------------------");
+//                        break;
+//                    } catch (PositionException e) {
+//                        System.out.println("При создании робота возникло исключение: " + e.getMessage() + "." +
+//                                " Попробуйте еще раз");
+//                    }
+//                }
+//                case "change-direction" -> {
+//                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [id direction]
+//                    robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
+//                    //System.out.println(robot.getDirection());
+//                    if (robot != null) {
+//                        System.out.println("Робот до смены направления: " + robot);
+//                        robot.changeDirection(RobotMap.Robot.Direction.valueOf(arguments[1]));
+//                        System.out.println("Робот сменил направление: " + robot.getDirection());
+//                        System.out.println("-------------------------------------------------------------------------");
+//                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
+//                            "-------------------------------------------------------");
+//                }
+//                case "move-robot" -> {
+//                    String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [2]
+//                    robot = (RobotMap.Robot) map.getRobots().get(Long.parseLong(arguments[0]));
+//                    if (robot != null) {
+//                        try {
+//                            robot.move();
+//                            System.out.printf("Текущее расположение роботов%s: \n", map.getRobots());
+//                            System.out.println("---------------------------------------------------------------------");
+//                        } catch (PositionException e) {
+//                            System.out.println("При попытке передвинуть робота возникло исключение: " + e.getMessage()
+//                                    + ". Попробуйте еще раз");
+//                        }
+//                    } else System.out.println("Для начала создайте робота!\n-----------------------------------------" +
+//                            "-------------------------------------------------------");
+//                }
+//            case "stop" -> {    //split[0].equalsIgnoreCase("stop");
+//                game = false;
+//            }
             }
         }
-    }
 
+    }
+}
 //        RobotMap.Robot robot1 = null;
 //        RobotMap.Robot robot2 = null;
 //        try {
@@ -135,7 +147,7 @@ public class Main {
 // create robot (3, 5)
 
 
-}
+
 
 
 
