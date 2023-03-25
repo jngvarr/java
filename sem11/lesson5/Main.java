@@ -38,7 +38,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         System.out.println("Введите команду \"create-map 5 5\" для создания карты:");
         RobotMap map = null;
-        RobotMap.Robot robot = null;
+//        RobotMap.Robot robot = null;
         while (true) {
             String command = sc.nextLine();
             if (command.startsWith("create-map")) {
