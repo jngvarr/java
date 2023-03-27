@@ -38,7 +38,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         System.out.println("Введите команду \"create-map 5 5\" для создания карты:");
         RobotMap map = null;
-        RobotMap.Robot robot = null;
+//        RobotMap.Robot robot = null;
         while (true) {
             String command = sc.nextLine();
             if (command.startsWith("create-map")) {
@@ -46,6 +46,7 @@ public class Main {
                 String[] arguments = Arrays.copyOfRange(split, 1, split.length); // [3 5]
                 try {
                     map = new RobotMap(Integer.parseInt(arguments[0]), Integer.parseInt(arguments[1]));
+                    System.out.println("Карта создана!");
                     break;
                 } catch (IllegalArgumentException e) {
                     System.out.println("При создании карты возникло исключение: " + e.getMessage() + "." +
@@ -64,11 +65,13 @@ public class Main {
         System.out.println("ИГРАЕМ...");
 
         while (game == true) {
+            System.out.println("_____________________________________________________________________________________");
             System.out.println("Введите команду по образцу: \n" +
                     "1. Для создания нового робота  - \"create-robot 3 3\".\n" +
                     "2. Сменить направление движения робота - \"change-direction id LEFT\".\n" +
                     "3. Походить роботом - \"move-robot id\"\n" +
                     "4. Закончить игру - \"stop\"");
+            System.out.println("-------------------------------------------------------------------------------------");
             String command = sc.nextLine();
             if (command.equalsIgnoreCase("stop")) {
                 game = false;
