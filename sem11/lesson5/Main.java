@@ -1,5 +1,7 @@
 package ru.gb.lesson5;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.awt.*;
 import java.lang.reflect.InvocationHandler;
 import java.util.Arrays;
@@ -63,7 +65,6 @@ public class Main {
         CommandManager commandManager = new CommandManager(map, handlers);
 
         System.out.println("ИГРАЕМ...");
-
         while (game == true) {
             System.out.println("_____________________________________________________________________________________");
             System.out.println("Введите команду по образцу: \n" +
