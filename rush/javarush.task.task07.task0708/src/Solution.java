@@ -3,7 +3,44 @@
 //Написать программу, которая ведёт обратный отсчёт с 30 до 0, а в конце выводит на экран текст "Бум!".
 //Программа должна уменьшать число 10 раз в секунду. Для того чтобы вставить в программу задержку, воспользуйся функцией:
 //Thread.sleep(100); //задержка на одну десятую секунды.
+//package com.javarush.task.task07.task0724;
 
+/*
+Семейная перепись
+*/
+
+public class Solution {
+    public static void main(String[] args) {
+    }
+
+    public static class Human {
+        String name;
+        boolean sex;
+        int age;
+        Human father;
+        Human mother;
+
+        public String toString() {
+            String text = "";
+            text += "Имя: " + this.name;
+            text += ", пол: " + (this.sex ? "мужской" : "женский");
+            text += ", возраст: " + this.age;
+
+            if (this.father != null) {
+                text += ", отец: " + this.father.name;
+            }
+
+            if (this.mother != null) {
+                text += ", мать: " + this.mother.name;
+            }
+
+            return text;
+        }
+    }
+}
+//Написать программу, которая ведёт обратный отсчёт с 30 до 0, а в конце выводит на экран текст "Бум!".
+//Программа должна уменьшать число 10 раз в секунду. Для того чтобы вставить в программу задержку, воспользуйся функцией:
+//Thread.sleep(100); //задержка на одну десятую секунды.
 //package com.javarush.task.task07.task0723;
 
 /*
