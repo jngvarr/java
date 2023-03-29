@@ -1,32 +1,195 @@
-package com.javarush.task.task07.task0709;
+package com.javarush.task.task07.task0718;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /*
-Выражаемся покороче
+Проверка на упорядоченность
 */
 
 public class Solution {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        ArrayList<String> str = new ArrayList<>();
-        str.add(reader.readLine());
-        int shortestString = str.get(0).length();
-        for (int i = 1; i < 5; i++) {
-            str.add(reader.readLine());
-            if (str.get(i).length() < shortestString) {
-                shortestString = str.get(i).length();
-            }
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            list.add(reader.readLine());
         }
-        for (String s : str) {
-            if (s.length() == shortestString) {
-                System.out.println(s);
+        for (int i = 0; i < list.size()-1; i++) {
+            if (list.get(i).length() > list.get(i+1).length()){
+                System.out.println(i+1);
+                break;
             }
         }
     }
 }
+
+
+//package com.javarush.task.task07.task0717;
+//
+//import java.io.BufferedReader;
+//import java.io.InputStreamReader;
+//import java.util.ArrayList;
+//
+///*
+//Удваиваем слова
+//*/
+//
+//public class Solution {
+//    public static void main(String[] args) throws Exception {
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        ArrayList<String> list = new ArrayList<>();
+//        for (int i = 0; i < 10; i++) {
+//            list.add(reader.readLine());
+//        }
+//        ArrayList<String> result = doubleValues(list);
+//
+//        for (String s : result) {
+//            System.out.println(s);
+//        }
+//    }
+//
+//    public static ArrayList<String> doubleValues(ArrayList<String> list) {
+//        ArrayList<String> tempList = new ArrayList<>();
+//        for (String l : list) {
+//            tempList.add(l);
+//            tempList.add(l);
+//        }
+//        return tempList;
+//    }
+//}
+//package com.javarush.task.task07.task0716;
+//
+//import java.util.ArrayList;
+//
+///*
+//Р или Л
+//*/
+//
+//public class Solution {
+//    public static void main(String[] args) {
+//        ArrayList<String> strings = new ArrayList<>();
+//        strings.add("роза");
+//        strings.add("лоза");
+//        strings.add("лира");
+//        strings = fix(strings);
+//
+//        for (String string : strings) {
+//            System.out.println(string);
+//        }
+//    }
+//
+//    public static ArrayList<String> fix(ArrayList<String> strings) {
+//
+//        String r = "р";
+//        String l = "л";
+//
+//        ArrayList<String> result = new ArrayList<>();
+//        for (String string : strings) {
+//            boolean isR = string.contains(r);
+//            boolean isL = string.contains(l);
+//
+//            if (isR && !isL) {
+//                continue;
+//            }
+//
+//            if (!isR && isL) {
+//                result.add(string);
+//            }
+//
+//            result.add(string);
+//        }
+//        return result;
+//    }
+//}package com.javarush.task.task07.task0709;
+//
+//import java.util.ArrayList;
+//
+///*
+//Р или Л
+//*/
+//
+//public class Solution {
+//    public static void main(String[] args) {
+//        ArrayList<String> strings = new ArrayList<String>();
+//        strings.add("роза");
+//        strings.add("лоза");
+//        strings.add("упор");
+//        strings.add("вода");
+//        strings.add("мера");
+//        strings.add("лира");
+//        strings = fix(strings);
+//
+//        for (String string : strings) {
+//            System.out.println(string);
+//        }
+//    }
+//
+//    public static ArrayList<String> fix(ArrayList<String> strings) {
+//        boolean toRemove = false;
+//        for (int i = strings.size() - 1; i >= 0; i--) {
+//            toRemove=false;
+//            if (strings.get(i).contains("р") && !strings.get(i).contains("л")) {
+//                toRemove = true; //strings.remove(i);
+//            }
+//            if (strings.get(i).contains("л") && !strings.get(i).contains("р")) {
+//                strings.add(strings.get(i));
+//            }
+//            if (toRemove) strings.remove(i);
+//        }
+//        return strings;
+//    }
+//}
+
+//}  public static ArrayList<String> fix(ArrayList<String> strings) {
+//        boolean toRemove = false;
+//        for (int i = strings.size()-1; i >= 0; i--) {
+//            if (strings.get(i).contains("р") && strings.get(i).contains("л")) {
+//
+//            } else {
+//                if (strings.get(i).contains("р")) {
+//                    toRemove=true;
+//                }
+//                if (strings.get(i).contains("л")) {
+//                    strings.add( strings.get(i));
+//                }
+//                if (toRemove) strings.remove(i);
+//            }
+//        }
+//        return strings;
+//    }
+//
+//}
+//package com.javarush.task.task07.task0709;
+//
+//import java.io.BufferedReader;
+//import java.io.InputStreamReader;
+//import java.util.ArrayList;
+//
+///*
+//Выражаемся покороче
+//*/
+//
+//public class Solution {
+//    public static void main(String[] args) throws Exception {
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        ArrayList<String> str = new ArrayList<>();
+//        str.add(reader.readLine());
+//        int shortestString = str.get(0).length();
+//        for (int i = 1; i < 5; i++) {
+//            str.add(reader.readLine());
+//            if (str.get(i).length() < shortestString) {
+//                shortestString = str.get(i).length();
+//            }
+//        }
+//        for (String s : str) {
+//            if (s.length() == shortestString) {
+//                System.out.println(s);
+//            }
+//        }
+//    }
+//}
 
 
 ////package com.javarush.task.task07.task0715;
