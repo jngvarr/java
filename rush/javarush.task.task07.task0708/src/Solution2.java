@@ -1,33 +1,52 @@
-package com.javarush.task.task07.task0709;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+//Переставь один модификатор static, чтобы пример скомпилировался.
+//package com.javarush.task.task07.task0725;
 
 /*
-Выражаемся покороче
+Переставь один модификатор static
 */
 
-public class Solution2 {
-    public static void main(String[] args) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        ArrayList<String> str = new ArrayList<>();
-        str.add(reader.readLine());
-        int shortestString = str.get(0).length();
-        for (int i = 1; i < 5; i++) {
-            str.add(reader.readLine());
-            if (str.get(i).length() < shortestString) {
-                shortestString = str.get(i).length();
-            }
-        }
-        for (String s : str) {
-            if (s.length() == shortestString) {
-                System.out.println(s);
-            }
-        }
-    }
-}
-
+//public class Solution {
+//    public final static int A = 5;
+//    public final static int B = 2;
+//    public final static int C = A * B;
+//
+//    public void main(String[] args) {
+//    }
+//
+//    public static int getValue() {
+//        return C;
+//    }
+//}
+//package com.javarush.task.task07.task0709;
+//
+//import java.io.BufferedReader;
+//import java.io.InputStreamReader;
+//import java.util.ArrayList;
+//
+///*
+//Выражаемся покороче
+//*/
+//
+//public class Solution2 {
+//    public static void main(String[] args) throws Exception {
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        ArrayList<String> str = new ArrayList<>();
+//        str.add(reader.readLine());
+//        int shortestString = str.get(0).length();
+//        for (int i = 1; i < 5; i++) {
+//            str.add(reader.readLine());
+//            if (str.get(i).length() < shortestString) {
+//                shortestString = str.get(i).length();
+//            }
+//        }
+//        for (String s : str) {
+//            if (s.length() == shortestString) {
+//                System.out.println(s);
+//            }
+//        }
+//    }
+//}
+//
 
 ////package com.javarush.task.task07.task0715;
 //
