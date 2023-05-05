@@ -118,7 +118,10 @@ public class Store {
                 "stitch", 6,
                 "teddybear", 7,
                 "chess", 8,
-                "constructor", 9
+                "constructor", 9,
+                "monopoly", 10,
+                "rpg", 11,
+                "helicopter", 12
         );
     }
         switch(str.toLowerCase())
