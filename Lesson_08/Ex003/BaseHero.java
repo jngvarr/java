@@ -27,8 +27,7 @@ public abstract class BaseHero {
     }
 
     public String getInfo() {
-        return String.format("Name: %s  Hp: %d  Type: %s",
-                this.name, this.hp, this.getClass().getSimpleName());
+        return String.format("Name: %s  Hp: %d  Type: %s", this.name, this.hp, this.getClass().getSimpleName());
     }
 
     protected void healed(int Hp) {

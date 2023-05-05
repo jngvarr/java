@@ -1,0 +1,21 @@
+Заполнение словаря значениями из списка и подсчет повторений:
+        for(Toy t:store){
+            if(map.containsKey(t.title))map.put(t.title,map.get(t.title)+1);
+        else map.put(t.title,1);
+        }
+Распечатка словаря:
+        for(Map.Entry<String, Integer> pair:map.entrySet()){
+            System.out.println(pair.getKey()+" : "+ pair.getValue());
+        }
+
+Создание сета из списка и распечатка уникальных значений:
+        Set<String> set = new LinkedHashSet<>();
+        for (Toy t : list) {
+            set.add(t.title);
+        }
+        for (int i = 0; i < set.size(); i++) {
+            System.out.println(i + ". " + set.iterator());
+        }
+        for (Iterator<String> iter = set.iterator(); iter.hasNext(); ) {
+            System.out.println(iter.next());
+        }

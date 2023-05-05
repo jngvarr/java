@@ -9,11 +9,12 @@ import java.io.File;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        String path = "c:\\Users\\Jngvarr\\gb\\java\\ToyShop\\Toystore\\toysList.csv";
+        String path = "i:\\gb\\ToyShop\\Toystore\\toysList.csv";
         OutputStream outStream = new FileOutputStream(path);
         List<Toy> toysList;
         Store store = new Store();
-        toysList = store.storeFilling();
+        toysList  = store.defaultStoreFilling(0);
+        toysList = store.manualStoreFilling(toysList);
         String titles = "N;ID;Title;\n";
         outStream.write(titles.getBytes(StandardCharsets.UTF_8));
         for (Toy toy : toysList) {
