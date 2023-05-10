@@ -21,15 +21,18 @@ import Toystore.Transport.Car.SpeedCar;
 import Toystore.Transport.Vessel.Boat;
 import Toystore.Transport.Vessel.SpeedBoat;
 import Toystore.Transport.Vessel.Submarine;
+import com.sun.jdi.Value;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Store {
     List<Toy> store = new ArrayList<>();
-    Map<String, Integer> map = new HashMap();
+    Map<String, Integer> map = new HashMap<>();
     Random r = new Random();
 
     public List<Toy> defaultStoreFilling(int quantity) {
@@ -107,56 +110,52 @@ public class Store {
         }
     }
 
-    public int toyNumber(String str) {
-        Map<String, Integer> map = Map.of(
-                "barbie", 0,
-                "lol", 1,
-                "monsterhigh", 2,
-                "rfrobot", 3,
-                "simplerobot", 4,
-                "kitty", 5,
-                "stitch", 6,
-                "teddybear", 7,
-                "chess", 8,
-                "constructor", 9,
-                "monopoly", 10,
-                "rpg", 11,
-                "helicopter", 12
-        );
+    public Map<String, Integer> toyNumberByTitle() {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("barbie", 0);
+        map.put("lol", 1);
+        map.put("monsterhigh", 2);
+        map.put("rfrobot", 3);
+        map.put("simplerobot", 4);
+        map.put("kitty", 5);
+        map.put("stitch", 6);
+        map.put("teddybear", 7);
+        map.put("chess", 8);
+        map.put("constructor", 9);
+        map.put("monopoly", 10);
+        map.put("rpg", 11);
+        map.put("helicopter", 12);
+        map.put("plane", 13);
+        map.put("quadcopter", 14);
+        map.put("boat", 15);
+        map.put("rfcar", 16);
+        map.put("specialservicecar", 17);
+        map.put("speedcar", 18);
+        map.put("speedboat", 19);
+        map.put("submarine", 20);
+        return map;
     }
-        switch(str.toLowerCase())
-
-
-                "plane", 13,
-                "quadcopter", 14,
-                "boat", 15,
-                "rfcar", 16,
-                "specialservicecar", 17,
-                "speedcar", 18,
-                "speedboat", 19,
-                "submarine", 20
-
-//        public List<Toy> prizeFound ( int prizePercent){
-//            return null;
-//        }
-
 
     public List<Toy> manualStoreFilling(List<Toy> list) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         printToysSet(list);
         boolean end = false;
         String qq;
+        Map toyDict = toyNumberByTitle();
+        printTitles(toyDict);
         while (!end) {
             System.out.println("(For END type \"exit\")");
-            System.out.print("\nType toys type to add: > ");
+            System.out.print("Type toys type to add: > ");
             qq = reader.readLine();
-            if (!qq.equals("exit")) {
+            if (!qq.equalsIgnoreCase("exit") && toyDict.containsKey(qq.toLowerCase())) {
                 System.out.print("Type quantity toys to add: > ");
                 int quantityToAdd = Integer.parseInt(reader.readLine());
                 for (int i = 0; i < quantityToAdd; i++) {
-                    filler(this.toyNumber(qq));
+                    filler((Integer) toyDict.get(qq.toLowerCase()));
                 }
-            } else end = true;
+            } else if (qq.equalsIgnoreCase("exit")) end = true;
+            else if (!toyDict.containsKey(qq.toLowerCase()) && !qq.equalsIgnoreCase("exit"))
+                System.out.println("Wrong input");
         }
         return store;
     }
@@ -166,11 +165,63 @@ public class Store {
         for (Toy t : list) {
             set.add(t.title);
         }
-        for (int i = 0; i < set.size(); i++) {
-            System.out.println(i + ". " + set.iterator());
-        }
+//        for (int i = 0; i < set.size(); i++) {
+//            System.out.println(i + ". " + set.iterator());
+//        }
         for (Iterator<String> iter = set.iterator(); iter.hasNext(); ) {
             System.out.println(iter.next());
         }
+    }
+
+    public void printTitles(Map<String, Integer> map) {
+        for (String key : map.keySet()) {
+            System.out.println(key.substring(0, 1).toUpperCase() + key.substring(1));
+        }
+    }
+
+    public List<String[]> prizeFundForming(short percent, List<String[]> list, Map<String, Integer> map) {
+        List<String[]> tempList = new ArrayList<>();
+        List<String[]> resultList = new ArrayList<>();
+        for (Map.Entry<String, Integer> key : map.entrySet()) {
+            for (String[] s : list) {
+                tempList.clear();
+                if (key.getKey().equals(s[2])) {
+                    tempList.add(s);
+                }
+            }
+            for (int i = 0; i < tempList.size() / percent; i++) {
+                resultList.add(tempList.get((int) (Math.random() * tempList.size())));
+            }//           if ( (int) Math.random()*100
+        }
+        return resultList;
+    }
+
+
+    public List<String[]> readDataFromFile(String path) {
+        List<String[]> list = new ArrayList<String[]>();
+        try (Scanner sc = new Scanner(new File(path), StandardCharsets.UTF_8)) {
+            while (sc.hasNextLine()) {
+                list.add(sc.nextLine().split(";"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        List<String[]> sublist = list.subList(1, list.size()); Collections.sort(sublist);
+//        Collections.sort(list.subList(1, list.size()));
+        return list;
+    }
+
+    public Map<String, Integer> printToysByTitle(List<String[]> list) {
+        Map<String, Integer> countToysByTitle = new HashMap<>();
+        for (String[] s : list) {
+            if (countToysByTitle.containsKey(s[2])) countToysByTitle.put(s[2], countToysByTitle.get(s[2]) + 1);
+            else countToysByTitle.put(s[2], 1);
+        }
+        for (Map.Entry<String, Integer> pair : countToysByTitle.entrySet()) {
+            if (!pair.getKey().equalsIgnoreCase("Title"))
+                System.out.println(pair.getKey() + " : " + pair.getValue());
+            else countToysByTitle.remove(pair);
+        }
+        return countToysByTitle;
     }
 }

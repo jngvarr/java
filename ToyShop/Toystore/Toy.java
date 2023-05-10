@@ -8,6 +8,7 @@ public abstract class Toy {
     protected String ID;
     protected String title;
     protected static int number;
+    protected double weight;
 
     public Toy() {
         this.ID = String.format("#%s", ++Toy.number);
@@ -17,5 +18,12 @@ public abstract class Toy {
     public Toy(String ID, String title) {
         this.ID = ID;
         this.title = title;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+    public void setWeight(int weight){
+        this.weight=weight;
     }
 }

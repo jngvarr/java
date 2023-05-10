@@ -22,8 +22,7 @@ public class BaseHero {
     }
 
     public BaseHero() {
-        this(String.format("Hero_Priest #%d", ++BaseHero.number),
-                BaseHero.r.nextInt(100, 200));
+        this(String.format("Hero_Priest #%d", ++BaseHero.number), BaseHero.r.nextInt(100, 200));
     }
 
     public String getInfo() {
