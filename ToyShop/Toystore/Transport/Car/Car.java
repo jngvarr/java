@@ -9,6 +9,7 @@ public abstract class Car extends Toy implements CanDrive {
 
     public Car() {
         this.ID = super.ID + "-C" + ++carNumber;
+        this.weight=60;
     }
 
     @Override

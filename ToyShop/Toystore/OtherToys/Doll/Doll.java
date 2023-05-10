@@ -7,5 +7,6 @@ public abstract class Doll extends Toy {
 
     public Doll() {
         this.ID = super.ID + "-D" + ++dollNumber;
+        this.weight=40;
     }
 }

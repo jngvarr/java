@@ -23,10 +23,7 @@ import Toystore.Transport.Vessel.SpeedBoat;
 import Toystore.Transport.Vessel.Submarine;
 import com.sun.jdi.Value;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -183,22 +180,23 @@ public class Store {
         List<String[]> tempList = new ArrayList<>();
         List<String[]> resultList = new ArrayList<>();
         for (Map.Entry<String, Integer> key : map.entrySet()) {
+            tempList.clear();
             for (String[] s : list) {
-                tempList.clear();
                 if (key.getKey().equals(s[2])) {
                     tempList.add(s);
                 }
             }
-            for (int i = 0; i < tempList.size() / percent; i++) {
-                resultList.add(tempList.get((int) (Math.random() * tempList.size())));
-            }//           if ( (int) Math.random()*100
+            for (int i = 0; i < Math.round(tempList.size() * percent / 100.0); i++) {
+                String[] toyToPrizeFund = tempList.get(r.nextInt(tempList.size()));
+                tempList.remove(toyToPrizeFund);
+                resultList.add(toyToPrizeFund);
+            }
         }
         return resultList;
     }
 
-
     public List<String[]> readDataFromFile(String path) {
-        List<String[]> list = new ArrayList<String[]>();
+        List<String[]> list = new ArrayList<>();
         try (Scanner sc = new Scanner(new File(path), StandardCharsets.UTF_8)) {
             while (sc.hasNextLine()) {
                 list.add(sc.nextLine().split(";"));
@@ -206,9 +204,28 @@ public class Store {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        List<String[]> sublist = list.subList(1, list.size()); Collections.sort(sublist);
-//        Collections.sort(list.subList(1, list.size()));
         return list;
+    }
+
+    public void writeToyDataToFile(List<Toy> toysList, String path) throws IOException {
+        OutputStream outStream = new FileOutputStream(path);
+        String titles = "N;ID;Title;weight;\n";
+        outStream.write(titles.getBytes(StandardCharsets.UTF_8));
+        for (Toy toy : toysList) {
+            outStream.write((toy.ID.substring(toy.ID.indexOf("#") + 1, toy.ID.indexOf("-")) + ";" + toy.ID + ";"
+                    + toy.title + ";" + toy.getWeight() + ";" + ";\n").getBytes(StandardCharsets.UTF_8));
+        }
+        outStream.close();
+    }
+
+    public void writeDataToFile(List<String[]> toysList, String path) throws IOException {
+        OutputStream outStream = new FileOutputStream(path);
+        String titles = "N;ID;Title;weight;\n";
+        outStream.write(titles.getBytes(StandardCharsets.UTF_8));
+        for (String[] toy : toysList) {
+            outStream.write((toy[0] + ";" + toy[1] + ";" + toy[2] + ";" + toy[3] + ";\n").getBytes(StandardCharsets.UTF_8));
+        }
+        outStream.close();
     }
 
     public Map<String, Integer> printToysByTitle(List<String[]> list) {
@@ -223,5 +240,18 @@ public class Store {
             else countToysByTitle.remove(pair);
         }
         return countToysByTitle;
+    }
+
+    public void raffle(List<String[]> list) {
+        List<String[]> prizes = new ArrayList<>();
+        for (String[] string : list) {
+            int rand = r.nextInt(100);
+            if (rand > Integer.parseInt(string[3])) {
+                prizes.add(string);
+            }
+        }
+        for (String[] st : prizes) {
+            System.out.println(st);
+        }
     }
 }

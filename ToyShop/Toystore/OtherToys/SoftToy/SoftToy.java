@@ -7,5 +7,6 @@ public abstract class SoftToy extends Toy {
 
     public SoftToy() {
         this.ID = super.ID + "-ST" + ++softNumber;
+        this.weight=30;
     }
 }

@@ -4,6 +4,7 @@ import Toystore.Interfaces.RFControl;
 import Toystore.Interfaces.Speed;
 
 public class SpeedBoat extends Vessel implements RFControl, Speed {
+    private int weight = 85;
     @Override
     public void rfControl() {
         System.out.println("i`m rf-controlled speedboat");
