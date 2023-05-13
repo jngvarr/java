@@ -21,7 +21,6 @@ import Toystore.Transport.Car.SpeedCar;
 import Toystore.Transport.Vessel.Boat;
 import Toystore.Transport.Vessel.SpeedBoat;
 import Toystore.Transport.Vessel.Submarine;
-import com.sun.jdi.Value;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -106,7 +105,20 @@ public class Store {
                 break;
         }
     }
+    public void weightChanger (String type, int newWeight) {
+        switch (type.toLowerCase()) {
+            case "barbie":
+                Barbie.weight=newWeight;
+                break;
+            case "lol":
+                LOL.weight = newWeight;
+                break;
+                case "monsterhigh":
+                MonsterHigh.weight = newWeight;
+                break;
 
+        }
+    }
     public Map<String, Integer> toyNumberByTitle() {
         Map<String, Integer> map = new HashMap<>();
         map.put("barbie", 0);
@@ -192,6 +204,13 @@ public class Store {
                 resultList.add(toyToPrizeFund);
             }
         }
+        Comparator<String[]> comparator = new Comparator<String[]>() {
+            @Override
+            public int compare(String[] o1, String[] o2) {
+                return Integer.compare(Integer.parseInt(o1[0]), Integer.parseInt(o2[0]));
+            }
+        };
+        resultList.sort(comparator);
         return resultList;
     }
 
@@ -209,7 +228,7 @@ public class Store {
 
     public void writeToyDataToFile(List<Toy> toysList, String path) throws IOException {
         OutputStream outStream = new FileOutputStream(path);
-        String titles = "N;ID;Title;weight;\n";
+        String titles = "N;ID;Title;Weight;\n";
         outStream.write(titles.getBytes(StandardCharsets.UTF_8));
         for (Toy toy : toysList) {
             outStream.write((toy.ID.substring(toy.ID.indexOf("#") + 1, toy.ID.indexOf("-")) + ";" + toy.ID + ";"
@@ -220,7 +239,7 @@ public class Store {
 
     public void writeDataToFile(List<String[]> toysList, String path) throws IOException {
         OutputStream outStream = new FileOutputStream(path);
-        String titles = "N;ID;Title;weight;\n";
+        String titles = "N;ID;Title;Weight;\n";
         outStream.write(titles.getBytes(StandardCharsets.UTF_8));
         for (String[] toy : toysList) {
             outStream.write((toy[0] + ";" + toy[1] + ";" + toy[2] + ";" + toy[3] + ";\n").getBytes(StandardCharsets.UTF_8));
@@ -242,16 +261,45 @@ public class Store {
         return countToysByTitle;
     }
 
-    public void raffle(List<String[]> list) {
+    public void setWeight(List<String[]> list) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        boolean end = false;
+        Map toyDict = toyNumberByTitle();
+        String qq;
+        Map<String, Integer> toysWeights = new HashMap<>();
+        list.remove(0);
+        for (String[] s : list) {
+            toysWeights.put(s[2], Integer.parseInt(s[3]));
+        }
+        for (Map.Entry<String, Integer> pair : toysWeights.entrySet()) {
+            System.out.println(pair.getKey() + "'s weight is: " + pair.getValue() + ".");
+        }
+        while (!end) {
+            System.out.println("(For END type \"exit\")");
+            System.out.print("Type toys type to change weight: > ");
+            qq = reader.readLine();
+            if (!qq.equalsIgnoreCase("exit") && toyDict.containsKey(qq.toLowerCase())) {
+                System.out.print("Type new value of weight: > ");
+                int newWeight = Integer.parseInt(reader.readLine());
+            } else if (qq.equalsIgnoreCase("exit")) end = true;
+            else if (!toyDict.containsKey(qq.toLowerCase()) && !qq.equalsIgnoreCase("exit"))
+                System.out.println("Wrong input");
+        }
+    }
+
+    public List<List<String[]>> raffle(List<String[]> prizeFundlist, List<String[]> wholeStore) {
         List<String[]> prizes = new ArrayList<>();
-        for (String[] string : list) {
+        List<String[]> listCopy = new ArrayList<>(prizeFundlist);
+        for (String[] string : listCopy) {
             int rand = r.nextInt(100);
             if (rand > Integer.parseInt(string[3])) {
+                prizeFundlist.remove(string);
                 prizes.add(string);
+                wholeStore.remove(string);
+
             }
         }
-        for (String[] st : prizes) {
-            System.out.println(st);
-        }
+        wholeStore.remove(0);
+        return List.of(prizes, wholeStore);
     }
 }
