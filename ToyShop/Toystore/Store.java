@@ -105,20 +105,75 @@ public class Store {
                 break;
         }
     }
-    public void weightChanger (String type, int newWeight) {
+
+    public void weightChanger(String type, int newWeight) {
         switch (type.toLowerCase()) {
             case "barbie":
-                Barbie.weight=newWeight;
+                Barbie.weight = newWeight;
                 break;
             case "lol":
                 LOL.weight = newWeight;
                 break;
-                case "monsterhigh":
+            case "monsterhigh":
                 MonsterHigh.weight = newWeight;
                 break;
-
+            case "rfrobot":
+                RF_Robot.weight = newWeight;
+                break;
+            case "simplerobot":
+                SimpleRobot.weight = newWeight;
+                break;
+            case "kitty":
+                Kitty.weight = newWeight;
+                break;
+            case "stitch":
+                Stitch.weight = newWeight;
+                break;
+            case "teddybear":
+                TeddyBear.weight = newWeight;
+                break;
+            case "chess":
+                Chess.weight = newWeight;
+                break;
+            case "constructor":
+                Constructor.weight = newWeight;
+                break;
+            case "monopoly":
+                Monopoly.weight = newWeight;
+                break;
+            case "rpg":
+                RPG.weight = newWeight;
+                break;
+            case "helicopter":
+                Helicopter.weight = newWeight;
+                break;
+            case "plane":
+                Plane.weight = newWeight;
+                break;
+            case "quadcopter":
+                Quadcopter.weight = newWeight;
+                break;
+            case "boat":
+                Boat.weight = newWeight;
+                break;
+            case "rfcar":
+                RFCar.weight = newWeight;
+                break;
+            case "specialservicecar":
+                SpecialServiceCar.weight = newWeight;
+                break;
+            case "speedcar":
+                SpeedCar.weight = newWeight;
+                break;
+            case "speedboat":
+                SpeedBoat.weight = newWeight;
+                break;
+            case "submarine":
+                Submarine.weight = newWeight;
+                break;
         }
     }
+
     public Map<String, Integer> toyNumberByTitle() {
         Map<String, Integer> map = new HashMap<>();
         map.put("barbie", 0);
@@ -274,6 +329,7 @@ public class Store {
         for (Map.Entry<String, Integer> pair : toysWeights.entrySet()) {
             System.out.println(pair.getKey() + "'s weight is: " + pair.getValue() + ".");
         }
+        System.out.println("_____________________________________________________________________________________");
         while (!end) {
             System.out.println("(For END type \"exit\")");
             System.out.print("Type toys type to change weight: > ");
