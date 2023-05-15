@@ -12,13 +12,11 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) throws IOException {
         Menu menu = new Menu();
+        Store store = new Store();
         menu.menuPrint();
         List<Toy> toysList = new ArrayList<>();
-        menu.subMenu(toysList);
+        toysList = menu.subMenu(toysList);
        /* String path = System.getProperty("user.dir") + "\\toysList.csv";
-        Store store = new Store();
-        toysList = store.defaultStoreFilling(1000);
-//        toysList = store.manualStoreFilling(toysList);
         store.writeToyDataToFile(toysList, path);
 
         List<String[]> toysStorelist = store.readDataFromFile(path);                 // Список всех игрушек в магазине

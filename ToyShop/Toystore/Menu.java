@@ -42,7 +42,8 @@ public class Menu {
             if (manualAdd()) {
                 System.out.println("-----------------------------------------------------------------------------------------");
                 System.out.println("Chose toys type to add: ");
-                System.out.println("-----------------------------------------------------------------------------------------");store.manualStoreFilling(toysList);}
+                System.out.println("-----------------------------------------------------------------------------------------");
+                store.manualStoreFilling(toysList);}
         } else if (choose.equalsIgnoreCase("2")) {
             System.out.println("-------------------------------------------------------------------------------------");
             System.out.println("Chose type of toy which yuo want to add:");
@@ -50,7 +51,7 @@ public class Menu {
             store.manualStoreFilling(toysList);
         }
         System.out.println("-----------------------------------------------------------------------------------------");
-        System.out.println("Done!\nList of toys is ready.");
+        System.out.println("List of toys is ready. Let`s start the raffle.\n What percentage of toys is involved");
         return toysList;
     }
 }
