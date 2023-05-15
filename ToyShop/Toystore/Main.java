@@ -11,8 +11,11 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        String path = System.getProperty("user.dir") + "\\toysList.csv";
-        List<Toy> toysList;
+        Menu menu = new Menu();
+        menu.menuPrint();
+        List<Toy> toysList = new ArrayList<>();
+        menu.subMenu(toysList);
+       /* String path = System.getProperty("user.dir") + "\\toysList.csv";
         Store store = new Store();
         toysList = store.defaultStoreFilling(1000);
 //        toysList = store.manualStoreFilling(toysList);
@@ -28,7 +31,7 @@ public class Main {
         Map<String, Integer> prizeToysByTitle = store.printToysByTitle(prizeFundList);                         // Количество призов по видам
         path = System.getProperty("user.dir") + "\\prizeFund.csv";
         store.writeDataToFile(prizeFundList, path);
-        store.raffle(prizeFundList);
+        store.raffle(prizeFundList);*/
 
     }
 }

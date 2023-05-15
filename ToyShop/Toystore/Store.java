@@ -23,6 +23,7 @@ import Toystore.Transport.Vessel.SpeedBoat;
 import Toystore.Transport.Vessel.Submarine;
 import com.sun.jdi.Value;
 
+import javax.sound.midi.Soundbank;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -135,7 +136,6 @@ public class Store {
 
     public List<Toy> manualStoreFilling(List<Toy> list) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        printToysSet(list);
         boolean end = false;
         String qq;
         Map toyDict = toyNumberByTitle();
