@@ -18,26 +18,24 @@ public class Model {
         }
     }
 
-    public Map<String, Integer> printToysByTitle(List<String[]> list) {
+    public Map<String, Integer> listToMapTitle(List<String[]> list) {
         Map<String, Integer> countToysByTitle = new HashMap<>();
         for (String[] s : list) {
             if (countToysByTitle.containsKey(s[2])) countToysByTitle.put(s[2], countToysByTitle.get(s[2]) + 1);
             else countToysByTitle.put(s[2], 1);
         }
-        for (Map.Entry<String, Integer> pair : countToysByTitle.entrySet()) {
-            if (!pair.getKey().equalsIgnoreCase("Title"))
-                System.out.println(pair.getKey() + " : " + pair.getValue());
-            else countToysByTitle.remove(pair);
-        }
-        System.out.println("-----------------------------------------------------------------------------");
         return countToysByTitle;
     }
-    Comparator<String[]> stringArrComparator = new Comparator<String[]>() {
-        @Override
-        public int compare(String[] o1, String[] o2) {
-            return Integer.compare(Integer.parseInt(o1[0]), Integer.parseInt(o2[0]));
+    public void printToysByTitle(Map <String, Integer>mapToys) {
+
+        for (Map.Entry<String, Integer> pair : mapToys.entrySet()) {
+            if (!pair.getKey().equalsIgnoreCase("Title"))
+                System.out.println(pair.getKey() + " : " + pair.getValue());
+            else mapToys.remove(pair);
         }
-    };
+        System.out.println("-------------------------------------------------------------------------");
+    }
+    Comparator<String[]> stringArrComparator = Comparator.comparingInt(o -> Integer.parseInt(o[0]));
     public List<String[]> readDataFromFile(String path) {
         List<String[]> list = new ArrayList<>();
         try (Scanner sc = new Scanner(new File(path), StandardCharsets.UTF_8)) {
