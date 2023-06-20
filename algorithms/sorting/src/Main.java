@@ -15,6 +15,7 @@ public class Main {
 
         for (int i = n / 2 - 1; i >= 0; i--) {
             heapify(arr, n, i);
+            printArray(arr);
         }
 
         for (int i = n - 1; i >= 0; i--) {
