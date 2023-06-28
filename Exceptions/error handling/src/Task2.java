@@ -18,7 +18,7 @@ public class Task2 {
             }
             return resultArr;
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("При исполнении кода возникло исключение ArrayIndexOutOfBoundsException: " + e.getMessage());
+            System.out.println("При исполнении кода возникло исключение " + e.getClass().getSimpleName() + ":" + e.getMessage());
             return null;
         }
     }
