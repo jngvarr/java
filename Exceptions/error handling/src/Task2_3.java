@@ -3,7 +3,7 @@ import java.io.FileNotFoundException;
 //    Задание 3
 //    Если необходимо, исправьте код:
 public class Task2_3 {
-    public static void main(String[] args) { //throws Exception -  main не кидает исключения, все исключения обработаны
+    public static void main(String[] args) { //throws Exception -  main не кидает исключения, да и все исключения уже обработаны
         try {
             int a = 90;
             int b = 3;
