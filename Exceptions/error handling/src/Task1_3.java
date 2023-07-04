@@ -5,7 +5,7 @@
 
 import java.util.Arrays;
 
-public class Task3 {
+public class Task1_3 {
     public static void main(String[] args) {
         int[] arr1 = {4, 7, 9};
         int[] arr2 = {2, 3, 2, 6};

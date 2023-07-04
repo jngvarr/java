@@ -1,7 +1,7 @@
 // Реализуйте 3 метода, чтобы в каждом из них получить разные исключения
 
 import java.util.Arrays;
-public class Task1 {
+public class Task1_1 {
     public static void main(String[] args) {
         // ArithmeticException
         div(9, 6);

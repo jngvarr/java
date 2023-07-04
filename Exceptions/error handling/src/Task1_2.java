@@ -3,7 +3,7 @@ import java.util.Arrays;
 // Реализуйте метод, принимающий в качестве аргументов два целочисленных массива, и возвращающий новый массив,
 // каждый элемент которого равен разности элементов двух входящих массивов в той же ячейке.
 // Если длины массивов не равны, необходимо как-то оповестить пользователя.
-public class Task2 {
+public class Task1_2 {
     public static void main(String[] args) {
         int[] arr1 = {4, 7, 9};
         int[] arr2 = {5, 8, 2, 9};
@@ -18,7 +18,7 @@ public class Task2 {
             }
             return resultArr;
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("При исполнении кода возникло исключение ArrayIndexOutOfBoundsException: " + e.getMessage());
+            System.out.println("При исполнении кода возникло исключение " + e.getClass().getSimpleName() + ":" + e.getMessage());
             return null;
         }
     }
