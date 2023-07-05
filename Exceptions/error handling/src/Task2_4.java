@@ -15,6 +15,7 @@ public class Task2_4 {
         if (sc.nextLine().equals("")) {
             throw new EmptyStringException("Ввод пустой строки недопустим!");
         }
+ //System.arraycopy(element, 0, temp, 0, element.length);
     }
 }
 
