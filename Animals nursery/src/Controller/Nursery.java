@@ -15,13 +15,12 @@ import static java.sql.DriverManager.getConnection;
 
 
 public class Nursery {
-//    public AnimalController roller;
     private Statement sqlStatement;
     private ResultSet resultSet;
     private String SQLQuery;
     Animals animal;
 
-    public List<Animals> getAll() throws SQLException, ClassNotFoundException, IOException {
+    public List<Animals> getAll() throws IOException {
         List<Animals> list = new ArrayList<>();
         AnimalController controller = new AnimalController();
         try {
@@ -29,7 +28,7 @@ public class Nursery {
             try (Connection connect = getConnection()) {
                 {
                     sqlStatement = connect.createStatement();
-                    SQLQuery = "SELECT * FROM all_animals ORDER BY Id";
+                    SQLQuery = "select * from all_animals;";
                     resultSet = sqlStatement.executeQuery(SQLQuery);
 
                     while (resultSet.next()) {
@@ -43,26 +42,101 @@ public class Nursery {
                     }
                 }
             }
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
         }
         return list;
     }
 
-    public static Connection getConnection() throws SQLException {
+    public void addAnimal(Animals animal) {
+        AnimalController controller = new AnimalController();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = "insert all_animals (Name, day_of_birth, commands, friends_name) \n" +
+                            String.format("Values('%s', '%s', '%s' , '%s');", animal.getName(), animal.getDayOfBirth(), animal.getCommands(), animal.getType());
+                    sqlStatement.executeUpdate(SQLQuery);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public void updateData(String[] newData, String id) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = String.format("Update all_animals SET Name = '%s', day_of_birth = '%s', commands = '%s', friends_name  = '%s' where id = '%s'",
+                            newData[0], newData[1], newData[2], newData[3], id);
+                    sqlStatement.executeUpdate(SQLQuery);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String getCommands(String id) {
+        String commands = "";
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = String.format("Select commands From all_animals WHERE id = '%s'", id);
+                    resultSet = sqlStatement.executeQuery(SQLQuery);
+                    while (resultSet.next()) {
+                        commands += resultSet.getString(1) + " ";
+                    }
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+        }
+        return commands;
+    }
+
+    public void deleteAnimal(String id) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = String.format("DELETE from all_animals where id = '%s';", id);
+                    sqlStatement.executeUpdate(SQLQuery);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void trainAnimal(String commands, String id) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = String.format("UPDATE all_animals SET commands = '%s' where id = '%s';", commands, id);
+                    sqlStatement.executeUpdate(SQLQuery);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
         Properties properties = new Properties();
         try (FileInputStream fileInputStream = new FileInputStream("src/Sources/connection.properties")) {
-
             properties.load(fileInputStream);
             String url = properties.getProperty("url");
             String username = properties.getProperty("user");
             String password = properties.getProperty("password");
-//.setAllowPublicKeyRetrieval(true);
             return DriverManager.getConnection(url, username, password);
         } catch (IOException e) {
             throw new RuntimeException(e);

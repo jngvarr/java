@@ -35,16 +35,16 @@ public class UserMenu {
                     menuController.addNewAnimal();
                     break;
                 case "3":
-                    //animalController.updateAnimalData();
+                    menuController.updateAnimalData();
                     break;
                 case "4":
-                    //animalController.animalsCommands();
+                    menuController.getAnimalsCommands();
                     break;
                 case "5":
-                    //animalController.training();
+                    menuController.trainAnimal();
                     break;
                 case "6":
-                   // animalController.deleteAnimal();
+                    menuController.deleteAnimal();
                     break;
                 case "0":
                     end = true;
@@ -56,9 +56,9 @@ public class UserMenu {
     public AnimalType animalTypeChoice() throws IOException, SQLException, ClassNotFoundException {
         AnimalType type = null;
         Scanner sc = new Scanner(System.in);
-        System.out.println("Какое животное добавляем: \n" +
-                "1 - Добавить домашнее животное.\n" +
-                "2 - Добавить вьючное животное.\n" +
+        System.out.println("Выберите тип животного: \n" +
+                "1 - Домашнее животное.\n" +
+                "2 - Вьючное животное.\n" +
                 "0 - Возврат в предыдущее меню. )");
         String choice;
         boolean end = false;
@@ -79,10 +79,10 @@ public class UserMenu {
         String choice;
         switch (type) {
             case HOME -> {
-                System.out.println("Какое животное добавить: \n" +
-                        "1 - Добавить кошку.\n" +
-                        "2 - Добавить собаку.\n" +
-                        "3 - Добавить хомяка.\n" +
+                System.out.println("Выберите животное: \n" +
+                        "1 - Кошка.\n" +
+                        "2 - Собака.\n" +
+                        "3 - Хомяк.\n" +
                         "0 - Возврат в предыдущее меню. ");
                 choice = sc.next();
                 switch (choice) {
@@ -97,10 +97,10 @@ public class UserMenu {
                 }
             }
             case PACK -> {
-                System.out.println("Какое животное добавить: \n" +
-                        "1 - Добавить верблюда.\n" +
-                        "2 - Добавить осла.\n" +
-                        "3 - Добавить лошадь.\n" +
+                System.out.println("Выберите животное: \n" +
+                        "1 - Верблюд.\n" +
+                        "2 - Осёл.\n" +
+                        "3 - Лошадь.\n" +
                         "0 - Возврат в предыдущее меню. ");
                 choice = sc.next();
                 switch (choice) {

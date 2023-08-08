@@ -1,6 +1,7 @@
 package Controller;
 
 import Model.*;
+import View.UserMenu;
 import View.ViewConsole;
 
 import java.io.IOException;
@@ -12,8 +13,8 @@ public class AnimalController {
     RegistryController registryController = new RegistryController();
     Validator validator = new Validator();
     Nursery nursery = new Nursery();
+    UserMenu mainMenu = new UserMenu();
     ViewConsole viewConsole = new ViewConsole();
-
 
     public Animals createAnimal(String id, String name, String day_of_birth, String commands, String type) throws IOException {
         Animals animal = null;
@@ -42,22 +43,11 @@ public class AnimalController {
         return animal;
     }
 
-    public void updateAnimalData() throws IOException {
-        Scanner sc = new Scanner(System.in);
-        try {
-            getAllAnimals();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Введите номер записи для внесения изменений.");
-        int noteNum = Integer.parseInt(sc.next());
-        if (validator.signIsNotDeleted(noteNum)) {
+    public void updateAnimalData() throws SQLException, IOException, ClassNotFoundException {
+        int noteNum = Integer.parseInt(viewConsole.getID());
             String[] newData = newAnimalData();
-            registryController.updateDB(newData, noteNum);
             System.out.println("Данные были изменены.");
-        }
+
     }
 
     public void deleteAnimal() throws IOException {
@@ -78,10 +68,9 @@ public class AnimalController {
         }
     }
 
-    public void getAllAnimals() throws SQLException, ClassNotFoundException, IOException {
-        List<Animals> animals;
-        animals = nursery.getAll();
-        viewConsole.printAll(animals);
+    public List<Animals> getAllAnimals() throws SQLException, ClassNotFoundException, IOException {
+        List<Animals> animals = nursery.getAll();
+        return animals;
     }
 
     public void animalsCommands() throws SQLException, ClassNotFoundException, IOException {
@@ -111,8 +100,9 @@ public class AnimalController {
         }
     }
 
-    public String[] newAnimalData() {
-        String[] animalData = new String[3];
+    public String[] newAnimalData() throws SQLException, IOException, ClassNotFoundException {
+        String[] animalData = new String[4];
+        animalData[3] = mainMenu.animalChoose(mainMenu.animalTypeChoice());
         animalData[0] = viewConsole.getName();
         while (!validator.dateFormatValidation(animalData[1] = viewConsole.getDay_of_birth())) {
         }
@@ -124,7 +114,7 @@ public class AnimalController {
         int lastNum = 0;
         List<Animals> list = nursery.getAll();
         if (!list.isEmpty()) lastNum = Integer.parseInt(list.get(list.size() - 1).getID());
-        System.out.println(Counter.getAnimalCount());
         return lastNum + 1;
     }
+
 }

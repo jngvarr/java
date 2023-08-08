@@ -37,6 +37,10 @@ public abstract class Animals {
         return commands;
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         return (ID + " " + name + " " + dayOfBirth + " " + commands + " " + type);
