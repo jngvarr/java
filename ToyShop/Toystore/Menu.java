@@ -69,7 +69,7 @@ public class Menu {
             "1", "Print the prize pool.",
             "2", "Print out the remaining toys.",
             "3", "Set prize pool percentage (default value: 20).", /* + Store.prizeFundPercent + ")."*/
-            "4", "Set toys weight (the able to be not drawn).",
+                "4", "Set toys weight (the able to be not drawn).",
             "5", "Raffle the prizes."
     );
 

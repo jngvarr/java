@@ -28,7 +28,7 @@ public class Main {
             if (hasDigit(arr[i]) || !Character.isUpperCase(arr[i].charAt(0)))
                 throw new FIOException("Неправильный формат ФИО!");
         }
-
+св
         for (String s : arr) {
             if (s.isEmpty()) throw new EmptyDataException("Введена пустая строка");
         }
