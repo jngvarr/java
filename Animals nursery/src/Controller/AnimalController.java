@@ -120,11 +120,11 @@ public class AnimalController {
         return animalData;
     }
 
-    public void setID() throws SQLException, IOException, ClassNotFoundException {
+    public int getID() throws SQLException, IOException, ClassNotFoundException {
         int lastNum = 0;
         List<Animals> list = nursery.getAll();
         if (!list.isEmpty()) lastNum = Integer.parseInt(list.get(list.size() - 1).getID());
-        System.out.println(lastNum);
         System.out.println(Counter.getAnimalCount());
+        return lastNum + 1;
     }
 }

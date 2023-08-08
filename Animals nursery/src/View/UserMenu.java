@@ -12,9 +12,8 @@ public class UserMenu {
 
     public void start() throws IOException, SQLException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
-        AnimalController animalController = new AnimalController();
         Nursery nursery = new Nursery();
-
+        MenuController menuController = new MenuController();
         boolean end = false;
 
         while (!end) {
@@ -30,19 +29,22 @@ public class UserMenu {
             String choice = sc.next();
             switch (choice) {
                 case "1":
-                    animalController.getAllAnimals();
+                    menuController.getAll();
                     break;
                 case "2":
-                    animalController.setID();
-                    //animalController.createAnimal(animalChoose(animalTypeChoice()), animalController.newAnimalData());
+                    menuController.addNewAnimal();
                     break;
-                case "3": animalController.updateAnimalData();
+                case "3":
+                    //animalController.updateAnimalData();
                     break;
-                case "4":animalController.animalsCommands();
+                case "4":
+                    //animalController.animalsCommands();
                     break;
-                case "5":animalController.training();
+                case "5":
+                    //animalController.training();
                     break;
-                case "6":animalController.deleteAnimal();
+                case "6":
+                   // animalController.deleteAnimal();
                     break;
                 case "0":
                     end = true;
@@ -51,7 +53,7 @@ public class UserMenu {
 
     }
 
-    private AnimalType animalTypeChoice() throws IOException {
+    public AnimalType animalTypeChoice() throws IOException, SQLException, ClassNotFoundException {
         AnimalType type = null;
         Scanner sc = new Scanner(System.in);
         System.out.println("Какое животное добавляем: \n" +
@@ -67,12 +69,12 @@ public class UserMenu {
                 type = AnimalType.getType(choice);
                 break;
             case "0":
-//                start();
+                start();
         }
         return type;
     }
 
-    private String animalChoose(AnimalType type) throws IOException {
+    public String animalChoose(AnimalType type) throws IOException, SQLException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
         String choice;
         switch (type) {
@@ -85,11 +87,11 @@ public class UserMenu {
                 choice = sc.next();
                 switch (choice) {
                     case "1":
-                        return "cat";
+                        return "Кошки";
                     case "2":
-                        return "dog";
+                        return "Собаки";
                     case "3":
-                        return "hamster";
+                        return "Хомяки";
                     case "0":
                         animalTypeChoice();
                 }
@@ -103,10 +105,11 @@ public class UserMenu {
                 choice = sc.next();
                 switch (choice) {
                     case "1":
-                        return "camel";
+                        return "Вербдюды";
                     case "2":
+                        return "Ослы";
                     case "3":
-                        return "horse";
+                        return "Лошади";
                     case "0":
                         animalTypeChoice();
                 }
