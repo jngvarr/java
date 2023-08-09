@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class UserMenu {
 
-    public void start() throws IOException, SQLException, ClassNotFoundException {
+    public void start() throws Exception {
         Scanner sc = new Scanner(System.in);
         MenuController menuController = new MenuController();
         boolean end = false;
@@ -52,7 +52,7 @@ public class UserMenu {
 
     }
 
-    public AnimalType animalTypeChoice() throws IOException, SQLException, ClassNotFoundException {
+    public AnimalType animalTypeChoice() throws Exception {
         AnimalType type = null;
         Scanner sc = new Scanner(System.in);
         System.out.println("Выберите тип животного: \n" +
@@ -73,7 +73,7 @@ public class UserMenu {
         return type;
     }
 
-    public String animalChoose(AnimalType type) throws IOException, SQLException, ClassNotFoundException {
+    public String animalChoose(AnimalType type) throws Exception {
         Scanner sc = new Scanner(System.in);
         String choice;
         switch (type) {

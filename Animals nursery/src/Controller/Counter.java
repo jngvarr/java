@@ -4,10 +4,12 @@ import Model.Animals;
 
 public class Counter implements AutoCloseable {
     static int animalCount;
+    boolean closed = false;
 
     static {
         animalCount = 0;
     }
+
     public void add() {
         animalCount++;
     }
@@ -19,5 +21,7 @@ public class Counter implements AutoCloseable {
     @Override
     public void close() throws Exception {
         System.out.println("Counter closed");
+        closed = true;
     }
+
 }

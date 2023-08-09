@@ -37,7 +37,7 @@ public class Nursery {
                     }
                 }
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return list;

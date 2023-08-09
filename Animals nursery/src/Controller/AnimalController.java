@@ -1,5 +1,7 @@
 package Controller;
 
+import Exceptions.UnclosedResourceException;
+import Exceptions.UncorrectedDataException;
 import Model.*;
 import View.UserMenu;
 import View.ViewConsole;
@@ -14,7 +16,7 @@ public class AnimalController {
     UserMenu mainMenu = new UserMenu();
     ViewConsole viewConsole = new ViewConsole();
 
-    public Animals createAnimal(String id, String name, String day_of_birth, String commands, String type) throws IOException {
+    public Animals createAnimal(String id, String name, String day_of_birth, String commands, String type) throws Exception {
         Animals animal = null;
         switch (type) {
             case "Кошки":
@@ -35,7 +37,14 @@ public class AnimalController {
             case "Лошади":
                 animal = new Horses(id, name, day_of_birth, commands, type);
         }
-        new Counter().add();
+        try (Counter counter = new Counter()) {
+            assert animal != null;
+            if (!animal.getName().isEmpty() && !animal.getDayOfBirth().isEmpty() && !animal.getCommands().isEmpty() && !animal.getType().isEmpty())
+                counter.add();
+            if (!counter.closed) throw new UnclosedResourceException("Ресурс не закрыт!");
+        } catch (UnclosedResourceException e) {
+            System.out.println(e.getMessage());
+        }
         return animal;
     }
 
@@ -44,7 +53,7 @@ public class AnimalController {
         return animals;
     }
 
-    public String[] newAnimalData() throws SQLException, IOException, ClassNotFoundException {
+    public String[] newAnimalData() throws Exception {
         String[] animalData = new String[4];
         animalData[3] = mainMenu.animalChoose(mainMenu.animalTypeChoice());
         animalData[0] = viewConsole.getName();
@@ -54,16 +63,24 @@ public class AnimalController {
         return animalData;
     }
 
-    public String[] partOfNewAnimalData(String[] part, String choice) throws SQLException, IOException, ClassNotFoundException {
+    public String[] partOfNewAnimalData(String[] part, String choice) throws Exception {
         String[] animalData = part;
-        switch (choice){
-            case "2": animalData[0] = viewConsole.getName(); break;
-            case "3": while (!validator.dateFormatValidation(animalData[1] = viewConsole.getDay_of_birth()));break;
-            case "4": animalData[2] = viewConsole.getCommands();break;
-            case "5": animalData[3] = mainMenu.animalChoose(mainMenu.animalTypeChoice());
+        switch (choice) {
+            case "2":
+                animalData[0] = viewConsole.getName();
+                break;
+            case "3":
+                while (!validator.dateFormatValidation(animalData[1] = viewConsole.getDay_of_birth())) ;
+                break;
+            case "4":
+                animalData[2] = viewConsole.getCommands();
+                break;
+            case "5":
+                animalData[3] = mainMenu.animalChoose(mainMenu.animalTypeChoice());
         }
         return animalData;
     }
+
     public int getID() throws IOException {
         int lastNum = 0;
         List<Animals> list = nursery.getAll();

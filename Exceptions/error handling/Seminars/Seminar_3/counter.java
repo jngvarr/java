@@ -20,7 +20,6 @@ public class Counter implements AutoCloseable {
             throw new IOException("Ресурс уже закрыт");
         }
         num++;
-
     }
 
     @Override

@@ -16,7 +16,7 @@ public class MenuController {
         viewConsole.printAll(animalController.getAllAnimals());
     }
 
-    public void addNewAnimal() throws SQLException, IOException, ClassNotFoundException {
+    public void addNewAnimal() throws Exception {
         String[] newAnimalData = animalController.newAnimalData();
         Animals addingAnimal = animalController.createAnimal(
                 animalController.getID() + "", newAnimalData[0], newAnimalData[1], newAnimalData[2], newAnimalData[3]);
@@ -24,7 +24,7 @@ public class MenuController {
         System.out.println("Новое животное добавлено.");
     }
 
-    public void updateAnimalData() throws SQLException, IOException, ClassNotFoundException {
+    public void updateAnimalData() throws Exception {
         String[] newAnimalData;
         System.out.println("Обновление данных: ");
         String updateID = viewConsole.getID();
