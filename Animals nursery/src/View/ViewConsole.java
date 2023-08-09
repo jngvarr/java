@@ -44,6 +44,5 @@ public class ViewConsole {
     }
     public String getNewCommands() {
         System.out.print("Введите через запятую команды, требуется выучить: \n> ");
-        return sc.nextLine();
-    }
+        return sc.nextLine();}
 }

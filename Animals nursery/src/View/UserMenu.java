@@ -12,7 +12,6 @@ public class UserMenu {
 
     public void start() throws IOException, SQLException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
-        Nursery nursery = new Nursery();
         MenuController menuController = new MenuController();
         boolean end = false;
 
@@ -116,5 +115,18 @@ public class UserMenu {
             }
         }
         return null;
+    }
+
+    public String choseUpdate() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Выберите вариант изменения записи: \n" +
+                "1 - Запись целиком.\n" +
+                "2 - Имя животного.\n" +
+                "3 - Дату рождения.\n" +
+                "4 - Выполняемые команды.\n" +
+                "2 - Вид животного.\n" +
+                "0 - Возврат в предыдущее меню. )\n> ");
+
+        return sc.next();
     }
 }

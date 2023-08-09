@@ -1,27 +1,22 @@
 package Controller;
 
-import Controller.AnimalController;
 import Model.Animals;
-
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static java.sql.DriverManager.getConnection;
-
 
 public class Nursery {
     private Statement sqlStatement;
     private ResultSet resultSet;
     private String SQLQuery;
-    Animals animal;
 
     public List<Animals> getAll() throws IOException {
         List<Animals> list = new ArrayList<>();
+        Animals animal;
         AnimalController controller = new AnimalController();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -98,6 +93,31 @@ public class Nursery {
         } catch (ClassNotFoundException | SQLException e) {
         }
         return commands;
+    }
+
+    public String getAnimal(String id) {
+        String animal = "";
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            try (Connection connect = getConnection()) {
+                {
+                    sqlStatement = connect.createStatement();
+                    SQLQuery = String.format("Select * From all_animals WHERE id = '%s';", id);
+                    resultSet = sqlStatement.executeQuery(SQLQuery);
+                    while (resultSet.next()) {
+                        String ID = resultSet.getString(1);
+                        String name = resultSet.getString(2);
+                        String day_of_birth = resultSet.getString(3);
+                        String commands = resultSet.getString(4);
+                        String type = resultSet.getString(5);
+
+                    animal = String.format("%s; %s; %s; %s; %s", ID, name, day_of_birth, commands, type);
+                    }
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+        }
+        return animal;
     }
 
     public void deleteAnimal(String id) {
