@@ -1,5 +1,5 @@
 package Model;
 
-public abstract class Pet extends Animals {
+public abstract class Pet extends Animal {
 }
 

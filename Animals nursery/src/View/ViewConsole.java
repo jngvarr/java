@@ -1,6 +1,6 @@
 package View;
 
-import Model.Animals;
+import Model.Animal;
 
 import java.util.List;
 import java.util.Scanner;
@@ -8,9 +8,9 @@ import java.util.Scanner;
 public class ViewConsole {
     Scanner sc = new Scanner(System.in);
 
-    public void printAll(List<Animals> list) {
+    public void printAll(List<Animal> list) {
         if (list.isEmpty()) System.out.println("Список пуст.");
-        else for (Animals animal : list) {
+        else for (Animal animal : list) {
             System.out.println(animal);
         }
     }
@@ -20,7 +20,7 @@ public class ViewConsole {
         return sc.nextLine();
     }
 
-    public String getDay_of_birth() {
+    public String getDayOfBirth() {
         System.out.print("Введите дату рождения животного(в формате гггг-мм-дд): \n> ");
         return sc.nextLine();
     }

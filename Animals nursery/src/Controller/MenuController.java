@@ -1,8 +1,9 @@
 package Controller;
 
-import Model.Animals;
+import Model.Animal;
 import View.UserMenu;
 import View.ViewConsole;
+
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -12,48 +13,45 @@ public class MenuController {
     ViewConsole viewConsole = new ViewConsole();
     UserMenu userMenu = new UserMenu();
 
-    public void getAll() throws IOException {
+    public void getAll() throws IOException, SQLException {
         viewConsole.printAll(animalController.getAllAnimals());
     }
 
-    public void addNewAnimal() throws Exception {
-        String[] newAnimalData = animalController.newAnimalData();
-        Animals addingAnimal = animalController.createAnimal(
-                animalController.getID() + "", newAnimalData[0], newAnimalData[1], newAnimalData[2], newAnimalData[3]);
-        nursery.addAnimal(addingAnimal);
+    public void addNewAnimal() throws SQLException, IOException, ClassNotFoundException {
+        nursery.addAnimal(animalController.newAnimalData());
         System.out.println("Новое животное добавлено.");
     }
 
-    public void updateAnimalData() throws Exception {
-        String[] newAnimalData;
+    public void updateAnimalData() throws SQLException, IOException, ClassNotFoundException {
+        Animal newAnimalData;
         System.out.println("Обновление данных: ");
         String updateID = viewConsole.getID();
-        String animal = nursery.getAnimal(updateID);
-        System.out.println("\nВносим изменеия: " + animal.replace(";", "") + "\n");
+        Animal animal = nursery.getAnimal(updateID);
+        System.out.println("\nВносим изменения: " + animal + "\n");
         String updateChoice = userMenu.choseUpdate();
         if (updateChoice.equals("1")) newAnimalData = animalController.newAnimalData();
         else {
-            newAnimalData = animalController.partOfNewAnimalData(animal.substring(animal.indexOf(" ") + 1).trim().split(";"), updateChoice);
+            newAnimalData = animalController.partOfNewAnimalData(animal, updateChoice);
         }
         nursery.updateData(newAnimalData, updateID);
         System.out.println("Данные обновлены.");
     }
 
-    public void getAnimalsCommands() {
+    public void getAnimalsCommands() throws SQLException {
         System.out.println("Получить список команд: ");
         String comID = viewConsole.getID();
         String commands = nursery.getCommands(comID);
         viewConsole.printCommands(commands);
     }
 
-    public void deleteAnimal() {
+    public void deleteAnimal() throws SQLException {
         System.out.println("Удаление животного: ");
         String delID = viewConsole.getID();
         nursery.deleteAnimal(delID);
         System.out.println("Запись удалена.");
     }
 
-    public void trainAnimal() {
+    public void trainAnimal() throws SQLException {
         System.out.println("Тренировка животного: ");
         String trainID = viewConsole.getID();
         String commands = nursery.getCommands(trainID);

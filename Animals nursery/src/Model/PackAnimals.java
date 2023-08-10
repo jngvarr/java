@@ -1,6 +1,6 @@
 package Model;
 
-public abstract class PackAnimals extends Animals {
+public abstract class PackAnimals extends Animal {
 
 }
 

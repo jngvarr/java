@@ -1,8 +1,8 @@
 package Model;
 
-public abstract class Animals {
+public abstract class Animal {
     static {
-        Animals.number = 0;
+        Animal.number = 0;
     }
 
     protected static int number;
@@ -22,11 +22,11 @@ public abstract class Animals {
     }
 
     public static int getNumber() {
-        return Animals.number;
+        return Animal.number;
     }
 
     public static void setNumber(int number) {
-        Animals.number = number;
+        Animal.number = number;
     }
 
     public String getDayOfBirth() {
@@ -44,6 +44,22 @@ public abstract class Animals {
     @Override
     public String toString() {
         return (ID + " " + name + " " + dayOfBirth + " " + commands + " " + type);
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDayOfBirth(String dayOfBirth) {
+        this.dayOfBirth = dayOfBirth;
+    }
+
+    public void setCommands(String commands) {
+        this.commands = commands;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
 
