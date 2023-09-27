@@ -33,7 +33,7 @@ public class AnimalController {
         return animals;
     }
 
-    public Animal newAnimalData() throws SQLException, IOException, ClassNotFoundException {
+    public Animal newAnimalData() throws Exception {
         String type = mainMenu.animalChoose(mainMenu.animalTypeChoice());
         String name = viewConsole.getName();
         String dob;
@@ -43,7 +43,7 @@ public class AnimalController {
         return AnimalController.createAnimal(null, name, dob, commands, type);
     }
 
-    public Animal partOfNewAnimalData(Animal animal, String choice) throws SQLException, IOException, ClassNotFoundException {
+    public Animal partOfNewAnimalData(Animal animal, String choice) throws Exception {
         switch (choice) {
             case "2":
                 animal.setName(viewConsole.getName());

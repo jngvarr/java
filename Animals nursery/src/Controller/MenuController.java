@@ -17,12 +17,12 @@ public class MenuController {
         viewConsole.printAll(animalController.getAllAnimals());
     }
 
-    public void addNewAnimal() throws SQLException, IOException, ClassNotFoundException {
+    public void addNewAnimal() throws Exception {
         nursery.addAnimal(animalController.newAnimalData());
         System.out.println("Новое животное добавлено.");
     }
 
-    public void updateAnimalData() throws SQLException, IOException, ClassNotFoundException {
+    public void updateAnimalData() throws Exception {
         Animal newAnimalData;
         System.out.println("Обновление данных: ");
         String updateID = viewConsole.getID();
