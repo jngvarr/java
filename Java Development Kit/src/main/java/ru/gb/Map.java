@@ -174,7 +174,7 @@ public class Map extends JPanel {
         do {
             x = RANDOM.nextInt(fieldSizeX);
             y = RANDOM.nextInt(fieldSizeY);
-        } while (isEmptyCell(x, y));
+        } while (!isEmptyCell(x, y));
         field[x][y] = AI_DOT;
     }
 
