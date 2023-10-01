@@ -15,8 +15,6 @@ public class GameWindow extends JFrame {
     JButton btnExit = new JButton("Exit");
     Map map;
     SettingsWindow settings;
-    boolean isGameOver;
-    boolean isInitialized;
 
     GameWindow() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
