@@ -57,7 +57,6 @@ public class Map extends JPanel {
         aiTurn();
         repaint();
         if (checkEndGame(AI_DOT, STATE_WIN_AI)) return;
-
     }
 
     private boolean checkEndGame(int dot, int gameOverType) {
@@ -98,7 +97,9 @@ public class Map extends JPanel {
         cellHeight = panelHeight / 3;
         cellWidth = panelWidth / 3;
         //g.setColor(Color.BLACK);
-
+/**
+ *      отрисовка игрового поля 3х3
+ */
         for (int w = 0; w < 3; w++) {
             int x = w * cellHeight;
             g.drawLine(x, 0, x, panelHeight);
@@ -107,6 +108,9 @@ public class Map extends JPanel {
             int y = h * cellWidth;
             g.drawLine(0, y, panelWidth, y);
         }
+/**
+ *  графика ходов
+ */
         //private void humanTurn () {
         for (int x = 0; x < fieldSizeY; x++) {
             for (int y = 0; y < fieldSizeX; y++) {
