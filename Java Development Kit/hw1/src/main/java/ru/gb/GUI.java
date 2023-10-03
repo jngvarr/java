@@ -18,6 +18,7 @@ public class GUI extends JFrame {
     JTextArea jTextAreaMessages;
     JTextField jTextFieldLogin;
     JTextField jTextFieldMessage;
+    JList jList;
 
     public GUI(Server server) {
         setTitle("Chat Client");
@@ -26,7 +27,9 @@ public class GUI extends JFrame {
         add(createBottomPanel(), BorderLayout.SOUTH);
         add(createUpPanel(), BorderLayout.NORTH);
         jTextAreaMessages = new JTextArea();
+        jList = new JList<>();
         add(jTextAreaMessages);
+        //jList.setListData();
 
         jButtonSend.addActionListener(new ActionListener() {
             @Override
