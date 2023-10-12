@@ -21,7 +21,6 @@ public class Server extends JFrame {
         setTitle("Chat Server");
         setVisible(true);
         setResizable(false);
-
         JPanel jPanelBottom = new JPanel(new GridLayout(1, 2));
         jPanelBottom.add(jButtonStart);
         jPanelBottom.add(jButtonStop);
@@ -45,6 +44,7 @@ public class Server extends JFrame {
                 }
             }
         });
+
         jButtonStop.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -60,5 +60,4 @@ public class Server extends JFrame {
             }
         });
     }
-
 }

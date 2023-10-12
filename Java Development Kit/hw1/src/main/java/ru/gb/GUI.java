@@ -33,7 +33,6 @@ public class GUI extends JFrame {
         add(jTextAreaMessages);
         //jList.setListData();
         String qq = this.jTextFieldLogin.getText();
-        System.out.println(qq);
         //setFocusable(true);
         Logger logger = new Logger();
         jTextFieldMessage.addKeyListener(new KeyListener() {
@@ -91,7 +90,6 @@ public class GUI extends JFrame {
         jPanelLoginData.add(jTextFieldLogin);
         jPanelLoginData.add(jPasswordField);
         jPanelLoginData.add(jButtonLogin);
-
         return jPanelLoginData;
     }
 
@@ -103,6 +101,4 @@ public class GUI extends JFrame {
         jPanelMessages.add(jButtonSend);
         return jPanelMessages;
     }
-
-
 }
