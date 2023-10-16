@@ -4,7 +4,7 @@ public class Main {
     public static class Minotaurus implements Human, Bull {
         @Override
         public void walk() {
-            System.out.println("Walk on tow legs");
+            System.out.println("Walk on two legs");
         }
 
         @Override
