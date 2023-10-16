@@ -1,24 +1,30 @@
-package ru.gb;
+package ru.gb.jdk.two.online.common;
+
+import ru.gb.jdk.two.online.circles.MainWindow;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Random;
 
 public class MainCanvas extends JPanel {
-    private final MainWindow controller;
+    private final CanvasRepaintListener controller;
+   // private final MainWindow controller;
     private long lastFrameTime;
 
 
-    MainCanvas(MainWindow controller) {
+//    MainCanvas(MainWindow controller) {
+public MainCanvas(CanvasRepaintListener controller) {
         //setBackground(Color.BLUE);
         this.controller = controller;
         lastFrameTime = System.nanoTime();
-//        setBackground(new Background().render(this, g));
+        setBackground(new Color(new Random().nextInt()));
     }
 
     @Override
     protected void paintComponent(Graphics g) { //метод перерисовки компонента
         super.paintComponent(g);
         //controller.onDrawFrame();// заставляем фрем перерисовыться
+
         try {
             Thread.sleep(16);
         } catch (InterruptedException e) {

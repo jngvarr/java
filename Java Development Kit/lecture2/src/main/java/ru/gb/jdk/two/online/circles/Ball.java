@@ -1,27 +1,30 @@
-package ru.gb;
+package ru.gb.jdk.two.online.circles;
+
+import ru.gb.jdk.two.online.common.MainCanvas;
+import ru.gb.jdk.two.online.common.Sprite;
 
 import java.awt.*;
 import java.util.Random;
 
 public class Ball extends Sprite {
     private static Random rnd = new Random();
-    private static Color color;
+    private final Color color;
     private float vX; // скорость по оси Х
     private float vY; // скорость по оси У
 
     Ball() {
-        halfHeight = 20 + (float) (Math.random() * 50f);
+        halfHeight = 20 + rnd.nextFloat(50);
         halfWidth = halfHeight;
         color = new Color(rnd.nextInt());
-        vX = 100f + (float) (Math.random() + 200f);
-        vY = 100f + (float) (Math.random() + 200f);
+        vX = 100f + rnd.nextFloat(200);
+        vY = 100f + rnd.nextFloat(200);
     }
 
     @Override
     public void render(MainCanvas canvas, Graphics g) {
-        g.setColor(color);
         g.fillOval((int) getLeft(), (int) getTop(),
                 (int) getWidth(), (int) getHeight());
+        g.setColor(color);
     }
 
     @Override
@@ -37,7 +40,7 @@ public class Ball extends Sprite {
             setRight((canvas.getRight()));
             vX = -vX;
         }
-        if (getTop() > canvas.getTop()) {
+        if (getTop() < canvas.getTop()) {
             setTop((canvas.getTop()));
             vY = -vY;
         }

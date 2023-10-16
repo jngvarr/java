@@ -1,4 +1,4 @@
-package ru.gb;
+package ru.gb.jdk.two.online.common;
 
 import java.awt.*;
 
