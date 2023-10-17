@@ -12,7 +12,8 @@ public class Ball extends Sprite {
     private float vX; // скорость по оси Х
     private float vY; // скорость по оси У
 
-    Ball() {
+    Ball(int x, int y) {
+        super(x, y);
         halfHeight = 20 + rnd.nextFloat(50);
         halfWidth = halfHeight;
         color = new Color(rnd.nextInt());

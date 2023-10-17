@@ -6,13 +6,14 @@ import ru.gb.jdk.two.online.common.Sprite;
 import java.awt.*;
 import java.util.Random;
 
-public class Brics extends Sprite {
+public class Bricks extends Sprite {
     private static Random rnd = new Random();
     private final Color color;
     private float vX; // скорость по оси Х
     private float vY; // скорость по оси У
 
-    Brics() {
+    Bricks(float x, float y) {
+        super(x,y);
         halfHeight = 20 + rnd.nextFloat(50);
         halfWidth = halfHeight;
         color = new Color(rnd.nextInt());
