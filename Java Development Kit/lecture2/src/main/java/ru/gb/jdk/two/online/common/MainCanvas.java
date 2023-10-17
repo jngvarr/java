@@ -8,12 +8,12 @@ import java.util.Random;
 
 public class MainCanvas extends JPanel {
     private final CanvasRepaintListener controller;
-   // private final MainWindow controller;
+    // private final MainWindow controller;
     private long lastFrameTime;
 
 
-//    MainCanvas(MainWindow controller) {
-public MainCanvas(CanvasRepaintListener controller) {
+    //    MainCanvas(MainWindow controller) {
+    public MainCanvas(CanvasRepaintListener controller) {
         //setBackground(Color.BLUE);
         this.controller = controller;
         lastFrameTime = System.nanoTime();
