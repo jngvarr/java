@@ -1,4 +1,7 @@
-package ru.gb;
+package ru.gb.server.client;
+
+import ru.gb.server.server.Server;
+import ru.gb.server.server.ServerGUI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -6,19 +9,21 @@ import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class GUI extends JFrame {
+public class ClientGUI extends JFrame implements ClientView{
     public static final int WINDOW_HEIGHT = 200;
     public static final int WINDOW_WIDTH = 400;
-    public static final int WINDOW_POSITION_X = 800;
-    public static final int WINDOW_POSITION_Y = 300;
     JButton jButtonSend, jButtonLogin;
     JPanel jPanelMessages, jPanelLoginData;
     JTextArea jTextAreaMessages;
-    JTextField jTextFieldLogin, jTextFieldMessage;
-    boolean isLogged;
+    JPasswordField jPasswordField;
+    JTextField jTextFieldLogin, jTextFieldMessage, jTextFieldIP,jTextFieldPort;
     JScrollPane jScrollPane;
+    boolean isLogged;
+    private Client client;
 
-    public GUI(Server server) {
+    public ClientGUI(Server server) {
+        this.client = new Client(this, server);
+
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Chat Client");
         setLocationRelativeTo(server);
@@ -36,8 +41,10 @@ public class GUI extends JFrame {
 //        add(jTextAreaMessages);
         add(mainPanel);
         jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
         // @TODO добавить скролинг окна
         //setFocusable(true);
+
         jTextFieldMessage.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -63,7 +70,7 @@ public class GUI extends JFrame {
                 if (isLogged) {
                     String result = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + ": " +
                             jTextFieldLogin.getText() + ": " + jTextFieldMessage.getText() + "\n";
-                    server.message(result);
+                    client.sendMessage(result);
                     System.out.println(jTextFieldMessage.getText());
                     jTextAreaMessages.append(result);
 
@@ -78,7 +85,7 @@ public class GUI extends JFrame {
                 jPanelLoginData.setVisible(false);
                 server.setVisible(false);
                 setTitle(getTitle() + " (" + jTextFieldLogin.getText() + ")");
-                jTextAreaMessages.setText(String.valueOf(server.readLog()));
+                jTextAreaMessages.setText(String.valueOf(client.readLog()));
             }
         });
     }
@@ -86,9 +93,9 @@ public class GUI extends JFrame {
     private Component createUpPanel() {
         jPanelLoginData = new JPanel(new GridLayout(2, 3));
         jTextFieldLogin = new JTextField("Фёдор Михалыч");
-        JPasswordField jPasswordField = new JPasswordField("password");
-        JTextField jTextFieldIP = new JTextField("192.168.0.1");
-        JTextField jTextFieldPort = new JTextField("8080");
+        jPasswordField = new JPasswordField("password");
+        jTextFieldIP = new JTextField("192.168.0.1");
+        jTextFieldPort = new JTextField("8080");
         jButtonLogin = new JButton("Login");
         jPanelLoginData.add(jTextFieldIP);
         jPanelLoginData.add(jTextFieldPort);
@@ -107,9 +114,20 @@ public class GUI extends JFrame {
         return jPanelMessages;
     }
 
-    private Component createLog() {
-        jTextAreaMessages = new JTextArea();
-        jTextAreaMessages.setEditable(false);
-        return new JScrollPane(jTextAreaMessages);
+    @Override
+    public void showMessage(String text) {
+
+    }
+
+    @Override
+    public void disconnectFromServer() {
+
+    }
+    @Override
+    protected void processWindowEvent(WindowEvent e) {
+        super.processWindowEvent(e);
+        if (e.getID() == WindowEvent.WINDOW_CLOSING){
+            disconnectFromServer();
+        }
     }
 }

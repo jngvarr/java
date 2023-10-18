@@ -1,10 +1,12 @@
-package ru.gb;
+package ru.gb.server.server;
+
+import ru.gb.server.client.ClientGUI;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
-public class Server extends JFrame {
+public class ServerGUI extends JFrame {
     public static final int WINDOW_HEIGHT = 400;
     public static final int WINDOW_WIDTH = 600;
     public static final int WINDOW_POSITION_X = 600;
@@ -16,7 +18,7 @@ public class Server extends JFrame {
     Logger logger = new Logger();
 
 
-    Server() {
+    ServerGUI() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocation(WINDOW_POSITION_X, WINDOW_POSITION_Y);
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -27,10 +29,10 @@ public class Server extends JFrame {
         jPanelBottom.add(jButtonStart);
         jPanelBottom.add(jButtonStop);
         add(jPanelBottom, BorderLayout.SOUTH);
-
         jTextArea = new JTextArea();
         add(jTextArea);
-        GUI gui = new GUI(this);
+
+        Server gui = new Server (this);
 
         jButtonStart.addActionListener(new AbstractAction() {
             @Override
@@ -63,13 +65,13 @@ public class Server extends JFrame {
         });
     }
 
-    public void message(String message) {
-        if (!isServerWorking) return;
-        jTextArea.append(message);
-        logger.writeLogToFile(message);
+    public int getX(){
+        return this.getX();
     }
 
-    public String readLog() {
-        return String.valueOf(logger.readLogTFromFile());
+    public int getY(){
+        return this.getY();
     }
+
+
 }
