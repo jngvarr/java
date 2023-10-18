@@ -26,7 +26,7 @@ public class ClientGUI extends JFrame implements ClientView{
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Chat Client");
-        setLocationRelativeTo(server);
+        setLocationRelativeTo(serverGUI);
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         JPanel mainPanel = new JPanel();
