@@ -1,4 +1,4 @@
-package ru.gb;
+package ru.gb.server;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ public class Logger {
 
     protected void writeLogToFile(String data) {
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filename, true))) {
-            bufferedWriter.write(data);
+            bufferedWriter.write(data+"\n");
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }

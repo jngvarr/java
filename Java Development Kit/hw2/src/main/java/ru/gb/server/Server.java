@@ -1,72 +1,73 @@
-package ru.gb;
+package ru.gb.server;
+
+import ru.gb.client.Client;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server extends JFrame {
-    public static final int WINDOW_HEIGHT = 400;
-    public static final int WINDOW_WIDTH = 600;
-    public static final int WINDOW_POSITION_X = 600;
-    public static final int WINDOW_POSITION_Y = 300;
-    JButton jButtonStart = new JButton("Start");
-    JButton jButtonStop = new JButton("Stop");
-    boolean isServerWorking;
-    private JTextArea jTextArea;
+    private boolean isServerWorking;
     Logger logger = new Logger();
+    ServerGUI serverGUI;
+    List<Client> clients;
+    private ServerView serverView;
 
-
-    Server() {
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocation(WINDOW_POSITION_X, WINDOW_POSITION_Y);
-        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-        setTitle("Chat Server");
-        setVisible(true);
-        setResizable(false);
-        JPanel jPanelBottom = new JPanel(new GridLayout(1, 2));
-        jPanelBottom.add(jButtonStart);
-        jPanelBottom.add(jButtonStop);
-        add(jPanelBottom, BorderLayout.SOUTH);
-
-        jTextArea = new JTextArea();
-        add(jTextArea);
-        GUI gui = new GUI(this);
-
-        jButtonStart.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (isServerWorking) {
-                    System.out.println("Server already started");
-                    jTextArea.append("Server already started\n");
-                } else {
-                    System.out.println("Server was started");
-                    jTextArea.append("Server was started\n");
-                    isServerWorking = true;
-                    gui.setVisible(true);
-                }
-            }
-        });
-
-        jButtonStop.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!isServerWorking) {
-                    System.out.println("Server already stopped");
-                    jTextArea.append("Server already stopped\n");
-                } else {
-                    System.out.println("Server was stopped");
-                    jTextArea.append("Server was stopped\n");
-                }
-                isServerWorking = false;
-                gui.setVisible(false);
-            }
-        });
+    public Server(ServerView serverView) {
+        this.serverView = serverView;
+        clients = new ArrayList<>();
     }
 
-    public void message(String message) {
+    public boolean connectUser(Client clientGUI) {
+        if (!isServerWorking) {
+            return false;
+        }
+        clients.add(clientGUI);
+        return true;
+    }
+
+
+    public String getLog() {
+        return readLog();
+    }
+
+
+
+    public void sendMessage(String message) {
         if (!isServerWorking) return;
-        jTextArea.append(message);
+        answerAll(message);
+        serverView.showMessage(message);
         logger.writeLogToFile(message);
+    }
+
+    private void answerAll(String answer) {
+        for (Client client : clients) {
+            client.serverAnswer(answer);
+        }
+    }
+    public List<Client> getClientsList() {
+        return clients;
+    }
+    public boolean isWorking() {
+        return isServerWorking;
+    }
+
+    public void switchServer(boolean working) {
+        isServerWorking = !working;
+    }
+
+    public void disconnectUser(Client client) {
+        if (client != null) {
+            clients.remove(client);
+        }
+    }
+
+    public void serverDown(Client client) {
+        if (client != null) {
+            client.disconnectFromServer();
+        }
     }
 
     public String readLog() {
