@@ -1,31 +1,30 @@
 package ru.gb.hw;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
 
 public class Table {
-    public static List<Philosopher> seaters = new ArrayList<>(5);
-
-    public static List<Fork> forks = new ArrayList<>(5);
-    private CountDownLatch cdl = new CountDownLatch(3);
+    String[] philosopherNames = {"Диоген", "Платон", "Сократ", "Эпикур", "Аристотель"};
+    List<Seat> seats;
+    Map<Seat, Eater> eaters;
+    Map<Fork, Eater> pickedUpForks;
 
     public Table() {
-        seaters.add(new Philosopher("Диоген"));
-        seaters.add(new Philosopher("Платон"));
-        seaters.add(new Philosopher("Сократ"));
-        seaters.add(new Philosopher("Эпикур"));
-        seaters.add(new Philosopher("Аристотель"));
-
-        for (int i = 0; i < seaters.size(); i++) {
-            forks.add(new Fork());
+        for (Seat seat : seats) {
+            eaters.put(seat, new Philosopher(philosopherNames[seat.getNumber()],3));
         }
     }
 
-    public void allPhilosopherTryToEat() throws InterruptedException {
+    void seat(Eater eater) {
+    }
 
-        for (Philosopher seater : seaters) {
-            seater.start();
-        }
+    void pickUp(Fork fork) {
+    }
+
+    void putDown(Fork fork) {
+    }
+
+    void unseat(Eater eater) {
     }
 }

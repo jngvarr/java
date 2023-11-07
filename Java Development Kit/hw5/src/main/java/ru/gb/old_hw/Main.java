@@ -1,8 +1,8 @@
-package ru.gb.hw;
+package ru.gb.old_hw;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        TableClass table = new TableClass();
+        Table table = new Table();
         table.allPhilosopherTryToEat();
     }
 }

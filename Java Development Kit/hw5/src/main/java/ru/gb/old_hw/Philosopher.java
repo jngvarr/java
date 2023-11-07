@@ -1,23 +1,44 @@
-package ru.gb.hw;
+package ru.gb.old_hw;
 
-import ru.gb.old_hw.Fork;
-import ru.gb.old_hw.Table;
+import ru.gb.hw.Fork;
+import ru.gb.hw.TableClass;
 
-public class Philosopher implements Runnable, Eater {
+public class Philosopher extends Thread {
     int ateThrice;
     int seaterNumber;
     private final String name;
+    private boolean hungry;
+    private boolean pondered;
 
 
-    private ru.gb.old_hw.Fork leftFork;
-    private ru.gb.old_hw.Fork rightFork;
+    private ru.gb.hw.Fork leftFork;
+    private ru.gb.hw.Fork rightFork;
 
-    public Philosopher(String name, int timesToEat) {
+    public Philosopher(String name) {
         this.name = name;
+        pondered = true;
+        hungry = true;
 
     }
 
-    public void takeAFork(ru.gb.old_hw.Fork fork) {
+    public boolean isHungry() {
+        return hungry;
+    }
+
+    public boolean isPondered() { // проверка, поразмышлял ли философ
+        return pondered;
+    }
+
+    public void setHungry(boolean hungry) { // проверка, поел ли философ (голоден или нет)
+        this.hungry = hungry;
+    }
+
+    public void setPondered(boolean pondered) {
+        this.pondered = pondered;
+    }
+
+//    public synchronized void takeAFork(Fork fork) {
+    public void takeAFork(ru.gb.hw.Fork fork) {
         System.out.println(this.name + " берёт вилку " + fork.getForkNumber() + " (вилка уже взята: " + fork.isTaken() + ")");
         fork.setFork(true);
     }
@@ -28,22 +49,27 @@ public class Philosopher implements Runnable, Eater {
     }
 
     public void toEat() throws InterruptedException {
-        seaterNumber = ru.gb.old_hw.Table.seaters.indexOf(this);
-        leftFork = ru.gb.old_hw.Table.forks.get(seaterNumber);
-        rightFork = ru.gb.old_hw.Table.forks.get((seaterNumber + 1) % Table.seaters.size());
-
+        int kostyl = 0;
+        seaterNumber = TableClass.seaters.indexOf(this);
+        leftFork = TableClass.forks.get(seaterNumber);
+        rightFork = TableClass.forks.get((seaterNumber + 1) % TableClass.seaters.size());
+        if (isHungry() && isPondered()) {
             if (!leftFork.isTaken()) {
+//                synchronized (leftFork) {
                 takeAFork(leftFork);
                 if (!rightFork.isTaken()) {
+//                        synchronized (rightFork) {
                     takeAFork(rightFork);
-                  //  sleep(100);
+                    sleep(100);
+                    setHungry(false);
+                    setPondered(false);
                     System.out.println(name + " поел!");
                     ateThrice++;
                         }
                     }
 //                }
 //            }
-        {
+        } else {
             toPonder();
         }
         if (leftFork.isTaken()) putDownAFork(leftFork);
@@ -63,12 +89,9 @@ public class Philosopher implements Runnable, Eater {
     }
 
     public void toPonder() throws InterruptedException {
-     //   sleep(1000);
+        sleep(1000);
+        setPondered(true);
+        setHungry(true);
         System.out.println(name + " поразмышлял!");
-    }
-
-    @Override
-    public void assign(ru.gb.hw.Fork left, ru.gb.hw.Fork right) {
-
     }
 }
