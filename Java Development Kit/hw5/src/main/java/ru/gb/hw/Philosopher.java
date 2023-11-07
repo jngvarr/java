@@ -11,13 +11,14 @@ public class Philosopher extends Thread {
     private boolean pondered;
 
 
-    Fork leftFork;
-    Fork rightFork;
+    private Fork leftFork;
+    private Fork rightFork;
 
     public Philosopher(String name) {
         this.name = name;
         pondered = true;
         hungry = true;
+
     }
 
     public boolean isHungry() {
@@ -36,8 +37,9 @@ public class Philosopher extends Thread {
         this.pondered = pondered;
     }
 
+//    public synchronized void takeAFork(Fork fork) {
     public void takeAFork(Fork fork) {
-        System.out.println(this.name + " берёт вилку " + fork.getForkNumber() + " (вилка уже взята: " + fork.isTaken()+")");
+        System.out.println(this.name + " берёт вилку " + fork.getForkNumber() + " (вилка уже взята: " + fork.isTaken() + ")");
         fork.setFork(true);
     }
 
@@ -50,20 +52,23 @@ public class Philosopher extends Thread {
         int kostyl = 0;
         seaterNumber = Table.seaters.indexOf(this);
         leftFork = Table.forks.get(seaterNumber);
-        if (seaterNumber == 0) kostyl = Table.seaters.size();
-        rightFork = Table.forks.get(seaterNumber - 1 + kostyl);
+        rightFork = Table.forks.get((seaterNumber + 1) % Table.seaters.size());
         if (isHungry() && isPondered()) {
             if (!leftFork.isTaken()) {
+//                synchronized (leftFork) {
                 takeAFork(leftFork);
                 if (!rightFork.isTaken()) {
+//                        synchronized (rightFork) {
                     takeAFork(rightFork);
                     sleep(100);
                     setHungry(false);
                     setPondered(false);
                     System.out.println(name + " поел!");
                     ateThrice++;
-                }
-            }
+                        }
+                    }
+//                }
+//            }
         } else {
             toPonder();
         }
