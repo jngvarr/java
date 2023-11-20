@@ -1,24 +1,35 @@
 package ru.gb.hw;
 
 public class Fork {
-    private boolean fork;
-    static int num;
-    int forkNumber;
+    private final int number;
 
-    public Fork() {
-        this.forkNumber =  num++;
+    public Fork(int number) {
+        this.number = number;
     }
 
-    public int getForkNumber() {
-        return forkNumber;
+    public int getNumber() {
+        return number;
     }
 
-    public boolean isTaken() {
-        return fork;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Fork fork = (Fork) o;
+
+        return number == fork.number;
     }
 
-    public void setFork(boolean fork) {
-        this.fork = fork;
+    @Override
+    public int hashCode() {
+        return number;
+    }
 
+    @Override
+    public String toString() {
+        return "ForkImpl{" +
+                "number=" + number +
+                '}';
     }
 }

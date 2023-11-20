@@ -1,74 +1,72 @@
 package ru.gb.hw;
 
-import ru.gb.old_hw.Fork;
-import ru.gb.old_hw.Table;
+import java.util.Random;
 
-public class Philosopher implements Runnable, Eater {
-    int ateThrice;
-    int seaterNumber;
+public class Philosopher extends Thread implements Eater {
     private final String name;
+    private final int timesToEat;
+    private Fork leftFork;
+    private Fork rightFork;
+    private Table table;
 
-
-    private ru.gb.old_hw.Fork leftFork;
-    private ru.gb.old_hw.Fork rightFork;
+    private static final Random RND = new Random();
 
     public Philosopher(String name, int timesToEat) {
         this.name = name;
-
+        this.timesToEat = timesToEat;
     }
 
-    public void takeAFork(ru.gb.old_hw.Fork fork) {
-        System.out.println(this.name + " берёт вилку " + fork.getForkNumber() + " (вилка уже взята: " + fork.isTaken() + ")");
-        fork.setFork(true);
-    }
-
-    public void putDownAFork(Fork fork) {
-        System.out.println(this.name + " положил вилку " + fork.getForkNumber());
-        fork.setFork(false);
-    }
-
-    public void toEat() throws InterruptedException {
-        seaterNumber = ru.gb.old_hw.Table.seaters.indexOf(this);
-        leftFork = ru.gb.old_hw.Table.forks.get(seaterNumber);
-        rightFork = ru.gb.old_hw.Table.forks.get((seaterNumber + 1) % Table.seaters.size());
-
-            if (!leftFork.isTaken()) {
-                takeAFork(leftFork);
-                if (!rightFork.isTaken()) {
-                    takeAFork(rightFork);
-                  //  sleep(100);
-                    System.out.println(name + " поел!");
-                    ateThrice++;
-                        }
-                    }
-//                }
-//            }
-        {
-            toPonder();
-        }
-        if (leftFork.isTaken()) putDownAFork(leftFork);
-        if (rightFork.isTaken()) putDownAFork(rightFork);
-    }
 
     @Override
     public void run() {
-        while (ateThrice < 3) {
-            try {
-                toEat();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        int timesEaten = 0;
+        do {
+            if (toEat()) {
+                timesEaten++;
             }
-        }
-        System.out.println(this.name + " наелся!");
+            if (timesEaten < 3) toPonder();
+        } while (timesEaten < timesToEat);
+        System.out.println(name + " наелся.");
+        leftFork = null;
+        rightFork = null;
     }
 
-    public void toPonder() throws InterruptedException {
-     //   sleep(1000);
+    private boolean toEat() {
+        boolean eaten = false;
+        if (table.pickUp(leftFork)) {
+            System.out.println(name + " взял вилку " + leftFork.getNumber());
+            if (table.pickUp(rightFork)) {
+                System.out.println(name + " взял вилку " + rightFork.getNumber());
+                pause(500, 1000);
+                System.out.println(name + " поел.");
+                eaten = true;
+                table.putDown(rightFork);
+                System.out.println(name + " положил вилку " + rightFork.getNumber());
+            }
+            table.putDown(leftFork);
+            System.out.println(name + " положил вилку " + leftFork.getNumber());
+        }
+        return eaten;
+    }
+
+    public void toPonder() {
+        pause(500, 1000);
         System.out.println(name + " поразмышлял!");
     }
 
-    @Override
-    public void assign(ru.gb.hw.Fork left, ru.gb.hw.Fork right) {
+    @SuppressWarnings("SameParameterValue")
+    private static void pause(int fixed, int variable) {
+        try {
+            Thread.sleep(fixed + RND.nextInt(0, variable));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
+    @Override
+    public void assign(Table table, Fork left, Fork right) {
+        this.table = table;
+        leftFork = left;
+        rightFork = right;
     }
 }

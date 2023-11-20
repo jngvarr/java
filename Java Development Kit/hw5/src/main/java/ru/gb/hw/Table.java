@@ -1,30 +1,10 @@
 package ru.gb.hw;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+public interface Table {
+    void seat(Eater eater);
 
-public class Table {
-    String[] philosopherNames = {"Диоген", "Платон", "Сократ", "Эпикур", "Аристотель"};
-    List<Seat> seats;
-    Map<Seat, Eater> eaters;
-    Map<Fork, Eater> pickedUpForks;
+    boolean pickUp(Fork fork);
 
-    public Table() {
-        for (Seat seat : seats) {
-            eaters.put(seat, new Philosopher(philosopherNames[seat.getNumber()],3));
-        }
-    }
+    void putDown(Fork fork);
 
-    void seat(Eater eater) {
-    }
-
-    void pickUp(Fork fork) {
-    }
-
-    void putDown(Fork fork) {
-    }
-
-    void unseat(Eater eater) {
-    }
 }
