@@ -11,13 +11,13 @@ public class TheMontyHallParadox {
     private boolean isTheCarBehindSecondFirstDoor;
     private boolean isTheCarBehindThirdDoor;
     private final int playersChoiceDoor;
+    List<Boolean> doors = new ArrayList<>();
 
     public int getPlayersChoiceDoor() {
         return playersChoiceDoor;
     }
 
 
-    List<Boolean> doors = new ArrayList<>();
 
     public TheMontyHallParadox() {
         setCarBehindTheDoor();
