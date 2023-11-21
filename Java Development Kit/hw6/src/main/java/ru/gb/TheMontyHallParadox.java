@@ -28,7 +28,7 @@ public class TheMontyHallParadox {
     }
 
     private void setCarBehindTheDoor() {
-        switch (rnd.nextInt(0, 3)) {
+        switch (rnd.nextInt(3)) {
             case 0 -> isTheCarBehindFirstDoor = true;
             case 1 -> isTheCarBehindSecondFirstDoor = true;
             case 2 -> isTheCarBehindThirdDoor = true;
@@ -36,11 +36,11 @@ public class TheMontyHallParadox {
     }
 
     public int playersChoice() {
-        return rnd.nextInt(0, 3);
+        return rnd.nextInt(3);
     }
 
     public boolean dealerChoice(List<Boolean> doors) {
-        int chosenElement = rnd.nextInt(0, doors.size());
+        int chosenElement = rnd.nextInt(doors.size());
         if (!doors.get(chosenElement)) {
             doors.remove(chosenElement);
             return doors.get(0);
