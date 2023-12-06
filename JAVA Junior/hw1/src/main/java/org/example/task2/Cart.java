@@ -2,6 +2,7 @@ package org.example.task2;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -47,56 +48,95 @@ public class Cart <T extends Food>{
      */
     public void cardBalancing()
     {
-        boolean proteins = false;
-        boolean fats = false;
-        boolean carbohydrates = false;
+        AtomicBoolean proteins = new AtomicBoolean(false);
+        AtomicBoolean fats = new AtomicBoolean(false);
+        AtomicBoolean carbohydrates = new AtomicBoolean(false);
 
-        for (var food : foodstuffs)
-        {
-            if (!proteins && food.getProteins())
-                proteins = true;
-            else
-            if (!fats && food.getFats())
-                fats = true;
-            else
-            if (!carbohydrates && food.getCarbohydrates())
-                carbohydrates = true;
-            if (proteins && fats && carbohydrates)
-                break;
-        }
+        proteins.set(foodstuffs.stream().anyMatch(t -> t.getProteins()));
+        fats.set(foodstuffs.stream().anyMatch(Food::getFats));
+        carbohydrates.set(foodstuffs.stream().anyMatch(Food::getCarbohydrates));
 
-        if (proteins && fats && carbohydrates)
-        {
+        if (proteins.get() && fats.get() && carbohydrates.get()) {
             System.out.println("Корзина уже сбалансирована по БЖУ.");
             return;
         }
 
-        for (var thing : market.getThings(Food.class))
-        {
-            if (!proteins && thing.getProteins())
-            {
-                proteins = true;
-                foodstuffs.add((T)thing);
-            }
-            else if (!fats && thing.getFats())
-            {
-                fats = true;
-                foodstuffs.add((T)thing);
-            }
-            else if (!carbohydrates && thing.getCarbohydrates())
-            {
-                carbohydrates = true;
-                foodstuffs.add((T)thing);
-            }
-            if (proteins && fats && carbohydrates)
-                break;
-        }
+        market.getThings(Food.class).stream()
+                .filter(thing -> !proteins.get() && thing.getProteins())
+                .findFirst()
+                .ifPresent(thing -> {
+                    proteins.set(true);
+                    foodstuffs.add((T) thing);
+                });
 
-        if (proteins && fats && carbohydrates)
+        market.getThings(Food.class).stream()
+                .filter(thing -> !fats.get() && thing.getFats())
+                .findFirst()
+                .ifPresent(thing -> {
+                    fats.set(true);
+                    foodstuffs.add((T) thing);
+                });
+
+        market.getThings(Food.class).stream()
+                .filter(thing -> !carbohydrates.get() && thing.getCarbohydrates())
+                .findFirst()
+                .ifPresent(thing -> {
+                    carbohydrates.set(true);
+                    foodstuffs.add((T) thing);
+                });
+
+        if (proteins.get() && fats.get() && carbohydrates.get())
             System.out.println("Корзина сбалансирована по БЖУ.");
         else
             System.out.println("Невозможно сбалансировать корзину по БЖУ.");
-
     }
+
+//        for (var food : foodstuffs)
+//        {
+//            if (!proteins && food.getProteins())
+//                proteins = true;
+//            else
+//            if (!fats && food.getFats())
+//                fats = true;
+//            else
+//            if (!carbohydrates && food.getCarbohydrates())
+//                carbohydrates = true;
+//            if (proteins && fats && carbohydrates)
+//                break;
+//        }
+//
+//        if (proteins && fats && carbohydrates)
+//        {
+//            System.out.println("Корзина уже сбалансирована по БЖУ.");
+//            return;
+//        }
+//
+//        for (var thing : market.getThings(Food.class))
+//        {
+//            if (!proteins && thing.getProteins())
+//            {
+//                proteins = true;
+//                foodstuffs.add((T)thing);
+//            }
+//            else if (!fats && thing.getFats())
+//            {
+//                fats = true;
+//                foodstuffs.add((T)thing);
+//            }
+//            else if (!carbohydrates && thing.getCarbohydrates())
+//            {
+//                carbohydrates = true;
+//                foodstuffs.add((T)thing);
+//            }
+//            if (proteins && fats && carbohydrates)
+//                break;
+//        }
+//
+//        if (proteins && fats && carbohydrates)
+//            System.out.println("Корзина сбалансирована по БЖУ.");
+//        else
+//            System.out.println("Невозможно сбалансировать корзину по БЖУ.");
+//
+//    }
 
 }

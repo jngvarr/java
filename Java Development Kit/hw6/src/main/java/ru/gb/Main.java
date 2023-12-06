@@ -17,7 +17,7 @@ public class Main {
             TheMontyHallParadox game = new TheMontyHallParadox();
             notRemindedWins.put(i, game.doors.get(game.getPlayersChoiceDoor()));
         }
-        System.out.printf("Количество выйгрышей когда игрок сменил выбор: %.2f%%\n",1.0 * winsCount(notRemindedWins) / iters * 100);
+        System.out.printf("Количество выйгрышей когда игрок не сменил выбор: %.2f%%\n",1.0 * winsCount(notRemindedWins) / iters * 100);
         System.out.printf("Количество выйгрышей когда игрок сменил выбор: %.2f%%\n",1.0 * winsCount(remindedWins) / iters * 100);
     }
 
