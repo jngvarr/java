@@ -11,7 +11,7 @@ public class Dog extends Animal {
         this.age = age;
     }
 
-    public void toBark(){
-        System.out.println("Гав-гав!");
+    public String toBark(){
+        return "Гав-гав!";
     }
 }
