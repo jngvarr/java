@@ -1,4 +1,4 @@
-package seminarT2;
+package ru.geekbrains.lesson2.task2;
 
 import java.lang.reflect.Field;
 
@@ -9,8 +9,8 @@ public class Program {
      * ================================================
      * <p>
      * Реализуйте обобщенный метод, который принимает объект и выводит в консоль значения всех его полей.
-     * Создайте класс "seminarT2.Program.Car" с различными полями (например, модель, цвет, год выпуска).
-     * Примените Reflection API для вывода значений полей созданного объекта класса "seminarT2.Program.Car"
+     * Создайте класс "Car" с различными полями (например, модель, цвет, год выпуска).
+     * Примените Reflection API для вывода значений полей созданного объекта класса "Car"
      * с использованием ранее созданного метода.
      */
     public static void main(String[] args) throws IllegalAccessException {
@@ -28,19 +28,4 @@ public class Program {
         }
     }
 
-    public static class Car {
-
-        private String model;
-
-        private String color;
-
-        private int year;
-
-        public Car(String model, String color, int year) {
-            this.model = model;
-            this.color = color;
-            this.year = year;
-        }
-
-    }
 }
