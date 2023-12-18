@@ -19,7 +19,7 @@ public class Task2 {
     }
 
     public static void saveXMLData(Student student) throws IOException {
-        xmlMapper.writeValue(new File("student.json"), student);
+        xmlMapper.writeValue(new File("student.xml"), student);
     }
 
 
