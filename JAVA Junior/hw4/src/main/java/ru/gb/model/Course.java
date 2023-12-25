@@ -5,6 +5,7 @@ import org.stringtemplate.v4.ST;
 import javax.persistence.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Entity
 @Table(name = "schoolDB.course")
@@ -15,9 +16,7 @@ public class Course {
     int id;
     String title;
     int duration;
-    private static Map<String, int> courses;
-    Map.Entry("1", 5),
-            Map.Entry("", 3),Map.Entry(" ",6);
+
 
     public Course(String title, int duration) {
         this.title = title;
@@ -25,6 +24,12 @@ public class Course {
     }
 
     public Course() {
+    }
+
+
+    public static Course create() {
+        Map.Entry entry = (Map.Entry) listOfCourses.get(new Random().nextInt(4));
+        return new Course((String) entry.getKey(), (Integer) entry.getValue());
     }
 
     public int getId() {
