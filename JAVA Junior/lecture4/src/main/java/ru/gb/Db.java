@@ -1,4 +1,4 @@
-package ru.gb.lecture;
+package ru.gb;
 
 import java.sql.*;
 

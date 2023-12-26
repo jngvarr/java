@@ -10,6 +10,7 @@ import java.util.Random;
 @Entity
 @Table(name = "schoolDB.course")
 public class Course {
+    private static final Random rnd = new Random();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
@@ -28,8 +29,12 @@ public class Course {
 
 
     public static Course create() {
-        Map.Entry entry = (Map.Entry) listOfCourses.get(new Random().nextInt(4));
-        return new Course((String) entry.getKey(), (Integer) entry.getValue());
+        String title = "Course #";
+        return new Course(String.format("%s %d", title, rnd.nextInt(20)), rnd.nextInt(10));
+    }
+
+    public void update(Course course) {
+
     }
 
     public int getId() {

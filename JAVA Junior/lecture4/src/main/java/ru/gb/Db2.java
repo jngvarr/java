@@ -1,4 +1,4 @@
-package ru.gb.lecture;
+package ru.gb;
 
 import org.hibernate.*;
 import org.hibernate.boot.MetadataSources;
