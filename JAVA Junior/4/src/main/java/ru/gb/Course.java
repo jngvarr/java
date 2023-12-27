@@ -1,19 +1,15 @@
-package ru.gb.model;
-
-import org.stringtemplate.v4.ST;
+package ru.gb;
 
 import javax.persistence.*;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 @Entity
-@Table(name = "schoolDB.course")
+@Table(name = "courses")
 public class Course {
     private static final Random rnd = new Random();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     int id;
     String title;
     int duration;
@@ -30,11 +26,11 @@ public class Course {
 
     public static Course create() {
         String title = "Course #";
-        return new Course(String.format("%s %d", title, rnd.nextInt(20)), rnd.nextInt(10));
+        return new Course(String.format("%s%d", title, rnd.nextInt(20)), rnd.nextInt(10));
     }
 
     public void update(Course course) {
-
+        course.duration = rnd.nextInt(20);
     }
 
     public int getId() {
