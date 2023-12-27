@@ -44,6 +44,7 @@ public class Main {
         List<Course> courses = coursesRepository.getAll();
         System.out.println("Courses:");
         courses.forEach(System.out::println);
+        coursesRepository.deleteAll();
 
 //        try(SessionFactory sessionFactory = new Configuration()
 //                .configure("hibernate.cfg.xml")
