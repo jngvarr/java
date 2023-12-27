@@ -2,59 +2,97 @@ package ru.gb.model;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import ru.gb.Course;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
-public class CoursesRepositoryImpl implements CoursesRepository{
-    @Override
-    public void add(Course item) {
-        try(SessionFactory sessionFactory = new Configuration()
+public class CoursesRepositoryImpl implements CoursesRepository {
+    private final SessionFactory sessionFactory;
+
+    public CoursesRepositoryImpl() {
+        this.sessionFactory = new Configuration()
                 .configure("hibernate.cfg.xml")
                 .addAnnotatedClass(Course.class)
-                .buildSessionFactory()){
+                .buildSessionFactory();
+    }
 
-
-            // Создание сессии
-            Session session = sessionFactory.getCurrentSession();
-
-            // Начало транзакции
-            session.beginTransaction();
-
-            // Создание объекта
-            Course course = Course.create();
+    @Override
+    public void add(Course course) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
             session.save(course);
-            System.out.println("Object course successfully saved");
-
-            session.getTransaction().commit();
-
+            transaction.commit();
+            System.out.printf("The course %s was added.\n", course);
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             e.printStackTrace();
         }
     }
 
     @Override
-    public void update(Course item) {
-
+    public void update(Course course) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            course.update();
+            session.update(course);
+            transaction.commit();
+            System.out.printf("The course %s was updated.\n", course);
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void delete(Course item) {
-
+    public void delete(Course course) {
+        Transaction transaction = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            session.delete(course);
+            transaction.commit();
+            System.out.printf("The course %s was deleted.\n", course);
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public Course getById(Integer integer) {
-        return null;
+    public Course getById(Integer id) {
+        try (Session session = sessionFactory.openSession()) {
+            Course course = session.get(Course.class, id);
+            System.out.printf("The selected course is: %s.\n", course);
+            return course;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
-    public Collection<Course> getAll() {
-        return null;
+    public List<Course> getAll() {
+        Transaction transaction = null;
+        List<Course> courses = null;
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+            courses = session.createQuery("FROM course", Course.class).list();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+        }
+        return courses;
     }
 }

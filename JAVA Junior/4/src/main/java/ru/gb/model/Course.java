@@ -1,4 +1,4 @@
-package ru.gb;
+package ru.gb.model;
 
 import javax.persistence.*;
 import java.util.Random;
@@ -29,8 +29,8 @@ public class Course {
         return new Course(String.format("%s%d", title, rnd.nextInt(20)), rnd.nextInt(10));
     }
 
-    public void update(Course course) {
-        course.duration = rnd.nextInt(20);
+    public void update() {
+        duration = rnd.nextInt(20);
     }
 
     public int getId() {
