@@ -85,7 +85,7 @@ public class CoursesRepositoryImpl implements CoursesRepository {
         List<Course> courses = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            courses = session.createQuery("FROM course", Course.class).list();
+            courses = session.createQuery("FROM Course", Course.class).list();
             transaction.commit();
         } catch (Exception e) {
             if (transaction != null) {
