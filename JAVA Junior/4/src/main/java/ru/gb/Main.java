@@ -30,14 +30,18 @@ public class Main {
 
 
         CoursesRepositoryImpl coursesRepository = new CoursesRepositoryImpl();
-        Course course = Course.create();
 
-        coursesRepository.add(course);
+        Course course = null;
+        for (int i = 0; i < 5; i++) {
+            course = Course.create();
+            coursesRepository.add(course);
+        }
+
         Course retrievedCourse = coursesRepository.getById(course.getId());
         coursesRepository.update(retrievedCourse);
         coursesRepository.delete(retrievedCourse);
 
-        Collection<Course> courses = coursesRepository.getAll();
+        List<Course> courses = coursesRepository.getAll();
         System.out.println("Courses:");
         courses.forEach(System.out::println);
 
