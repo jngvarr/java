@@ -22,8 +22,7 @@ public class ClientManager implements Runnable {
             clients.add(this);
             System.out.println(name + " подключился к чату.");
             broadcastMessage("Server: " + name + " подключился к чату.");
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
 
@@ -43,29 +42,41 @@ public class ClientManager implements Runnable {
                     break;
                 }*/
                 broadcastMessage(massageFromClient);
-            }
-            catch (IOException e){
+            } catch (IOException e) {
                 closeEverything(socket, bufferedReader, bufferedWriter);
                 break;
             }
         }
     }
 
-    private void broadcastMessage(String message){
-        for (ClientManager client: clients) {
-            try {
-                if (!client.name.equals(name)) {
-                    client.bufferedWriter.write(message);
-                    client.bufferedWriter.newLine();
-                    client.bufferedWriter.flush();
+    private void broadcastMessage(String message) {
+        for (ClientManager client : clients) {
+            String sender = message.substring(0, message.indexOf(":"));
+            int atIndex = message.indexOf("@");
+            int spaceIndex = message.indexOf(" ", atIndex);
+            String recipient = message.substring(atIndex + 1, spaceIndex);
+            if (message.contains("@")) {
+                if (recipient.equals(client.name)) {
+                    client.sendMessage("Приватное сообщение от \'" + sender + "\': " + message.substring(spaceIndex));
+                    break;
                 }
-            }
-            catch (IOException e){
-                closeEverything(socket, bufferedReader, bufferedWriter);
+            } else {
+                if (!client.name.equals(name)) {
+                    client.sendMessage(message);
+                }
             }
         }
     }
 
+    public void sendMessage(String message) {
+        try {
+            bufferedWriter.write(message);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         // Удаление клиента из коллекции
@@ -88,7 +99,7 @@ public class ClientManager implements Runnable {
         }
     }
 
-    private void removeClient(){
+    private void removeClient() {
         clients.remove(this);
         System.out.println(name + " покинул чат.");
         broadcastMessage("Server: " + name + " покинул чат.");

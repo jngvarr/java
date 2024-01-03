@@ -11,11 +11,32 @@ public class Server {
     }
 
     public void runServer() {
+
+        try {
+            while (!serverSocket.isClosed()) {
+                Socket socket = serverSocket.accept();
+                System.out.println("Подключен новый клиент!");
+                ClientManager client = new ClientManager(socket);
+                Thread thread = new Thread(client);
+                thread.start();
+            }
+
+        } catch (
+                IOException e) {
+            closeSocket();
+        }
     }
-            try{
+    public void closeSocket(){
+        try{
+            if (serverSocket != null) serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    } catch(IOException e){
-        closeSocket();
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(1300);
+        Server server = new Server(serverSocket);
+        server.runServer();
     }
 }

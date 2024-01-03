@@ -7,18 +7,16 @@ import java.rmi.UnknownHostException;
 public class Program {
 
     public static void main(String[] args) {
-        try
-        {
+
+        try {
             ServerSocket serverSocket = new ServerSocket(1400);
             Server server = new Server(serverSocket);
             server.runServer();
-        }
-        catch (UnknownHostException e){
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
 
+    }
 }
