@@ -56,17 +56,18 @@ public class Person {
 
         try (FileWriter writer = new FileWriter(filePath)) {
             writer.write(json);
-            System.out.println("Объект Person успешно сериализован " + filePath);
+            System.out.println("Объект Person успешно сериализован в файл: '" + filePath + "'");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     // Метод для чтения объекта Person из файла JSON
-    public  Person readPersonFromFile(String filePath) {
+    public Person readPersonFromFile(String filePath) {
         Gson gson = new Gson();
 
         try (FileReader reader = new FileReader(filePath)) {
+            System.out.println("Объект Person успешно десериализован: ");
             return gson.fromJson(reader, Person.class);
         } catch (IOException e) {
             e.printStackTrace();
