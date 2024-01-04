@@ -1,5 +1,5 @@
 .idea
 out
 target
-distr/
-distr
+Distr/
+Distr/g*
