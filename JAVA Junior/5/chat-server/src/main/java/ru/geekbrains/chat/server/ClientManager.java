@@ -25,8 +25,6 @@ public class ClientManager implements Runnable {
         } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
-
-
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import ru.gb.seminar.task2.ToDo;
 
 import java.io.*;
-import java.util.List;
 
 public class Task2 {
     private static final ObjectMapper objectMapper = new ObjectMapper();

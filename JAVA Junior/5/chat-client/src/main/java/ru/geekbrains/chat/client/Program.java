@@ -16,11 +16,11 @@ public class Program {
             String name = scanner.nextLine();
             Socket socket = new Socket("localhost", 1400);
             Client client = new Client(socket, name);
-            InetAddress inetAddress = socket.getInetAddress();
+            InetAddress inetAddress = socket.getInetAddress();//Returns the address to which the socket is connected.
             System.out.println("InetAddress: " + inetAddress);
-            String remoteIp = inetAddress.getHostAddress();
+            String remoteIp = inetAddress.getHostAddress();//Returns the raw IP address of this InetAddress object.
             System.out.println("Remote IP: " + remoteIp);
-            System.out.println("LocalPort:" + socket.getLocalPort());
+            System.out.println("LocalPort:" + socket.getLocalPort());//Returns the local port number to which this socket is bound.
 
             client.listenForMessage();
             client.sendMessage();
