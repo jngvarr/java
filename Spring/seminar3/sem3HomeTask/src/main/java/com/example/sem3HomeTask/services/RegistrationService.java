@@ -7,14 +7,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class RegistrationService {
 
+    private final DataProcessingService dataProcessingService;
+    private final UserService userService;
+    private final NotificationService notificationService;
 
     public DataProcessingService getDataProcessingService() {
         return dataProcessingService;
     }
 
-    private DataProcessingService dataProcessingService;
-    private UserService userService;
-    private NotificationService notificationService;
 
     public RegistrationService(DataProcessingService dataProcessingService, UserService userService,
                                NotificationService notificationService) {
@@ -25,8 +25,8 @@ public class RegistrationService {
 
     /**
      *  Создание пользователя с заданными параметрами,
-     *  вывод в консоль сообщения о создании,
      *  добавление пользователя в репозиторий
+     *  вывод в консоль сообщения о создании,
      *
      * @param name Имя пользователя
      * @param age Возраст пользователя
@@ -34,6 +34,7 @@ public class RegistrationService {
      */
     public void processRegistration(String name, int age, String eMail) {
         User user = userService.createUser(name, age, eMail);
-        dataProcessingService.addUserToList(user);
+        dataProcessingService.addUser(user);
+//        notificationService.notifyUser(user); в методе с UserService.createUser уже есть уведомление о создании юзера
     }
 }

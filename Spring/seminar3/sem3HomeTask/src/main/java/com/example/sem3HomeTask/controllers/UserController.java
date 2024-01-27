@@ -20,12 +20,12 @@ public class UserController {
 
     @GetMapping
     public List<User> userList() {
-        return service.getDataProcessingService().getRepository().getUsers();
+        return service.getDataProcessingService().getRepository().findAll();
     }
 
     @PostMapping("/body")
     public String userAddFromBody(@RequestBody User user) {
-        service.getDataProcessingService().getRepository().getUsers().add(user);
+        service.processRegistration(user.getName(), user.getAge(), user.getEmail());
         return "User added from body!";
     }
 
@@ -42,12 +42,12 @@ public class UserController {
             @RequestParam int age,
             @RequestParam String email) {
         User user = userService.createUser(name, age, email);
-        service.getDataProcessingService().getRepository().getUsers().add(user);
+        service.getDataProcessingService().getRepository().addUser(user);
         return ResponseEntity.ok(user);
     }
 }
 //{
-//        "name": "John",
+//        "name": "Ваня",
 //        "age": 25,
-//        "email": "john@example.com"
+//        "email": "ivan@internet.com"
 //        }
