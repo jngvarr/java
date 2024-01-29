@@ -1,11 +1,14 @@
 package com.example.demo.repositories;
 
+import com.example.demo.model.MagicData;
 import com.example.demo.model.User;
 import lombok.AllArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 @Repository
@@ -13,9 +16,10 @@ import java.util.List;
 public class UserRepository {
 
     private final JdbcTemplate jdbc;
+    private final MagicData magicData;
 
     public List<User> findAll() {
-        String sql = "SELECT * FROM userTable";
+        String sql = magicData.getFindAllQuery();
 
         RowMapper<User> userRowMapper = (r, i) -> {
             User rowObject = new User();
@@ -29,28 +33,31 @@ public class UserRepository {
     }
 
     public User save(User user) {
-        String sql = "INSERT INTO userTable VALUES (NULL, ?, ?)";
+        String sql = magicData.getSaveQuery();
         jdbc.update(sql, user.getFirstName(), user.getLastName());
         return user;
     }
 
     public void deleteById(int id) {
-        String sql = "DELETE FROM userTable WHERE id=?";
+        String sql = magicData.getDeleteByIdQuery();
         jdbc.update(sql, id);
     }
 
-    public void update(int id, User user) {
-        String sql = "UPDATE userTable SET firstName = ?, lastName = ? WHERE id = ?";
+    public void updateUser(int id, User user) {
+        String sql = magicData.getUpdateUserQuery();
         jdbc.update(sql, user.getFirstName(), user.getLastName(), id);
     }
+
     public User getOne(int id) {
-        String sql = "SELECT * FROM userTable WHERE id = ?";
-        return jdbc.queryForObject(sql, new Object[]{id}, (r, i) -> {
+        String sql = magicData.getGetOneQuery();
+        List<User> users = jdbc.query(sql, (rs, rowNum) -> {
             User user = new User();
-            user.setId(r.getInt("id"));
-            user.setFirstName(r.getString("firstName"));
-            user.setLastName(r.getString("lastName"));
+            user.setId(rs.getInt("id"));
+            user.setFirstName(rs.getString("firstName"));
+            user.setLastName(rs.getString("lastName"));
             return user;
-        });
+        }, id);
+
+        return users.isEmpty() ? null : users.get(0);
     }
 }

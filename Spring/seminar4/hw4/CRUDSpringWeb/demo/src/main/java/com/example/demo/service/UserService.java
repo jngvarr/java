@@ -3,7 +3,6 @@ package com.example.demo.service;
 import com.example.demo.model.User;
 import com.example.demo.repositories.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +28,7 @@ public class UserService {
     }
 
     public void updateUser(int id, User user) {
-        userRepository.update(id, user);
+        userRepository.updateUser(id, user);
     }
 
 
