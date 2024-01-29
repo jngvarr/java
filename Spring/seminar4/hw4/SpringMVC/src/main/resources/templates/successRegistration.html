@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+      <meta charset="UTF-8">
+      <title>Registration Success</title>
+  </head>
+  <body>
+      <h1>Registration Successful!</h1>
+      <p>Thank you for registering, <span th:text="${name}"></span>!</p>
+      <p>Your email: <span th:text="${email}"></span></p>
+      <a th:href="@{/task3}">Back to Registration</a>
+  </body>
+</html>
