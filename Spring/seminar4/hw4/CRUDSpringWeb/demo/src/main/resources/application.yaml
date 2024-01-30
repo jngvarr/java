@@ -1,0 +1,11 @@
+server:
+  error:
+    whitelabel:
+        enabled : false
+magic:
+  data:
+    findAllQuery : SELECT * FROM userTable
+    saveQuery : "INSERT INTO userTable VALUES (NULL, ?, ?)"
+    deleteByIdQuery : "DELETE FROM userTable WHERE id=?"
+    updateUserQuery : "UPDATE userTable SET firstName = ?, lastName = ? WHERE id = ?"
+    getOneQuery : "SELECT * FROM userTable WHERE id = ?"
