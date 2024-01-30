@@ -1,5 +1,7 @@
 package ru.gb.hw4.model;
-
+/**
+ * Класс, представляющий сущность пользователя.
+ */
 public class User {
     private String name;
     private String password;
