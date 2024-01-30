@@ -1,4 +1,4 @@
-package ru.gb.hw5;
+package ru.gb.hw5.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

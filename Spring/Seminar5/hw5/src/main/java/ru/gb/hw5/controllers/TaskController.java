@@ -1,4 +1,4 @@
-package ru.gb.hw5;
+package ru.gb.hw5.controllers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;

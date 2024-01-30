@@ -2,7 +2,7 @@ package ru.gb.hw5.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.gb.hw5.TaskRepository;
+import ru.gb.hw5.repositories.TaskRepository;
 import ru.gb.hw5.model.Task;
 import ru.gb.hw5.model.TaskStatus;
 
