@@ -17,11 +17,9 @@ public class Task {
     @Column(nullable = false)
     private String description;
     private TaskStatus status;
-    private LocalDateTime creationDate = LocalDateTime.now();
+    private LocalDateTime creationDate;
 
-//    public Task(String description, TaskStatus taskStatus, Date creationDate) {
-//        this.description = description;
-//        this.taskStatus = taskStatus;
-//        this.creationDate = LocalDateTime.now();
-//    }
+    public Task() {
+        this.creationDate = LocalDateTime.now();
+    }
 }

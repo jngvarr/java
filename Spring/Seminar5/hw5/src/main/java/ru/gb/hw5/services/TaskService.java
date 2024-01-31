@@ -14,7 +14,7 @@ public class TaskService {
 
     TaskRepository repository;
 
-    public List<Task> getAllTasks(Task task) {
+    public List<Task> getAllTasks() {
         return repository.findAll();
     }
 
@@ -25,12 +25,12 @@ public class TaskService {
     public List<Task> showTasksByStatus(TaskStatus status) {
         return repository.showByStatus(status);
     }
+    public void deleteTask(Long id){
+        repository.deleteById(id);
+    }
 
     public void changeTasksStatus(Long id, TaskStatus status) {
         repository.changeStatus(id, status);
-    }
-    public void deleteTask(Long id){
-        repository.deleteById(id);
     }
 
     public void deleteTask(String name) {
