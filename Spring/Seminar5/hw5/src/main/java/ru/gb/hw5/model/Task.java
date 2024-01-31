@@ -1,11 +1,9 @@
 package ru.gb.hw5.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Data
@@ -17,9 +15,6 @@ public class Task {
     @Column(nullable = false)
     private String description;
     private TaskStatus status;
-    private LocalDateTime creationDate;
+    private LocalDateTime creationDate= LocalDateTime.now();
 
-    public Task() {
-        this.creationDate = LocalDateTime.now();
-    }
 }

@@ -13,14 +13,10 @@ import java.util.List;
 
 //@Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    @Query("SELECT * FROM tasks WHERE status = status")
+    @Query("SELECT task FROM Task task WHERE task.status = :status")
     List<Task> showByStatus(TaskStatus status);
 
     @Modifying
-    @Query("UPDATE status SET status = :status WHERE id = :id")
+    @Query("UPDATE Task SET status = :status WHERE id = :id")
     void changeStatus(long id, TaskStatus status);
-
-    @Modifying
-    @Query("DELETE FROM tasks WHERE name = :name")
-    void deleteByName(String name);
 }

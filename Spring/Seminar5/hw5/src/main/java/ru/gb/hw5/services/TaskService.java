@@ -1,7 +1,10 @@
 package ru.gb.hw5.services;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.gb.hw5.repositories.TaskRepository;
 import ru.gb.hw5.model.Task;
 import ru.gb.hw5.model.TaskStatus;
@@ -9,10 +12,10 @@ import ru.gb.hw5.model.TaskStatus;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TaskService {
 
-    TaskRepository repository;
+    private final TaskRepository repository;
 
     public List<Task> getAllTasks() {
         return repository.findAll();
@@ -25,15 +28,12 @@ public class TaskService {
     public List<Task> showTasksByStatus(TaskStatus status) {
         return repository.showByStatus(status);
     }
-    public void deleteTask(Long id){
+
+    public void deleteTask(long id) {
         repository.deleteById(id);
     }
 
-    public void changeTasksStatus(Long id, TaskStatus status) {
+    public void changeTasksStatus(long id, TaskStatus status) {
         repository.changeStatus(id, status);
-    }
-
-    public void deleteTask(String name) {
-        repository.deleteByName(name);
     }
 }
