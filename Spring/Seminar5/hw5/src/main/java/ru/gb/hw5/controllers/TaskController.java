@@ -29,15 +29,17 @@ public class TaskController {
     public void addTask(@RequestBody Task task){
         service.addTask(task);
     }
+
     @GetMapping("/status/{status}")
-    public List<Task> showBTaskByStatus(@PathVariable TaskStatus status){
+    public List<Task> showTaskByStatus(@PathVariable TaskStatus status){
         return service.showTasksByStatus(status);
     }
 
-    @PutMapping("/{id}")
-    public void update(@PathVariable long id, @RequestBody TaskStatus status){
+    @PutMapping("/{id}/status")
+    public void update(@PathVariable long id, @PathVariable TaskStatus status){
         service.changeTasksStatus(id, status);
     }
+
     @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable long id){
         service.deleteTask(id);

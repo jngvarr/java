@@ -13,7 +13,7 @@ import java.util.List;
 
 //@Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    @Query("SELECT task FROM Task task WHERE task.status = :status")
+    @Query(value = "SELECT * FROM Task task WHERE task.status = :status", nativeQuery = true)
     List<Task> showByStatus(TaskStatus status);
 
     @Modifying
