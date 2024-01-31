@@ -1,5 +1,6 @@
 package ru.gb.hw5.services;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class TaskService {
         repository.deleteById(id);
     }
 
+    @Transactional
     public void changeTasksStatus(long id, TaskStatus status) {
         repository.changeStatus(id, status);
     }
