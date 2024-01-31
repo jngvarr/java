@@ -35,8 +35,8 @@ public class TaskController {
         return service.showTasksByStatus(status);
     }
 
-    @PutMapping("/{id}/status")
-    public void update(@PathVariable long id, @PathVariable TaskStatus status){
+    @PutMapping("/{id}/{status}")
+    public void update(@PathVariable("id") long id, @PathVariable("status") TaskStatus status){
         service.changeTasksStatus(id, status);
     }
 
