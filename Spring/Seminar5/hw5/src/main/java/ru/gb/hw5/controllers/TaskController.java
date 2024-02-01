@@ -35,10 +35,14 @@ public class TaskController {
         return service.showTasksByStatus(status);
     }
 
-    @PutMapping("/{id}/{status}")
-    public void update(@PathVariable("id") long id, @PathVariable("status") TaskStatus status){
+    @PutMapping("/{id}")
+    public void update(@PathVariable("id") long id, @RequestBody TaskStatus status) {
         service.changeTasksStatus(id, status);
     }
+//    } @PutMapping("/{id}/{status}")
+//    public void update(@PathVariable("id") long id, @PathVariable("status") TaskStatus status){
+//        service.changeTasksStatus(id, status);
+//    }
 
     @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable long id){
