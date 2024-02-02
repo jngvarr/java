@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class UsersProject extends EntityWithRelation{
+public class    UsersProject extends EntityWithRelation{
     private Long projectId;
     private Long userId;
 

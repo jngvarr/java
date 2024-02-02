@@ -5,15 +5,17 @@ import lombok.Data;
 
 @Entity
 @Data
+@Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @Column(name = "user_name")
     private String userName;
     private String password;
     private String email;
     private String role;
-//    @OneToMany
-//    @JoinColumn(name = "project_id")
-    private Project project;
+//    @OneToOne
+//    @JoinColumn(name = "user_id")
+//    private UsersProject uProject;
 }
