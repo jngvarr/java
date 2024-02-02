@@ -1,13 +1,14 @@
 package ru.gb.hw52.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+@NoArgsConstructor
+@Data
 @Entity
 public class Project {
     @Id
@@ -16,4 +17,8 @@ public class Project {
     private String name;
     private String description;
     private LocalDate creationDate;
+
+//    @ManyToOne
+//    @JoinColumn(name = "user_id")
+    private User user;
 }
