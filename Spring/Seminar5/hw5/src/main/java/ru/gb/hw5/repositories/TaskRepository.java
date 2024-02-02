@@ -10,13 +10,15 @@ import ru.gb.hw5.model.TaskStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+/**
+ * Репозиторий для работы с задачами в базе данных.
+ */
 
-//@Repository
-public interface TaskRepository extends JpaRepository<Task, Long> {
-    @Query(value = "SELECT * FROM Task task WHERE task.status = :status", nativeQuery = true)
-    List<Task> showByStatus(TaskStatus status);
+    public interface TaskRepository extends JpaRepository<Task, Long> {
+        @Query(value = "SELECT task FROM Task task WHERE task.status = :status")
+        List<Task> showByStatus(TaskStatus status);
 
-    @Modifying
-    @Query("UPDATE Task SET status = :status WHERE id = :id")
-    void changeStatus(long id, TaskStatus status);
-}
+        @Modifying
+        @Query("UPDATE Task SET status = :status WHERE id = :id")
+        void changeStatus(long id, TaskStatus status);
+    }

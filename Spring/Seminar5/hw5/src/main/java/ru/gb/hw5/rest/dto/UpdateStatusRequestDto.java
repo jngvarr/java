@@ -1,4 +1,4 @@
-package ru.gb.hw5.controllers;
+package ru.gb.hw5.rest.dto;
 
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;

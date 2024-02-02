@@ -1,8 +1,11 @@
-insert into tasks (description,status)
-values ('поесть','IN_PROGRESS' );
-insert into tasks (description,status)
-values ('заправить кровать', 'NOT_STARTED');
-insert into tasks (description,status)
-values ('почистить зубы', 'NOT_STARTED');
-insert into tasks (description,status)
-values ('помыть посуду', 'DONE');
+insert into tasks (description, status, creation_date)
+values ('поесть', 'IN_PROGRESS', now());
+
+insert into tasks (description, status, creation_date)
+values ('заправить кровать', 'NOT_STARTED', now());
+
+insert into tasks (description, status, creation_date)
+values ('почистить зубы', 'NOT_STARTED', now());
+
+insert into tasks (description, status, creation_date)
+values ('помыть посуду', 'DONE', now());

@@ -1,41 +1,59 @@
 package ru.gb.hw5.services;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import ru.gb.hw5.repositories.TaskRepository;
 import ru.gb.hw5.model.Task;
 import ru.gb.hw5.model.TaskStatus;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class TaskService {
+/**
+ * Сервис для управления задачами
+ */
+public interface TaskService {
+    /**
+     * Получить список всех задач.
+     *
+     * @return Список всех задач
+     */
+    List<Task> getAllTasks();
 
-    private final TaskRepository repository;
+    /**
+     * Получить задачу по идентификатору.
+     *
+     * @param id Идентификатор задачи
+     * @return Задача с указанным идентификатором
+     */
+    Task get(long id);
 
-    public List<Task> getAllTasks() {
-        return repository.findAll();
-    }
+    /**
+     * Добавить новую задачу.
+     *
+     * @param task Новая задача для добавления
+     * @return Добавленная задача
+     */
+    Task addTask(Task task);
 
-    public void addTask(Task task) {
-        repository.save(task);
-    }
+    /**
+     * Получить список задач по их статусу.
+     *
+     * @param status Статус задачи для фильтрации
+     * @return Список задач с указанным статусом
+     */
+    List<Task> showTasksByStatus(TaskStatus status);
 
-    public List<Task> showTasksByStatus(TaskStatus status) {
-        return repository.showByStatus(status);
-    }
+    /**
+     * Удалить задачу по идентификатору.
+     *
+     * @param id Идентификатор задачи для удаления
+     */
+    void deleteTask(long id);
 
-    public void deleteTask(long id) {
-        repository.deleteById(id);
-    }
-
+    /**
+     * Изменить статус задачи по её идентификатору.
+     *
+     * @param id     Идентификатор задачи
+     * @param status Новый статус задачи
+     */
     @Transactional
-    public void changeTasksStatus(long id, TaskStatus status) {
-        repository.changeStatus(id, status);
-    }
+    void changeTasksStatus(long id, TaskStatus status);
 }
