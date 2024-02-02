@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -18,7 +19,6 @@ public class Project {
     private String description;
     private LocalDate creationDate;
 
-//    @ManyToOne
-//    @JoinColumn(name = "user_id")
-//    private User user;
+//    @OneToMany(mappedBy = "project")
+//    List<UserToProject> usersProject;
 }

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.gb.hw52.model.Project;
 import ru.gb.hw52.model.User;
-import ru.gb.hw52.model.UsersProject;
 import ru.gb.hw52.repository.ProjectRepository;
 import ru.gb.hw52.repository.UserRepository;
 import ru.gb.hw52.repository.UsersProjectRepository;

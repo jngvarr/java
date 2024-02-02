@@ -3,6 +3,8 @@ package ru.gb.hw52.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Data
 @Table(name = "users")
@@ -15,7 +17,7 @@ public class User {
     private String password;
     private String email;
     private String role;
-//    @OneToOne
-//    @JoinColumn(name = "user_id")
-//    private UsersProject uProject;
+
+//    @OneToMany(mappedBy = "user")
+//    private List<UsersProject> usersProjects;
 }
