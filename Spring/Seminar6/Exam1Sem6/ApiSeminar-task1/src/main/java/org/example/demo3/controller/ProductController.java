@@ -3,6 +3,7 @@ package org.example.demo3.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.demo3.model.Product;
 import org.example.demo3.service.ProductService;
+import org.example.demo3.service.impl.ProductServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductServiceImpl productService;
 
     @GetMapping
     public ResponseEntity<List<Product>> getAll() {
