@@ -19,6 +19,4 @@ public class Project {
     private String description;
     private LocalDate creationDate;
 
-//    @OneToMany(mappedBy = "project")
-//    List<UserToProject> usersProject;
 }

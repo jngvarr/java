@@ -18,6 +18,4 @@ public class User {
     private String email;
     private String role;
 
-//    @OneToMany(mappedBy = "user")
-//    private List<UsersProject> usersProjects;
 }

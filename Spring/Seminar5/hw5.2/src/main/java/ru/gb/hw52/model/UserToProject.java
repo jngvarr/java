@@ -1,20 +1,26 @@
 package ru.gb.hw52.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Table
 @Data
-public class UserToProject extends EntityWithRelation{
-    @OneToOne(targetEntity = User.class)
-    @JoinColumn(name = "user_id")
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserToProject {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private Long userId;
 
-    @OneToOne(targetEntity = Project.class)
-    @JoinColumn(name = "project_id")
     private Long projectId;
-
+    public UserToProject(long userId, long projectId) {
+        this.userId = userId;
+        this.projectId = projectId;
+    }
 }

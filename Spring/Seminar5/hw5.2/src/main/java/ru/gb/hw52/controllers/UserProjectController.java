@@ -62,22 +62,23 @@ public class UserProjectController {
      *
      * @param userId    уникальный идентификатор пользователя
      * @param projectId уникальный идентификатор проекта
-     * @return
+     * @return ResponseEntity с соответствующим HTTP-статусом.
      */
     @PostMapping("/{userId}/{projectId}")
-    public ResponseEntity addUserToProject(@PathVariable("userId") Long userId, @PathVariable("projectId") Long projectId) {
-        return new ResponseEntity<>(userProjectService.addUserToProject(userId, projectId), HttpStatus.OK);
+    public ResponseEntity<Void> addUserToProject(@PathVariable("userId") Long userId,
+                                                 @PathVariable("projectId") Long projectId) {
+        return ResponseEntity.ok().build();
     }
 
-        /**
-         * метод, обрабатывающий POST-запрос для удаления пользователя из проекта
-         *
-         * @param userId уникальный идентификатор, удаляемого пользователя
-         * @param projectId уникальный идентификатор проекта
-         * @return ResponseEntity с соответствующим HTTP-статусом.
-         */
-        public ResponseEntity removeUserFromProject (Long userId, Long projectId){
-            userProjectService.removeUserFromProject(userId, projectId);
-            return ResponseEntity.ok().build();
-        }
+    /**
+     * Метод, обрабатывающий POST-запрос для удаления пользователя из проекта
+     *
+     * @param userId    уникальный идентификатор, удаляемого пользователя
+     * @param projectId уникальный идентификатор проекта
+     * @return ResponseEntity с соответствующим HTTP-статусом.
+     */
+    public ResponseEntity removeUserFromProject(Long userId, Long projectId) {
+        userProjectService.removeUserFromProject(userId, projectId);
+        return ResponseEntity.ok().build();
     }
+}

@@ -8,8 +8,4 @@ import java.util.List;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    List<Project> getByUserId(Long userId);
-
-    Project addUserById(Long projectId, Long userId);
-    void deleteUserById(Long projectId, Long userId);
 }
