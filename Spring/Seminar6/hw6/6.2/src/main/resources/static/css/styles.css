@@ -1,0 +1,161 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    color: #333;
+    margin-left: 100px;
+    text-align: center;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.character-card {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px;
+    background-color: #f9f9f9;
+}
+
+.character-image {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.character-details {
+    flex: 2;
+}
+
+.back-link {
+    margin-top: 16px;
+    display: block;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.character {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.character-name {
+    font-weight: bold;
+    font-size: medium;
+    background-color: rgba(144, 238, 208, 0.1);
+    padding: 5px;
+}
+
+.pagination-link {
+    margin-top: 15px;
+    font-size: 20px;
+    display: inline-block;
+    padding: 10px 10px;
+    background-color: lightgray;
+    text-decoration: none;
+    color: black;
+}
+
+.pagination-links {
+    display: flex;
+    justify-content: space-between;
+}
+
+.characters-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+}
+
+.characters-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 16px;
+    background-color: #f9f9f9;
+    /*width: calc(50% - 32px); !* 50% ширины с учетом отступов *!*/
+    box-sizing: border-box;
+    display: inline-block; /* Расположение в строку */
+    vertical-align: top; /* Верхний вертикальный отступ */
+    overflow: hidden;
+}
+
+.characters-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.characters-details {
+    padding: 16px;
+}
+
+.characters-name {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.filter-button-container {
+    margin-bottom: 16px; /* Расстояние между кнопкой "Фильтровать" и другими элементами */
+    text-align: center; /* Выравнивание в центре для кнопки "Фильтровать" */
+}
+
+.filter-button {
+    padding: 8px 16px; /* Размеры кнопки */
+    background-color: #007BFF; /* Цвет фона кнопки */
+    color: #fff; /* Цвет текста на кнопке */
+    text-decoration: none; /* Убираем стандартное подчеркивание текста на кнопке */
+    border: none; /* Убираем границу у кнопки */
+    border-radius: 4px; /* Закругляем углы кнопки */
+    cursor: pointer; /* Изменяем курсор при наведении на кнопку */
+    transition: background-color 0.3s; /* Плавное изменение цвета фона при наведении */
+}
+
+.filter-button:hover {
+    background-color: #0056b3; /* Цвет фона при наведении на кнопку */
+}
+
+
+.filter-form {
+    text-align: center; /* Выравнивание в центре для формы фильтрации */
+    margin-top: 16px; /* Отступ сверху формы */
+    margin-bottom: 16px; /* Отступ снизу формы */
+}
+
+.filter-form label {
+    display: block; /* Каждая метка с новой строки */
+    margin-bottom: 8px; /* Отступ снизу у метки */
+    text-align: left; /* Выравнивание слева для названия полей*/
+}
+
+.filter-form input,
+.filter-form select {
+    padding: 8px 12px; /* Размеры полей ввода и выпадающего списка */
+    margin-bottom: 16px; /* Отступ снизу у полей ввода и выпадающего списка */
+    width: 100%; /* Занимаем 100% ширины контейнера */
+    box-sizing: border-box; /* Учитываем отступы и границы внутри элемента */
+}
+
+.filter-form button {
+    padding: 8px 16px; /* Размеры кнопки */
+    background-color: #007BFF; /* Цвет фона кнопки */
+    color: #fff; /* Цвет текста на кнопке */
+    text-decoration: none; /* Убираем стандартное подчеркивание текста на кнопке */
+    border: none; /* Убираем границу у кнопки */
+    border-radius: 4px; /* Закругляем углы кнопки */
+    cursor: pointer; /* Изменяем курсор при наведении на кнопку */
+    transition: background-color 0.3s; /* Плавное изменение цвета фона при наведении */
+}
+
+.filter-form button:hover {
+    background-color: #0056b3; /* Цвет фона при наведении на кнопку */
+}
+
+

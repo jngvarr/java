@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Фильтр персонажей</title>
+  <link rel="stylesheet" type="text/css" href="/css/styles.css">
+  <style>
+
+  </style>
+</head>
+<body>
+<h1>Фильтр персонажей</h1>
+<form th:action="@{/character/filter/result}" method="get" class="filter-form">
+  <label for="name">Имя:</label>
+  <input type="text" id="name" name="name">
+
+  <label for="status">Статус:</label>
+  <select id="status" name="status">
+    <option value="">-- Выберите статус --</option>
+    <option th:each="option : ${statusOptions}" th:value="${option}" th:text="${option}"></option>
+  </select>
+
+  <label for="species">Вид:</label>
+  <input type="text" id="species" name="species">
+
+  <label for="type">Тип:</label>
+  <input type="text" id="type" name="type">
+
+  <label for="gender">Пол:</label>
+  <select id="gender" name="gender">
+    <option value="">-- Выберите пол --</option>
+    <option th:each="option : ${genderOptions}" th:value="${option}" th:text="${option}"></option>
+  </select>
+
+  <button type="submit">Применить фильтр</button>
+
+  <a th:href="@{/character}" class="back-link">В Начало</a>
+</form>
+</body>
+</html>

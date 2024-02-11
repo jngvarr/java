@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rick and Morty Characters</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <style>
+
+    </style>
+</head>
+<body>
+<h1>Список персонажей Rick and Morty</h1>
+<!-- Добавляю кнопку "Фильтровать" -->
+<div class="filter-button-container">
+    <a th:href="@{/character/filter}" class="filter-button">Фильтровать</a>
+    <a th:href="@{/character}" class="filter-button">В Начало</a>
+</div>
+<div class="pagination-links">
+    <a th:if="${prevPage}" th:href="@{/character(page=${prevPage})}" class="filter-button">Назад</a>
+    <a th:if="${nextPage}" th:href="@{/character(page=${nextPage})}" class="filter-button">Вперед</a>
+<!--    pagination-link-->
+</div>
+<div class="characters-container">
+    <div th:each="character : ${characters}" class="characters-card">
+        <div class="characters-image">
+            <img th:src="${character.image}" alt="Character Image" style="max-width: 100%; height: auto;"/>
+        </div>
+        <div class="characters-details">
+            <a class="characters-name" th:href="@{/character/{id}(id=${character.id})}" th:text="${character.name}"></a>
+        </div>
+    </div>
+</div>
+<div class="pagination-links">
+    <a th:if="${prevPage}" th:href="@{/character(page=${prevPage})}" class="filter-button">Назад</a>
+    <a th:if="${nextPage}" th:href="@{/character(page=${nextPage})}" class="filter-button">Вперед</a>
+</div>
+</body>

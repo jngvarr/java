@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <link rel="stylesheet" type="text/css" href="/css/styles.css">
+  <style>
+
+  </style>
+</head>
+<body>
+<h1>Детали персонажа</h1>
+<div th:if="${character != null}" class="character-card">
+  <div class="character-image">
+    <img th:src="${character.image}" alt="Character Image"/>
+  </div>
+  <div class="character-details">
+    <p>Name: <span th:text="${character.name}"></span></p>
+    <p>Status: <span th:text="${character.status}"></span></p>
+    <p>Species: <span th:text="${character.species}"></span></p>
+    <p>Type: <span th:text="${character.type}"></span></p>
+    <p>Gender: <span th:text="${character.gender}"></span></p>
+    <!-- Другие поля модели Result - url, created не стала добавлять,
+     хотя url согласно документации можно использовать в запросе по id сразу-->
+  </div>
+</div>
+<div th:if="${character == null}">
+  <p>Персонаж не найден</p>
+</div>
+<a th:href="@{/character(page=${page})}" class="back-link">Назад</a>
+<a th:href="@{/character}" class="back-link">В Начало</a>
+</body>
+</html>
