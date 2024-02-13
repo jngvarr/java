@@ -15,8 +15,6 @@ import java.util.logging.Logger;
 @Log
 public class LoggingAspect {
 
-    //private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
-
     @Around("@annotation(ru.geekbrain.empl3sem8.aspect.LoggedExecution)")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
