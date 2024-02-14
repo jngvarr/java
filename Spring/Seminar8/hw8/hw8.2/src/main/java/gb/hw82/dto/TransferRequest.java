@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public class TransferRequest {
 
   private long senderAccountId;
-  private long shopAccountId;
+//  private long shopAccountId;
   private long amount;
 
 }
