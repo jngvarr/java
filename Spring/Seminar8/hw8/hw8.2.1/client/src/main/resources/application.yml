@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: web
+
+api:
+  storage:
+    basicUri: http//localhost:8081
+  payment:
+    basicUri: http//localhost:8082
+
+shop:
+  account:
+    number=1

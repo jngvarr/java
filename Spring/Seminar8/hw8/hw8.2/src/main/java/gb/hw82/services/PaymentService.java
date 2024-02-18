@@ -28,7 +28,7 @@ public class PaymentService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        Account buyerAccount = accountService.getUserAccount(accountId);
+        Account buyerAccount = accountService.getBuyerAccount(accountId);
         Account shopAccount = accountService.getShopAccount();
         if (buyerAccount.getBalance() >= product.getPrice()) {
             buyerAccount.setBalance(buyerAccount.getBalance() - product.getPrice());

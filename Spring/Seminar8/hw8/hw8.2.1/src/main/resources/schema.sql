@@ -1,0 +1,13 @@
+CREATE TABLE products (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(50) NOT NULL,
+    description VARCHAR(50) NOT NULL,
+    price DOUBLE NOT NULL,
+    quantity LONG NOT NULL
+);
+
+create TABLE account (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    amount DOUBLE NOT NULL
+);

@@ -11,7 +11,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    public Account getUserAccount(Long id) {
+    public Account getBuyerAccount(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new RuntimeException("User account not found"));
     }
 

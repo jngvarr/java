@@ -9,7 +9,7 @@ public interface ShopService {
 
     Product getProductById(long id);
 
-    Product addTask(Product product);
+    Product addProduct(Product product);
 
     void deleteProduct(long id);
 }

@@ -24,7 +24,7 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public Product addTask(Product product) {
+    public Product addProduct(Product product) {
         return null;
     }
 
