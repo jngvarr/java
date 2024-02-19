@@ -10,6 +10,6 @@ public class StorageController {
     @GetMapping
     public String storageMethod(){
         return "Service is developing" +
-                "Soon I will create a normal working storage-service!";
+                " Soon I will create a normal working storage-service!";
     }
 }

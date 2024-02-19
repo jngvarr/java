@@ -22,6 +22,7 @@ import java.util.List;
  */
 @Service
 public class ShopService {
+    private final RestTemplate template = new RestTemplate();
     /**+
      * Api оплаты.
      */
@@ -54,7 +55,6 @@ public class ShopService {
      */
     @LogLeadTime
     public List<Product> getAll(){
-        RestTemplate template = new RestTemplate();
         ResponseEntity<List<Product>> response = template.exchange(storageApi.getBasicUri(),
         HttpMethod.GET, null, new ParameterizedTypeReference<>(){});
         return response.getBody();
@@ -70,6 +70,7 @@ public class ShopService {
      */
     @LogLeadTime
     public void buyProduct(Long productId, int amount, BigDecimal sum, Long numberCredit){
+        Transaction transaction = new Transaction();
         productReserve(productId, amount);
         try {
             payOrder(sum, numberCredit);
@@ -94,7 +95,6 @@ public class ShopService {
     @LogLeadTime
     private void productReserve(Long id, int amount)
             throws HttpClientErrorException {
-        RestTemplate template = new RestTemplate();
         String path = storageApi.getBasicUri() + id + "/reserve";
         Order order = new Order();
         order.setAmount(amount);
@@ -109,7 +109,6 @@ public class ShopService {
     @LogLeadTime
     private void rollbackProductReserve(Long id, int amount)
             throws HttpClientErrorException {
-        RestTemplate template = new RestTemplate();
         String path = storageApi.getBasicUri() + id + "/reserve/rollback";
         Order order = new Order();
         order.setAmount(amount);
@@ -124,7 +123,6 @@ public class ShopService {
     @LogLeadTime
     private void productBay(Long id, int amount)
             throws HttpClientErrorException {
-        RestTemplate template = new RestTemplate();
         Order order = new Order();
         order.setAmount(amount);
         template.postForEntity(storageApi.getBasicUri() + id,
@@ -139,7 +137,6 @@ public class ShopService {
     @LogLeadTime
     private void payOrder(BigDecimal sum, Long numberCredit)
             throws HttpClientErrorException {
-        RestTemplate template = new RestTemplate();
         Transaction transaction = new Transaction();
         transaction.setCreditNumber(numberCredit);
         transaction.setDebitNumber(Long.parseLong(shopAccount));
@@ -156,8 +153,6 @@ public class ShopService {
     @LogLeadTime
     private void rollbackPayOrder(BigDecimal sum, Long numberCredit)
             throws HttpClientErrorException {
-        RestTemplate template = new RestTemplate();
-        Transaction transaction = new Transaction();
         transaction.setCreditNumber(numberCredit);
         transaction.setDebitNumber(Long.parseLong(shopAccount));
         transaction.setSum(sum);

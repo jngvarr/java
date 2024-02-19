@@ -1,10 +1,10 @@
-package src.test.java.ru.gb.webshop;
+package ru.gb.apigateway;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class WebShopApplicationTests {
+class ApigatewayApplicationTests {
 
 	@Test
 	void contextLoads() {

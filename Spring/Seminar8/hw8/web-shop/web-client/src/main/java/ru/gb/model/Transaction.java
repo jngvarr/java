@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 
 @Data
 public class Transaction {
-    private long buyerAccountId;
-    private BigDecimal sum;
+
+        private Long creditNumber;
+        private Long debitNumber;
+        private BigDecimal sum;
 }
