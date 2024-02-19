@@ -1,0 +1,19 @@
+server:
+  port=8080
+
+spring:
+  application:
+    name:web
+  main:
+    web-application-type: reactive
+
+api:
+  storage:
+    baseUrl: http://localhost:8081/
+  payment:
+    baseUrl: http://localhost:8082/
+
+#eureka:
+#  client:
+#    register-with-eureka: false
+#    fetch-registry: false

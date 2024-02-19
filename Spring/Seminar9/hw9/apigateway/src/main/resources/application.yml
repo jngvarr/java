@@ -10,10 +10,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: web
-          uri: http://localhost:8080/
-          predicates:
-            - Path=/web/**
+#        - id: web
+#          uri: http://localhost:8080/
+#          predicates:
+#            - Path=/web/**
         - id: storage
           uri: http://localhost:8081/
           predicates:
