@@ -5,9 +5,18 @@ spring:
   application:
     name: payment
 
+  config:
+    activate:
+      on-profile: dev
+    import:
+      optional:
+        configserver: http://localhost:8888
+  cloud:
+    config:
+      fail-fast: true
 
-  main:
-    web-application-type: reactive
+#  main:
+#    web-application-type: reactive
 
 #eureka:
 #  client:

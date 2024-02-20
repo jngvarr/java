@@ -1,0 +1,17 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/jngvarr/SpringConfig.git
+          username: jngvarr
+          password: Ihu37818
+          default-label: main
+          search-paths: "{application}"
+
