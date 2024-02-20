@@ -11,7 +11,7 @@
 	<groupId>ru.gb</groupId>
 	<artifactId>web-shop-with-api-gateaway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>web-shop-with-api-gateway</name>
+	<name>web-shop-with-api-gateaway</name>
 	<description>api gateway+eureka</description>
 	<properties>
 		<java.version>17</java.version>

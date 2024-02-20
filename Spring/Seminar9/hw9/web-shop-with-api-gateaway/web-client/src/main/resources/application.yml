@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name:web
+    name: web
   main:
     web-application-type: reactive
 

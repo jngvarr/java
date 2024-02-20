@@ -8,3 +8,8 @@ spring:
 
   main:
     web-application-type: reactive
+
+#eureka:
+#  client:
+#    register-with-eureka: false
+#    fetch-registry: false
