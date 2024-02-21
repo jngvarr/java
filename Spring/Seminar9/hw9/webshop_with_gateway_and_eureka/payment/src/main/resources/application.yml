@@ -7,7 +7,7 @@ spring:
 
   config:
     import:
-     configserver: http://localhost:8888
+     configserver:http://localhost:8888
 
   jpa:
     generate-ddl: false

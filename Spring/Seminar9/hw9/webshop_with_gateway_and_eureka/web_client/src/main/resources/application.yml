@@ -5,11 +5,11 @@ spring:
   application:
     name: web
 
-  config:
-    import: configserver:http://localhost:8888
+#  config:
+#    import: configserver:http://localhost:8888
 
-#api:
-#  storage:
-#    baseUrl: http://localhost:8081/
-#  payment:
-#    baseUrl: http://localhost:8082/
+api:
+  storage:
+    baseUrl: http://localhost:8081/
+  payment:
+    baseUrl: http://localhost:8082/

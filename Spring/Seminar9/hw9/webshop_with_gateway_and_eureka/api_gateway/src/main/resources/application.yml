@@ -15,23 +15,23 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-  config:
-    import: configserver:http://localhost:8888
+#  config:
+#    import: configserver:http://localhost:8888
 
 
-#      routes:
+      routes:
 #        - id: web
 #          uri: http://localhost:8080/
 #          predicates:
 #            - Path=/web/**
-#        - id: storage
-#          uri: http://localhost:8081/
-#          predicates:
-#            - Path=/storage/**
-#        - id: payment
-#          uri: http://localhost:8082/
-#          predicates:
-#            - Path=/payment/**
+        - id: storage
+          uri: http://localhost:8081/
+          predicates:
+            - Path=/storage/**
+        - id: payment
+          uri: http://localhost:8082/
+          predicates:
+            - Path=/payment/**
 #        - id: eserver
 #          uri: http://localhost:8761/
 #          predicates:
