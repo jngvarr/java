@@ -7,11 +7,11 @@ spring:
   main:
     web-application-type: reactive
 
-api:
-  storage:
-    baseUrl: http://localhost:8081/
-  payment:
-    baseUrl: http://localhost:8082/
+#api:
+#  storage:
+#    baseUrl: http://localhost:8081/
+#  payment:
+#    baseUrl: http://localhost:8082/
 
 #eureka:
 #  client:
