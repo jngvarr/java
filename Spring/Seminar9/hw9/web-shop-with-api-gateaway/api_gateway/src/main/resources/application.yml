@@ -1,0 +1,24 @@
+server:
+  port: 8765
+
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      routes:
+#        - id: web
+#          uri: http://localhost:8080/
+#          predicates:
+#            - Path=/web/**
+        - id: storage
+          uri: http://localhost:8081/
+          predicates:
+            - Path=/storage/**
+        - id: payment
+          uri: http://localhost:8082/
+          predicates:
+            - Path=/payment/**

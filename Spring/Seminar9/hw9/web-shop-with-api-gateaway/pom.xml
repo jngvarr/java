@@ -18,7 +18,8 @@
 		<module>payment</module>
 		<module>storage</module>
 		<module>web-client</module>
-	</modules>
+        <module>api_gateway</module>
+    </modules>
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2023.0.0</spring-cloud.version>

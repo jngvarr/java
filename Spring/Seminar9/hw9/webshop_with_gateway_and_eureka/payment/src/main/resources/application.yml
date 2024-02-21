@@ -6,13 +6,20 @@ spring:
     name: payment
 
   config:
-    activate:
-      on-profile: dev
     import:
      configserver: http://localhost:8888
-  cloud:
-    config:
-      fail-fast: true
+
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+
+  profiles:
+    active: eclient
+
+#  cloud:
+#    config:
+#      fail-fast: true
 
 #  main:
 #    web-application-type: reactive
@@ -21,3 +28,9 @@ spring:
 #  client:
 #    register-with-eureka: false
 #    fetch-registry: false
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: metrics,prometheus

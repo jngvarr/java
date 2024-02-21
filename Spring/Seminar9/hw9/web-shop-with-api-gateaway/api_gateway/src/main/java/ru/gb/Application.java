@@ -1,4 +1,4 @@
-package ru.gb.web_shop_with_ap_gateaway;
+package ru.gb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
