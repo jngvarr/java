@@ -10,6 +10,6 @@ spring:
 
 api:
   storage:
-    baseUrl: http://localhost:8081/
+    baseUri: http://localhost:8081/
   payment:
-    baseUrl: http://localhost:8082/
+    baseUri: http://localhost:8082/
