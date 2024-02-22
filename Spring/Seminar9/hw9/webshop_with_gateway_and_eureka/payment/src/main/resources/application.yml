@@ -5,17 +5,11 @@ spring:
   application:
     name: payment
 
-  config:
-    import:
-     configserver:http://localhost:8888
-
   jpa:
     generate-ddl: false
     hibernate:
       ddl-auto: none
 
-  profiles:
-    active: eclient
 
 #  cloud:
 #    config:

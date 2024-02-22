@@ -21,7 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class TransferServiceWithAnnotationsUnitTests {
+public class  TransferServiceWithAnnotationsUnitTests {
 
   @Mock
   private AccountRepository accountRepository;

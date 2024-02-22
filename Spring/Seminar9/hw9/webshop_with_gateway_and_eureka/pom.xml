@@ -7,17 +7,16 @@
     <groupId>ru.gb</groupId>
     <artifactId>webshop_with_gateway_and_eureka</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <modules>
         <module>payment</module>
         <module>storage</module>
         <module>web_client</module>
         <module>api_gateway</module>
-        <module>config_server</module>
         <module>eureka_server</module>
     </modules>
     <properties>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
-
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
