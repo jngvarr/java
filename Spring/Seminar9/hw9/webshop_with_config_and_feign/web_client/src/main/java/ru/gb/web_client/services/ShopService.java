@@ -1,17 +1,14 @@
 package ru.gb.web_client.services;
 
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import ru.gb.web_client.aspect.LogAction;
+import ru.gb.web_client.clients.PaymentClientApi;
+import ru.gb.web_client.clients.StorageClientApi;
 import ru.gb.web_client.model.Order;
 import ru.gb.web_client.model.Product;
 import ru.gb.web_client.model.Transaction;
-import ru.gb.web_client.model.api.Payment;
-import ru.gb.web_client.model.api.Storage;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,66 +17,46 @@ import java.util.List;
  * Сервис для осуществления покупки.
  */
 @Service
+@RequiredArgsConstructor
 public class ShopService {
 
 
-    private final RestTemplate template = new RestTemplate();
-        /**+
-         * Api оплаты.
-         */
-        private final Payment paymentApi;
-        /**
-         * Api склада товаров.
-         */
-        private final Storage storageApi;
-        /**
-         * Номер счета магазина.
-         */
-
-        /**
-         * Конструктор класса.
-         * @param paymentApi api оплаты.
-         * @param storageApi api склада.
-         */
-        public ShopService(Payment paymentApi, Storage storageApi) {
-            this.paymentApi = paymentApi;
-            this.storageApi = storageApi;
-
-        }
-
-        /**
-         * Получение все товаров со склада.
-         * @return список товаров.
-         */
-        @LogAction
-        public List<Product> getAll(){
-            RestTemplate template = new RestTemplate();
-            ResponseEntity<List<Product>> response = template.exchange(storageApi.getBaseUri(),
-                    HttpMethod.GET, null, new ParameterizedTypeReference<>(){});
-            return response.getBody();
-        }
     /**
-     * Метод покупки товара. На каждом этапе происходит проверка,
-     * в случае получения исключения происходит откат выполненных транзакций.
-     * @param productId идентификатор продукта.
-     * @param amount количество заказанного продукта.
-     * @param sum сумма заказа.
-     * @param numberCredit номер счета для списания.
+     * +
+     * Api оплаты.
+     */
+    private final PaymentClientApi paymentApi;
+    /**
+     * Api склада товаров.
+     */
+    private final StorageClientApi storageApi;
+
+
+    /**
+     * Получение все товаров со склада.
+     *
+     * @return список товаров.
      */
     @LogAction
-    public void buyProduct(Long productId, int amount, BigDecimal sum, Long numberCredit){
+    public List<Product> getAll() {
+        return storageApi.getProducts();
+    }
+
+
+    @LogAction
+    public void buyProduct(Long productId, int amount, BigDecimal sum, Long numberCredit) {
         Transaction transaction = new Transaction();
         productReserve(productId, amount);
         try {
             payOrder(sum, numberCredit);
-            try{
-                productBay(productId, amount);
-            } catch (HttpClientErrorException e){
+            try {
+                productBuy(productId, amount);
+            } catch (HttpClientErrorException e) {
                 rollbackPayOrder(sum, numberCredit);
                 rollbackProductReserve(productId, amount);
                 throw e;
             }
-        }catch (HttpClientErrorException e){
+        } catch (HttpClientErrorException e) {
             rollbackProductReserve(productId, amount);
             throw e;
         }
@@ -87,49 +64,44 @@ public class ShopService {
 
     /**
      * Резервирование продукта на складе.
-     * @param id идентификатор продукта.
+     *
+     * @param id     идентификатор продукта.
      * @param amount количество.
      */
     @LogAction
     private void productReserve(Long id, int amount)
             throws HttpClientErrorException {
-        String path = storageApi.getBaseUri() + id + "/reserve";
-        Order order = new Order();
-        order.setProductsAmount(amount);
-        template.postForEntity(path, order, Object.class);
+        storageApi.reserveProduct(id, Order.builder().productsAmount(amount).build());
     }
 
     /**
      * Служебный метод отката резервирования товара
-     * @param id идентификатор товара.
+     *
+     * @param id     идентификатор товара.
      * @param amount количество.
      */
     @LogAction
     private void rollbackProductReserve(Long id, int amount)
             throws HttpClientErrorException {
-        String path = storageApi.getBaseUri() + id + "/reserve/rollback";
-        Order order = new Order();
-        order.setProductsAmount(amount);
-        template.postForEntity(path, order, Object.class);
+        storageApi.rollbackReserve(id, Order.builder().productsAmount(amount).build());
     }
 
     /**
      * Оформление покупки, уменьшение остатка на складе.
-     * @param id идентификатор продукта.
+     *
+     * @param id     идентификатор продукта.
      * @param amount количество товара.
      */
     @LogAction
-    private void productBay(Long id, int amount)
+    private void productBuy(Long id, int amount)
             throws HttpClientErrorException {
-        Order order = new Order();
-        order.setProductsAmount(amount);
-        template.postForEntity(storageApi.getBaseUri() + id,
-                order, Object.class);
+        storageApi.buy(id, Order.builder().productsAmount(amount).build());
     }
 
     /**
      * Оплата товара
-     * @param sum сумма для оплаты.
+     *
+     * @param sum          сумма для оплаты.
      * @param numberCredit номер счета списания.
      */
     @LogAction
@@ -137,15 +109,15 @@ public class ShopService {
             throws HttpClientErrorException {
         Transaction transaction = new Transaction();
         transaction.setCreditNumber(numberCredit);
-        transaction.setDebitNumber(Long.parseLong("0"));
+        transaction.setDebitNumber(0L);
         transaction.setSum(sum);
-        template.postForEntity(paymentApi.getBaseUri(),
-                transaction, Object.class);
+        paymentApi.pay(transaction);
     }
 
     /**
      * Служебный метод отката произведенной оплаты.
-     * @param sum сумма операции.
+     *
+     * @param sum          сумма операции.
      * @param numberCredit номер счета.
      */
     @LogAction
@@ -153,10 +125,9 @@ public class ShopService {
             throws HttpClientErrorException {
         Transaction transaction = new Transaction();
         transaction.setCreditNumber(numberCredit);
-        transaction.setDebitNumber(Long.parseLong("0"));
+        transaction.setDebitNumber(0L);
         transaction.setSum(sum);
-        template.postForEntity(paymentApi.getBaseUri() + "/rollback",
-                transaction, Object.class);
+        paymentApi.rollback(transaction);
     }
 
 }

@@ -23,5 +23,5 @@ public interface StorageClientApi {
     void rollbackReserve(@PathVariable Long id, @RequestBody Order order);
 
     @PostMapping("/{id}")
-    ResponseEntity<?> bay(@PathVariable Long id, @RequestBody Order order);
+    ResponseEntity<?> buy(@PathVariable Long id, @RequestBody Order order);
 }

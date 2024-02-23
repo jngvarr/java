@@ -8,6 +8,8 @@ spring:
     active: eclient
 #  main:
 #    web-application-type: reactive
+  config:
+    import: configserver:http://localhost:8888
 
   cloud:
     gateway:
@@ -15,15 +17,14 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-#  config:
-#    import: configserver:http://localhost:8888
+
 
 
       routes:
-#        - id: web
-#          uri: http://localhost:8080/
-#          predicates:
-#            - Path=/web/**
+##        - id: web
+##          uri: http://localhost:8080/
+##          predicates:
+##            - Path=/web/**
         - id: storage
           uri: http://localhost:8081/
           predicates:
