@@ -18,6 +18,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Юнит-тест для метода addTask класса TaskServiceImpl.
+ */
 
 @ExtendWith(MockitoExtension.class)
 public class AddTaskServiceTest {
@@ -35,10 +38,9 @@ public class AddTaskServiceTest {
 //        given(taskRepository);
 
         // Когда вызывается метод save у taskRepository с любым объектом Task, то возвращаем этот же объект
-        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.save(any(Task.class))).thenReturn(task); //задается поведение Mock-репозитория
 
         // action Вызываем метод addTask у taskService
-
         Task addedTask = taskService.addTask(task);
 
         verify(taskRepository).save(task);
