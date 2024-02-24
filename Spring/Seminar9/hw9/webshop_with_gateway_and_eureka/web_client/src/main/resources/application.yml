@@ -5,8 +5,6 @@ spring:
   application:
     name: web
 
-#  config:
-#    import: configserver:http://localhost:8888
 
 api:
   storage:

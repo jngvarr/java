@@ -19,4 +19,6 @@ public class Product {
     private double price;
     @Column(nullable = false)
     private Long quantity;
+    @Column(name = "reserved")
+    private int reserved;
 }
