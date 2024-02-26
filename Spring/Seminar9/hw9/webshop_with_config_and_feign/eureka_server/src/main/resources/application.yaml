@@ -3,8 +3,9 @@ server:
 spring:
   application:
     name: eserver
-#  config:
-#    import: configserver:http://localhost:8888
+  config:
+    import: configserver:http://localhost:8888/
+
 #  profiles:
 #    active: default
 
@@ -12,7 +13,6 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
 
