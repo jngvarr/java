@@ -1,0 +1,33 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: storage
+
+  profiles:
+    active: eclient
+
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, metrics
+#    endpoint:
+#      health:
+#        show-details: always
+
+
+#    metrics:
+#      export:
+#        prometheus:
+#          enabled: true
+#
