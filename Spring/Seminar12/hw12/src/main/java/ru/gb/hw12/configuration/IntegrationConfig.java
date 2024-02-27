@@ -1,4 +1,4 @@
-package ru.gb.hw5.configuration;
+package ru.gb.hw12.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,6 @@ import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.messaging.MessageChannel;
 
 import java.io.File;
-import java.io.FileWriter;
 
 @Configuration
 public class IntegrationConfig {
@@ -38,10 +37,13 @@ public class IntegrationConfig {
     @ServiceActivator(inputChannel = "fileWriterChanel")
     public FileWritingMessageHandler messageHandler(){
         FileWritingMessageHandler handler =
-                new FileWritingMessageHandler(new File("../files"));
+                new FileWritingMessageHandler(new File("../files of hw12"));
         handler.setExpectReply(false);
         handler.setFileExistsMode(FileExistsMode.APPEND);
         handler.setAppendNewLine(true);
+
+
+        System.out.println(getClass().getSimpleName());;
 
         return handler;
 

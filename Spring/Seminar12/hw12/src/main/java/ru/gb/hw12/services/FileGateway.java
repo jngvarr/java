@@ -1,4 +1,4 @@
-package ru.gb.hw5.services;
+package ru.gb.hw12.services;
 
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.file.FileHeaders;

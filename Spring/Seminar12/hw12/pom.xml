@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.gb</groupId>
-	<artifactId>hw5</artifactId>
+	<artifactId>hw12</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>hw5</name>
+	<name>hw12</name>
 	<description>Demo project for Spring Boot  Spring Data Jpa</description>
 	<properties>
 		<java.version>17</java.version>

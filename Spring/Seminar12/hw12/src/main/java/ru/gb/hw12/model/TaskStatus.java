@@ -1,7 +1,5 @@
-package ru.gb.hw5.model;
+package ru.gb.hw12.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Перечисление, представляющее возможные статусы задачи.
  */

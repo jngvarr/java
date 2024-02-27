@@ -1,8 +1,8 @@
-package ru.gb.hw5.rest.dto;
+package ru.gb.hw12.rest.dto;
 
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;
-import ru.gb.hw5.model.TaskStatus;
+import ru.gb.hw12.model.TaskStatus;
 
 /**
  * DTO (Data Transfer Object) для запроса обновления статуса задачи.

@@ -1,4 +1,4 @@
-package ru.gb.hw5.model;
+package ru.gb.hw12.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

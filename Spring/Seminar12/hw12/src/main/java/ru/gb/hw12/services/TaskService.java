@@ -1,8 +1,8 @@
-package ru.gb.hw5.services;
+package ru.gb.hw12.services;
 
 import jakarta.transaction.Transactional;
-import ru.gb.hw5.model.Task;
-import ru.gb.hw5.model.TaskStatus;
+import ru.gb.hw12.model.Task;
+import ru.gb.hw12.model.TaskStatus;
 
 import java.util.List;
 

@@ -1,14 +1,11 @@
-package ru.gb.hw5.rest.controllers;
+package ru.gb.hw12.rest.controllers;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import ru.gb.hw5.rest.dto.UpdateStatusRequestDto;
-import ru.gb.hw5.model.Task;
-import ru.gb.hw5.model.TaskStatus;
-import ru.gb.hw5.services.FileGateway;
-import ru.gb.hw5.services.TaskService;
+import ru.gb.hw12.rest.dto.UpdateStatusRequestDto;
+import ru.gb.hw12.model.Task;
+import ru.gb.hw12.model.TaskStatus;
+import ru.gb.hw12.services.TaskService;
 
 import java.util.List;
 
@@ -16,21 +13,18 @@ import java.util.List;
  * Контроллер, управляющий HTTP-запросами для операций с задачами
  */
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping()
 @RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService service;
-    private final FileGateway fileGateway;
-
-
 
     /**
      * Показать все задания
      *
      * @return все задания из списка
      */
-    @GetMapping
+    @GetMapping("/tasks")
     public List<Task> showAllTasks() {
         return service.getAllTasks();
     }

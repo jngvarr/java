@@ -1,14 +1,11 @@
-package ru.gb.hw5.repositories;
+package ru.gb.hw12.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-import ru.gb.hw5.model.Task;
-import ru.gb.hw5.model.TaskStatus;
+import ru.gb.hw12.model.Task;
+import ru.gb.hw12.model.TaskStatus;
 
-import java.math.BigDecimal;
 import java.util.List;
 /**
  * Репозиторий для работы с задачами в базе данных.
