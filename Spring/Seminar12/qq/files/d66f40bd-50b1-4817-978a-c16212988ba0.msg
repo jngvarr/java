@@ -1,0 +1,1 @@
+Венгерская оппозиция вышла на митинг с требованием прямых выборов президента Марина Совина https://lenta.ru/news/2024/02/25/vengerskaya-oppozitsiya-vyshla-na-miting-s-trebovaniem-pryamyh-vyborov-prezidenta/
