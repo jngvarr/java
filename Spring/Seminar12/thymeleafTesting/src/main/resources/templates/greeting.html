@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Greeting</title>
+    <link rel="stylesheet" href="/styles.css"> <!-- Ссылка на CSS к странице-->
+</head>
+<body>
+        <h1 th:text="${message}">Hello, World!</h1> <!-- текст внутри тега <h1> должен быть заменен на значение переменной message.-->
+</body>
+</html>

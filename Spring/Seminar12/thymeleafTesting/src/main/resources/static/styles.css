@@ -1,0 +1,10 @@
+body {
+    background-color: lightblue;
+}
+
+h1 {
+
+    color: navy;
+    font-family: 'Arial', sans-serif;
+}
+/* Здесь мы делаем фон нашей страницы светло-синим и устанавливаем цвет и шрифт для заголовков первого уровня. */
