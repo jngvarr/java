@@ -1,13 +1,12 @@
-package ru.jngvarr.clientmanagment;
+package ru.jngvarr.clientmanagement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ClientManagmentApplication {
+public class ClientManagementApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ClientManagmentApplication.class, args);
+        SpringApplication.run(ClientManagementApplication.class, args);
     }
-
 }

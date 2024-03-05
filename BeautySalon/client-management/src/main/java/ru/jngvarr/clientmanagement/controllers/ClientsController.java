@@ -1,12 +1,12 @@
-package ru.jngvarr.clientmanagment.controllers;
+package ru.jngvarr.clientmanagement.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.jngvarr.clientmanagment.services.ClientService;
-import ru.jngvarr.clientmanagment.model.Client;
+import ru.jngvarr.clientmanagement.services.ClientService;
+import ru.jngvarr.clientmanagement.model.Client;
 
 
 @Controller

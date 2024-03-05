@@ -1,4 +1,4 @@
-package ru.jngvarr.clientmanagment;
+package ru.jngvarr.clientmanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

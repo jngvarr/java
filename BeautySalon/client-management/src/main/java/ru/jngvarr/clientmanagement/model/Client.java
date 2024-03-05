@@ -1,4 +1,4 @@
-package ru.jngvarr.clientmanagment.model;
+package ru.jngvarr.clientmanagement.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
