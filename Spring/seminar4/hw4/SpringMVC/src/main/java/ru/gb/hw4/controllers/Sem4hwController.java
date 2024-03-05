@@ -11,17 +11,18 @@ import java.time.LocalDate;
  * Обработка HTML запросов домашнего задания четвертого семинара
  */
 @Controller
+@RequestMapping
 public class Sem4hwController {
-    /**
-     * Обработка HTTP-запросов, направленных на путь "/home"
-     * Отображение HTML-страницы домашнего задания четвертого семинара
-     *
-     * @return возвращает логическое имя шаблона
-     */
-    @RequestMapping("/home")
-    public String task() {
-        return "home";
-    }
+//    /**
+//     * Обработка HTTP-запросов, направленных на путь "/home"
+//     * Отображение HTML-страницы домашнего задания четвертого семинара
+//     *
+//     * @return возвращает логическое имя шаблона
+//     */
+//    @GetMapping()
+//    public String task() {
+//        return "home";
+//    }
 
     /**
      * Обработка HTTP-запросов, направленных на путь "/task1"

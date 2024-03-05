@@ -2,13 +2,14 @@ package com.example.demo;
 
 
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-@Component
+@Repository
 public class UserRepository {
     private final Map<Long, User> users = new ConcurrentHashMap<>();
     private final AtomicLong counter = new AtomicLong();

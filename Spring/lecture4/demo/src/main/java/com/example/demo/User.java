@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import jakarta.persistence.Entity;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @Entity

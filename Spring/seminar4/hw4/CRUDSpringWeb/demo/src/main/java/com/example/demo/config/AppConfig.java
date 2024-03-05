@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
  * Конфигурация приложения.
  */
 @Configuration
-@ConfigurationProperties(prefix = "magic.data")
+//@ConfigurationProperties(prefix = "magic.data")
 public class AppConfig {
-    // private MagicData magicData;
 }
