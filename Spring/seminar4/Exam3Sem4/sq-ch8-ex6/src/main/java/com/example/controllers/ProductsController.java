@@ -24,6 +24,11 @@ public class ProductsController {
     return "products.html";
   }
 
+  @GetMapping("/table")
+  public String viewProducts() {
+    return "table";
+  }
+
   @PostMapping("/products")
   public String addProduct(
       Product p,
