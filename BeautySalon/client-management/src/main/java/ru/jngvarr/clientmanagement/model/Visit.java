@@ -2,10 +2,10 @@ package ru.jngvarr.clientmanagement.model;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import ru.jngvarr.servicesmanagement.model.Servize;
 import java.util.ArrayList;
 import java.util.Date;
 
+import ru.jngvarr.servicemamagement.model.Servize;
 @Data
 @RequiredArgsConstructor
 public class Visit {

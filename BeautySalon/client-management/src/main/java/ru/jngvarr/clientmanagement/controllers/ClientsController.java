@@ -5,9 +5,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.jngvarr.clientmanagement.services.ClientService;
 import ru.jngvarr.clientmanagement.model.Client;
-
+import ru.jngvarr.clientmanagement.services.ClientService;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,7 +19,7 @@ public class ClientsController {
         return "clients";
     }
 
-    public String getClient(Model model, @RequestBody Client client){
-
+    public String getClient(Model model, @RequestBody Client client) {
+        return "client";
     }
 }

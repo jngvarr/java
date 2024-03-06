@@ -3,7 +3,6 @@ package ru.jngvarr.clientmanagement.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.jngvarr.clientmanagement.model.Client;
-
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
 
 import java.util.List;

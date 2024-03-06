@@ -1,9 +1,8 @@
 package ru.jngvarr.clientmanagement.model;
 
+import ru.jngvarr.beautysalon.common.model.SomeOne;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.jngvarr.beautysalon.common.model.SomeOne;
-
 import java.util.ArrayList;
 
 @EqualsAndHashCode(callSuper = true)

@@ -1,13 +1,13 @@
-package ru.jngvarr.servicesmanagement;
+package ru.jngvarr.beautysalon;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ServicesManagementApplication {
+public class BeautySalonApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ServicesManagementApplication.class, args);
+        SpringApplication.run(BeautySalonApplication.class, args);
     }
 
 }
