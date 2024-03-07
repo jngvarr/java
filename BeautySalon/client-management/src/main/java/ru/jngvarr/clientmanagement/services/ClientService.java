@@ -6,6 +6,7 @@ import ru.jngvarr.clientmanagement.model.Client;
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,15 +17,20 @@ public class ClientService {
         return clientsRepository.findAll();
     }
 
-    public Client getClient(Client client) {
-        return clientsRepository.getReferenceById(client.getId());
+    public Client getClient(Long id) {
+        return clientsRepository.getReferenceById(id);
     }
 
-    public Client addClient(Client client){
+    public Client addClient(Client client) {
         return clientsRepository.save(client);
     }
 
-    public void deleteClient(Client client){
+    public Client update(Client updateClient) {
+//        Client newClient =
+       return clientsRepository.save(updateClient);
+    }
+
+    public void deleteClient(Client client) {
         clientsRepository.deleteById(client.getId());
     }
 }

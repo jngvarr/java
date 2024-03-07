@@ -16,13 +16,13 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/products")
-    public String getProductS(Model model){
+    public String getProductS(Model model) {
         model.addAttribute("products", productService.getAllProducts());
         return "products";
     }
 
     @PostMapping("/products")
-    public String addProduct(Product p, Model model){
+    public String addProduct(Product p, Model model) {
         productService.addProduct(p);
         model.addAttribute("products", productService.getAllProducts());
         return "products";

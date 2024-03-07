@@ -1,3 +1,27 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: clients
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://localhost:5432/clients
+    username: user
+    password: password
+
+jakarta:
+  persistence:
+    jdbc:
+     url: jdbc:postgresql://localhost:5432/clients
+     user: user
+     password: password
+
+#
+#hibernate:
+#  dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
