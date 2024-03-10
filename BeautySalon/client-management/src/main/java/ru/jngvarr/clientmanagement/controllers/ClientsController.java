@@ -23,9 +23,20 @@ public class ClientsController {
         return ResponseEntity.ok().body(clientService.showAll());
     }
 
+    @GetMapping("/clear")
+    public ResponseEntity<Void> clearAllData() {
+        clientService.clearAllData();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Client> getClient(@PathVariable Long id) {
         return new ResponseEntity<>(clientService.getClient(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/{phoneNumber}")
+    public ResponseEntity<Client> getClientByPhone(@PathVariable String phoneNumber) {
+        return new ResponseEntity<>(clientService.getClientByPhone(phoneNumber), HttpStatus.OK);
     }
 
     @PostMapping
@@ -33,12 +44,14 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.addClient(newClient), HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<Client> updateClient(Client newClient) {
-        return new ResponseEntity<>(clientService.addClient(newClient), HttpStatus.OK);
+    @PutMapping("/{id}")
+    public ResponseEntity<Client> updateClient(@RequestBody Client newClient, @PathVariable Long id) {
+        return new ResponseEntity<>(clientService.update(newClient, id), HttpStatus.OK);
     }
-    @DeleteMapping
-    public ResponseEntity<Client> deleteClient(Client newClient) {
-        return new ResponseEntity<>(clientService.addClient(newClient), HttpStatus.NO_CONTENT);
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
+        clientService.deleteClient(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -13,5 +13,5 @@ spring:
         git:
           uri: https://github.com/jngvarr/SpringConfig.git
           default-label: main
-          basedir: c:\Users\jngva\gb\springConfig\
-
+#          basedir: c:\..\gb\springConfig\
+          basedir: .\gb\springConfig\
