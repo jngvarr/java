@@ -5,8 +5,6 @@ import org.springframework.stereotype.Service;
 import ru.jngvarr.clientmanagement.model.Client;
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +13,7 @@ import java.util.Optional;
 public class ClientService {
     private final ClientsRepository clientsRepository;
 
-    public List<Client> showAll() {
+    public List<Client> getClients() {
         return clientsRepository.findAll();
     }
 
@@ -25,13 +23,13 @@ public class ClientService {
         else throw new IllegalArgumentException("Client not found");
     }
 
-    public Client getClientByPhone(String phoneNumber) {
+    public Client getClientByContact(String contact) {
 //        List<Client> clients = showAll();
 //        for (Client c : clients) {
 //            if (c.getContact().equals(phoneNumber)) return c;
 //        }
 //        throw new IllegalArgumentException("Client not found");
-        Client neededClient = clientsRepository.findByContact(phoneNumber);
+        Client neededClient = clientsRepository.findByContact(contact);
         if (neededClient != null) return neededClient;
         else throw new IllegalArgumentException("Client not found");
     }

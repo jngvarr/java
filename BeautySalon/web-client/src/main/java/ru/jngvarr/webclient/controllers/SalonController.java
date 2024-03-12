@@ -4,25 +4,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import ru.jngvarr.clientmanagement.model.Client;
-import ru.jngvarr.webclient.fgn_clients.ServiceFGNClient;
+import ru.jngvarr.webclient.services.SalonService;
 
 @Controller
 @RequiredArgsConstructor
 public class SalonController {
 
-    private final ServiceFGNClient serviceFGNClient;
+    private final SalonService salonService;
 
     @GetMapping("/clients")
     public String showAll(Model model) {
-        model.addAttribute("clients", serviceFGNClient.showAll());
+        model.addAttribute("clients", salonService.getAll());
         return "clients";
     }
 
-    public String getClient(Model model, @RequestBody Client client) {
-
-        return "client";
-    }
+//    public String getClient(Model model, @RequestBody Client client) {
+//
+//        return "client";
+//    }
 }
 

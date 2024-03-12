@@ -54,8 +54,8 @@ public class ShopService {
      */
     @LogLeadTime
     public List<Product> getAll(){
-        ResponseEntity<List<Produ        RestTemplate template = new RestTemplate();
-        ct>> response = template.exchange(storageApi.getBasicUri(),
+        RestTemplate template = new RestTemplate();
+        ResponseEntity<List<Product>> response = template.exchange(storageApi.getBasicUri(),
         HttpMethod.GET, null, new ParameterizedTypeReference<>(){});
         return response.getBody();
     }

@@ -3,14 +3,11 @@ package ru.jngvarr.clientmanagement.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.clientmanagement.model.Client;
 import ru.jngvarr.clientmanagement.services.ClientService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,7 +17,7 @@ public class ClientsController {
 
     @GetMapping
     public ResponseEntity<List<Client>> showAll() {
-        return ResponseEntity.ok().body(clientService.showAll());
+        return ResponseEntity.ok().body(clientService.getClients());
     }
 
     @GetMapping("/clear")
@@ -34,9 +31,9 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.getClient(id), HttpStatus.OK);
     }
 
-    @GetMapping("/by-phone/{phoneNumber}")
+    @GetMapping("/by-contact/{phoneNumber}")
     public ResponseEntity<Client> getClientByPhone(@PathVariable String phoneNumber) {
-        return new ResponseEntity<>(clientService.getClientByPhone(phoneNumber), HttpStatus.OK);
+        return new ResponseEntity<>(clientService.getClientByContact(phoneNumber), HttpStatus.OK);
     }
 
     @PostMapping
