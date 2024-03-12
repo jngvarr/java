@@ -34,7 +34,7 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.getClient(id), HttpStatus.OK);
     }
 
-    @GetMapping("/{phoneNumber}")
+    @GetMapping("/by-phone/{phoneNumber}")
     public ResponseEntity<Client> getClientByPhone(@PathVariable String phoneNumber) {
         return new ResponseEntity<>(clientService.getClientByPhone(phoneNumber), HttpStatus.OK);
     }

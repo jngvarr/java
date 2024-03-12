@@ -26,14 +26,14 @@ public class ClientService {
     }
 
     public Client getClientByPhone(String phoneNumber) {
-        List<Client> clients = showAll();
-        for (Client c : clients) {
-            if (c.getContact().equals(phoneNumber)) return c;
-        }
-        throw new IllegalArgumentException("Client not found");
-//        Client neededClient = clientsRepository.findByPhone(phoneNumber);
-//        if (neededClient != null) return neededClient;
-//        else throw new IllegalArgumentException("Client not found");
+//        List<Client> clients = showAll();
+//        for (Client c : clients) {
+//            if (c.getContact().equals(phoneNumber)) return c;
+//        }
+//        throw new IllegalArgumentException("Client not found");
+        Client neededClient = clientsRepository.findByContact(phoneNumber);
+        if (neededClient != null) return neededClient;
+        else throw new IllegalArgumentException("Client not found");
     }
 
     public Client addClient(Client clientToAdd) {

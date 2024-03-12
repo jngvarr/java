@@ -5,6 +5,7 @@ spring:
     user:
       name: user
       password: pass
+
   application:
     name: clients
   jpa:
