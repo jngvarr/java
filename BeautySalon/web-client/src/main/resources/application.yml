@@ -1,1 +1,16 @@
+spring:
+  application:
+    name: web
+  security:
+    user:
+      name: user
+      password: pass
 
+feign:
+  client:
+    config:
+      clients:
+        basic-auth:
+          url: http://localhost:8081
+          username: user
+          password: pass

@@ -1,0 +1,21 @@
+h1 {
+    font-size: 50px;
+    color: navy;
+}
+
+p{
+    font-size: 30px;
+}
+
+.container{
+    margin: auto;
+    width: 1140px;
+}
+header{
+    text-align: center;
+}
+
+.main_part{
+    width: 800px;
+    margin: 0 auto;
+}
