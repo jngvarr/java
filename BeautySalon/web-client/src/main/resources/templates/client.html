@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Client</title>
+    <link rel="stylesheet" type="text/css" href="../static/client_style.css">
+</head>
+<body>
+<div >
+    <table>
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Contact</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${client.id}"></td>
+            <td th:text="${client.firstName}"></td>
+            <td th:text="${client.lastName}"></td>
+            <td th:text="${client.contact}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p><a href="/client-update">Edit client</a></p>
+    <p><a href="http://localhost:8080">Back</a></p>
+</div>
+</body>
+</html>

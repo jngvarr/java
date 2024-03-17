@@ -64,9 +64,10 @@ public class UserController {
      * @param id Идентификатор пользователя.
      * @return Перенаправление на страницу списка пользователей.
      */
-    @GetMapping("user-delete/{id}")
+    @DeleteMapping("user-delete/{id}")
     public String deleteUser(@PathVariable("id") int id) {
         userService.deleteById(id);
+        System.out.println("get delete");
         return "redirect:/users";
     }
     /**
@@ -90,6 +91,7 @@ public class UserController {
     @PostMapping("/user-update")
     public String updateUser(@ModelAttribute("user") User user) {
         userService.updateUser(user.getId(), user);
+        System.out.println("post");
         return "redirect:/users";
     }
 }

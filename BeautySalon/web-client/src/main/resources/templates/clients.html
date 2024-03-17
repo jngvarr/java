@@ -1,42 +1,37 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Сlients</title>
-    <link rel="stylesheet" href="../../../../../src/main/resources/static/style.css">
+    <title>Clients</title>
+    <link rel="stylesheet" type="text/css" href="../static/client_style.css">
 </head>
 <body>
-<h1>Список клиентов: </h1>
-<div>
-    <table>
-        <tr>
-            <th>Имя: </th>
-            <th>Фамилия: </th>
-            <th>Номер телефона: </th>
-        </tr>
-        <tr th:each="c: ${clients}">
-            <td th:text="${c.firstName}"></td>
-            <td th:text="${lastName}"></td>
-            <td th:text="${contact}"></td>
-        </tr>
-    </table>
-</div>
-
-<div class="reg-form">
-    <h1>Registration Form</h1>
-    <h2>Add a user:</h2>
-    <form action="/task3" method="post">
-        <label for="name">Имя:</label>
-        <input type="text" id="name" name="name" required placeholder="Имя">
-
-        <label for="lastname">Фамилия:</label>
-        <input type="text" id="lastname" name="lastname" placeholder="Фамилия">
-
-        <label for="phone">Телефон:</label>
-        <input type="number" id="phone" name="телефон" required placeholder="Номер телефона начиная с +7"><br>
-
-        <button type="submit">Добавить</button>
-    </form>
+<div th:switch="${clients}">
+    <h2 th:case="null">No client found!</h2>
+    <div th:case="*">
+        <h2>Список клиентов:</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>First name</th>
+                <th>Last name</th>
+                <th>Contact</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="client : ${clients}">
+                <td th:text="${client.id}"></td>
+                <td th:text="${client.firstName}"></td>
+                <td th:text="${client.lastName}"></td>
+                <td th:text="${client.contact}"></td>
+                <td><a th:href="@{client-update/{id}(id=${client.id})}">Edit</a></td>
+                <td><a th:href="@{client-delete/{id}(id=${client.id})}">Delete</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><a href="/client-create">Create client</a></p>
 </div>
 </body>
 </html>

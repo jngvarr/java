@@ -14,3 +14,7 @@ feign:
           url: http://localhost:8081
           username: user
           password: pass
+#server:
+#  error:
+#    whitelabel:
+#      enabled : false

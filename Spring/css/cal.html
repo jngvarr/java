@@ -3,16 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой сайт</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
-
+    <title>Calendar</title>
+    <link rel="stylesheet" href="css/cal.css">
 </head>
 <body>
-
-<header>
-    <h1>Мой сайт</h1>
-</header>
-
 <div class="calendar">
     <table id="calendar2">
         <thead>
@@ -74,60 +68,6 @@
             Calendar2("calendar2", document.querySelector('#calendar2 thead td:nth-child(2)').dataset.year, parseFloat(document.querySelector('#calendar2 thead td:nth-child(2)').dataset.month) + 1);
         }
     </script>
-</div>.
-<nav>
-    <ul><h1>Главное меню:</h1>
-        <div class="dropdown">
-            <a class="dropref">Журнал записи</a>
-            <div class="dropdown-content">
-                <a href="#">Ссылка 1</a>
-                <a href="#">Ссылка 2</a>
-                <a href="#">Ссылка 3</a>
-            </div>
-        </div>
-        <!--        <li><a class="appointment" href="javascript:void(0);" tabindex="1" >Журнал записи</a>-->
-        <!--            <ul class="sub-menu">-->
-        <!--                <li><a href="#1">подпункт 1</a></li>-->
-        <!--                <li><a href="#2">подпункт 2</a></li>-->
-        <!--                <li><a href="#3">подпункт 3</a></li>-->
-        <!--            </ul>-->
-        <div class="dropdown">
-            <button class="dropref">Сотрудники</button>
-            <div class="dropdown-content">
-                <a href="#">Ссылка 1</a>
-                <a href="#">Ссылка 2</a>
-                <a href="#">Ссылка 3</a>
-            </div>
-        </div>
-        <div class="dropdown">
-            <button class="dropref">Клиенты</button>
-            <div class="dropdown-content">
-                <a href="#">Ссылка 1</a>
-                <a href="#">Ссылка 2</a>
-                <a href="#">Ссылка 3</a>
-            </div>
-        </div>
-        <div class="dropdown">
-            <button class="dropref">Склад</button>
-            <div class="dropdown-content">
-                <a href="#">Ссылка 1</a>
-                <a href="#">Ссылка 2</a>
-                <a href="#">Ссылка 3</a>
-            </div>
-        </div>
-        <!--        <li><a href="#">Сотрудники</a><br></li>-->
-        <!--        <li><a href="#">Клиенты</a><br></li>-->
-        <!--        <li><a href="#">Склад</a></li>-->
-    </ul>
-</nav>
-
-<section class="navbar-toggle-button">
-    <p>Сегодня</p>
-</section>
-
-<footer>
-    <p>&copy; 2024 Мой сайт. Все права защищены.</p>
-</footer>
-
+</div>
 </body>
 </html>

@@ -36,7 +36,7 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.getClientByContact(phoneNumber), HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/create-client")
     public ResponseEntity<Client> createClient(@RequestBody Client newClient) {
         return new ResponseEntity<>(clientService.addClient(newClient), HttpStatus.CREATED);
     }
@@ -46,7 +46,7 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.update(newClient, id), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping ("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();

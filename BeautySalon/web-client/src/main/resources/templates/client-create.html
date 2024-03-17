@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Create client</title>
+</head>
+<body>
+<form action="#" th:action="@{/client-create}" th:object="${client}" method="post">
+    <label for="firstName">First name</label>
+    <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"><br>
+    <label for="lastName">Last name</label>
+    <input type="text" th:field="*{lastName}" id="lastName" placeholder="Last Name"><br>
+    <label for="contact">Contact</label>
+    <input type="text" th:field="*{contact}" id="contact" placeholder="Contact"><br>
+<!--    <input type="submit" value="Create Client">-->
+    <button type="submit">Create Client</button>
+</form>
+</body>
+</html>

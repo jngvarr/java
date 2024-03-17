@@ -20,7 +20,8 @@ public class SalonService {
         return clientFGNClient.getClient(id);
     }
 
-    public Client addClient(Client client) {
+    public Client addClient(Client client) {        System.out.println("create salonservice");
+
         return clientFGNClient.addClient(client);
     }
 
