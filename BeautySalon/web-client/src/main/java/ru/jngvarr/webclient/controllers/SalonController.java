@@ -80,7 +80,7 @@ public class SalonController {
         return "clients";
     }
 
-    @GetMapping("/client-delete/{id}")
+    @DeleteMapping("/client-delete/{id}")
     public String delete(@PathVariable Long id) {
         log.debug("delete {}", id);
         salonService.delete(id);
