@@ -25,13 +25,13 @@
                 <td th:text="${client.firstName}"></td>
                 <td th:text="${client.lastName}"></td>
                 <td th:text="${client.contact}"></td>
-                <td><a th:href="@{client-update/{id}(id=${client.id})}">Edit</a></td>
-                <td><a th:href="@{client-delete/{id}(id=${client.id})}">Delete</a></td>
+                <td><a th:href="@{clients/client-update/{id}(id=${client.id})}">Edit</a></td>
+                <td><a th:href="@{clients/client-delete/{id}(id=${client.id})}">Delete</a></td>
             </tr>
             </tbody>
         </table>
     </div>
-    <p><a href="/client-create">Create client</a></p>
+    <p><a href="clients/client-create">Create client</a></p>
 </div>
 </body>
 </html>

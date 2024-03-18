@@ -4,7 +4,7 @@
 <title>Update client</title>
 </head>
 <body>
-<form action="#" th:action="@{/client-update}" th:object="${client}" method="post">
+<form action="#" th:action="@{clients/client-update}" th:object="${client}" method="post">
     <label for="id">ID</label>
     <input readonly type="number" th:field="*{id}" id="id" placeholder="ID">
     <br/>

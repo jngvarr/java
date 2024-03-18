@@ -1,6 +1,14 @@
 package ru.jngvarr.webclient.model;
 
-import java.util.Date;
+import lombok.Data;
 
-public record Client(Long id, String firstName, String lastName, String contact, Date dob) {
+import java.time.LocalDate;
+
+@Data
+public class Client {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String contact;
+    private LocalDate dob;
 }

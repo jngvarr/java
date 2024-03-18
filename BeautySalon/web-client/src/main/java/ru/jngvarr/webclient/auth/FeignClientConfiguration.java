@@ -1,16 +1,20 @@
-//package ru.jngvarr.webclient.auth;
-//
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//
-//@Configuration
-//public class FeignClientConfiguration {
-//    @Value("${your.token}") // Подставьте имя свойства, в котором хранится ваш токен
-//    private String token;
-//
-//    @Bean
-//    public TokenInterceptor tokenInterceptor() {
-//        return new TokenInterceptor(token);
-//    }
-//}
+package ru.jngvarr.webclient.auth;
+
+import feign.auth.BasicAuthRequestInterceptor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@RequiredArgsConstructor
+public class FeignClientConfiguration {
+    @Value("${feign.client.config.clients.basic-auth.username}")
+    private String username;
+    @Value("${feign.client.config.clients.basic-auth.password}")
+    private String password;
+
+    @Bean
+    public BasicAuthRequestInterceptor basicAuthRequestInterceptor() {
+        return new BasicAuthRequestInterceptor(username, password);
+    }
+}

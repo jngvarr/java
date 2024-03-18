@@ -1,14 +1,17 @@
 package ru.jngvarr.clientmanagement.controllers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.clientmanagement.model.Client;
 import ru.jngvarr.clientmanagement.services.ClientService;
 
+import java.time.LocalDate;
 import java.util.List;
 
+@Log4j2
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/clients")
@@ -36,9 +39,10 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.getClientByContact(phoneNumber), HttpStatus.OK);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create-client")
-    public ResponseEntity<Client> createClient(@RequestBody Client newClient) {
-        return new ResponseEntity<>(clientService.addClient(newClient), HttpStatus.CREATED);
+    public Client createClient(@RequestBody Client newClient) {
+        return clientService.addClient(newClient);
     }
 
     @PutMapping("/{id}")
@@ -46,9 +50,8 @@ public class ClientsController {
         return new ResponseEntity<>(clientService.update(newClient, id), HttpStatus.OK);
     }
 
-    @DeleteMapping ("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public void deleteClient(@PathVariable Long id) {
         clientService.deleteClient(id);
-        return ResponseEntity.noContent().build();
     }
 }

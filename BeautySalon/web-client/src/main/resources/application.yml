@@ -6,15 +6,23 @@ spring:
       name: user
       password: pass
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          clients:
+            url: http://localhost:8081
 feign:
   client:
     config:
       clients:
         basic-auth:
-          url: http://localhost:8081
           username: user
           password: pass
 #server:
 #  error:
 #    whitelabel:
 #      enabled : false
+logging:
+  level:
+    ru.jngvarr: DEBUG

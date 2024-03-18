@@ -26,16 +26,9 @@ spring:
     init:
       mode: always
 
-
-#jakarta:
-#  persistence:
-#    jdbc:
-#     url: jdbc:postgresql://localhost:5432/clients
-#     user: user
-#     password: password
-
-#
-#hibernate:
-#  dialect: org.hibernate.dialect.PostgreSQLDialect
+logging:
+  level:
+    ru.jngvarr: DEBUG
+#    org.springframework.security: TRACE
 
 

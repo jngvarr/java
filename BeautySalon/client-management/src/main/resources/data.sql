@@ -4,3 +4,5 @@
 
 select * from clients;
 
+SELECT t.* FROM public.clients t;
+

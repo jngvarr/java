@@ -1,16 +1,18 @@
 package ru.jngvarr.webclient.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import ru.jngvarr.webclient.fgn_clients.ClientFGNClient;
+import ru.jngvarr.webclient.fgn_clients.ClientFeignClient;
 import ru.jngvarr.webclient.model.Client;
 
 import java.util.List;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class SalonService {
-    private final ClientFGNClient clientFGNClient;
+    private final ClientFeignClient clientFGNClient;
 
     public List<Client> getAll() {
         return clientFGNClient.getClients();
@@ -20,8 +22,8 @@ public class SalonService {
         return clientFGNClient.getClient(id);
     }
 
-    public Client addClient(Client client) {        System.out.println("create salonservice");
-
+    public Client addClient(Client client) {
+        log.debug("create {}", client);
         return clientFGNClient.addClient(client);
     }
 
