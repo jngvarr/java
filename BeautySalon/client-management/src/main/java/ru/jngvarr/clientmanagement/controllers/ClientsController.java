@@ -45,12 +45,12 @@ public class ClientsController {
         return clientService.addClient(newClient);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(@RequestBody Client newClient, @PathVariable Long id) {
-        return new ResponseEntity<>(clientService.update(newClient, id), HttpStatus.OK);
+    @PutMapping("/client-update/{id}")
+    public Client updateClient(@RequestBody Client newClient, @PathVariable Long id) {
+        return clientService.update(newClient, id);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/client-delete/{id}")
     public void deleteClient(@PathVariable Long id) {
         clientService.deleteClient(id);
     }

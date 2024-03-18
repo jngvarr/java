@@ -23,7 +23,7 @@ public interface ClientFeignClient {
     @RequestMapping(value = "/clients/create-client", method = RequestMethod.POST)
     Client addClient(@RequestBody Client clientToAdd);
 
-    @RequestMapping(value = "/clients/client-update/{id}", method = RequestMethod.POST)
+    @RequestMapping(value = "/clients/client-update/{id}", method = RequestMethod.PUT)
     Client update(@RequestBody Client newData, @PathVariable Long id);
 
     @RequestMapping(value = "/clients/client-delete/{id}", method = RequestMethod.DELETE)

@@ -72,7 +72,7 @@ public class SalonController {
         return "client-update";
     }
 
-    @PostMapping("/client-update")
+    @GetMapping ("/client-update")
     public String update(@ModelAttribute("client") Client client) {
         System.out.println(client);
         log.debug("put {}", client);
