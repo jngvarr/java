@@ -5,7 +5,7 @@
     <title>Create client</title>
 </head>
 <body>
-<form action="#" th:action="@{client-create}" th:object="${client}" method="post">
+<form action="#" th:action="@{create-action}" th:object="${client}" method="post">
     <label for="firstName">First name</label>
     <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"><br>
     <label for="lastName">Last name</label>

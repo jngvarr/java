@@ -51,13 +51,13 @@ public class SalonController {
         return "clients";
     }
 
-    @GetMapping("/client-create")
+    @GetMapping("/create-view")
     public String toCreateClient(Model model) {
         model.addAttribute("client", new Client());
         return "client-create";
     }
 
-    @PostMapping("/client-create")
+    @PostMapping("/create-action")
     public String addClient(Model model, Client client) {
         log.debug("create {}", client);
         salonService.addClient(client);
@@ -65,22 +65,22 @@ public class SalonController {
         return "clients";
     }
 
-    @GetMapping("/client-update/{id}")
+    @GetMapping("/update-view/{id}")
     public String updateClientForm(Model model, @PathVariable long id) {
         Client oldClient = salonService.getClient(id);
         model.addAttribute("client", oldClient);
         return "client-update";
     }
 
-    @GetMapping ("/client-update")
+    @PostMapping ("/update-action")
     public String update(@ModelAttribute("client") Client client) {
         System.out.println(client);
         log.debug("put {}", client);
         salonService.update(client, client.getId());
-        return "clients";
+        return "redirect:/clients";
     }
 
-    @DeleteMapping("/client-delete/{id}")
+    @GetMapping("/delete-action/{id}")
     public String delete(@PathVariable Long id) {
         log.debug("delete {}", id);
         salonService.delete(id);
