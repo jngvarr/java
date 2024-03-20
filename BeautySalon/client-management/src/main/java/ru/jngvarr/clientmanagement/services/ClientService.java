@@ -1,10 +1,9 @@
 package ru.jngvarr.clientmanagement.services;
 
+import dao.people.Client;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.jngvarr.clientmanagement.model.Client;
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
-
 import java.util.List;
 import java.util.Optional;
 

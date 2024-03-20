@@ -5,8 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.jngvarr.webclient.model.Client;
 import ru.jngvarr.webclient.services.SalonService;
+import dao.people.Client;
 
 @Log4j2
 @Controller
@@ -36,13 +36,6 @@ public class SalonController {
         model.addAttribute("client", salonService.getClientByContact(contact));
         return "client";
     }
-
-//    @PostMapping("/client-create")
-//    public Client addClient(@RequestBody Client client) {
-//       log.debug("create salonController");
-//
-//        return salonService.addClient(client);
-//    }
 
     @GetMapping("/clear")
     public String getClient(Model model) {

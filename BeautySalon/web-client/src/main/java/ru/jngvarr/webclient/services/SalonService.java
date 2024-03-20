@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.jngvarr.webclient.fgn_clients.ClientFeignClient;
-import ru.jngvarr.webclient.model.Client;
 
 import java.util.List;
+import dao.people.Client;
 
 @Log4j2
 @Service

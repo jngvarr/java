@@ -3,8 +3,7 @@ package ru.jngvarr.webclient.fgn_clients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.webclient.auth.FeignClientConfiguration;
-import ru.jngvarr.webclient.model.Client;
-
+import dao.people.Client;
 import java.util.List;
 
 @FeignClient(name = "clients", configuration = FeignClientConfiguration.class)

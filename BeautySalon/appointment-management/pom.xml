@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>ru.jngvarr</groupId>
-    <artifactId>appointment-management</artifactId>
+    <artifactId>note-management</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>appointment-management</name>
     <description>appointment-management</description>

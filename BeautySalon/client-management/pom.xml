@@ -77,12 +77,12 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>ru.jngvarr</groupId>
-            <artifactId>BeautySalon</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ru.jngvarr</groupId>-->
+<!--            <artifactId>BeautySalon</artifactId>-->
+<!--            <version>0.0.1-SNAPSHOT</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -101,6 +101,12 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>6.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.jngvarr</groupId>
+            <artifactId>core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>

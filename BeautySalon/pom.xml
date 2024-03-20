@@ -12,8 +12,12 @@
     <groupId>ru.jngvarr</groupId>
     <artifactId>BeautySalon</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>BeautySalon</name>
     <description>BeautySalon</description>
+    <modules>
+        <module>core</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
