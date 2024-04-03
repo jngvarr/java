@@ -14,7 +14,7 @@ import java.util.List;
 @Table(name = "services")
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class Service {
+public class Servize {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +26,6 @@ public class Service {
     @Column(name = "description")
     private String description;
     @Column(name = "consumables")
-    @ManyToMany(mappedBy = "consumable")
+    @ManyToMany(mappedBy = "services")
     private List<Consumable> consumables;
 }

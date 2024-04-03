@@ -1,17 +1,17 @@
 package ru.jngvarr.servicemanagement.services;
 
-import dao.Service;
-import lombok.RequiredArgsConstructor;
+import dao.Servize;
+import lombok.*;
+import org.springframework.stereotype.Service;
 import ru.jngvarr.servicemanagement.repositories.SalonServiceRepository;
-
 import java.util.List;
 
-@org.springframework.stereotype.Service
+@Service
 @RequiredArgsConstructor
 public class ServiceForServices {
     private final SalonServiceRepository salonServiceRepository;
 
-    public List<Service> getServices(){
+    public List<Servize> getServices(){
         return salonServiceRepository.findAll();
     }
 

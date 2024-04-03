@@ -11,7 +11,7 @@ import dao.people.Client;
 @Log4j2
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/clients")
+@RequestMapping("/visits")
 public class SalonController {
 
     private final SalonService salonService;

@@ -1,6 +1,6 @@
 -- create table clients;
 -- use clients;
-CREATE SCHEMA IF NOT EXISTS employees;
+CREATE SCHEMA IF NOT EXISTS staff;
 
 create table if not exists employees
 (
@@ -11,3 +11,5 @@ create table if not exists employees
     dob        DATE         NOT NULL,
     function   varchar(50)  NOT NULL
 );
+ drop table employees;
+drop schema employees;

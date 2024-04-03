@@ -1,13 +1,14 @@
 package dao.people;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDate;
-
+@Data
 @MappedSuperclass
-public class SomeOne {
+abstract class SomeOne {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "first_name")

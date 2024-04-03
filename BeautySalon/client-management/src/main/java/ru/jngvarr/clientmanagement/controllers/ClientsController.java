@@ -13,7 +13,7 @@ import java.util.List;
 @Log4j2
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/clients")
+@RequestMapping("/visits")
 public class ClientsController {
     private final ClientService clientService;
 
@@ -41,6 +41,7 @@ public class ClientsController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create-client")
     public Client createClient(@RequestBody Client newClient) {
+        log.debug("create-client {}",newClient);
         return clientService.addClient(newClient);
     }
 
