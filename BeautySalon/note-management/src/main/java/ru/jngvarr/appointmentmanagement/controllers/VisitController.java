@@ -5,13 +5,14 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import dao.Visit;
+import ru.jngvarr.appointmentmanagement.model.VisitData;
 import ru.jngvarr.appointmentmanagement.services.VisitService;
 
 import java.util.List;
 @Log4j2
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/visits")
+@RequestMapping("/clients")
 public class VisitController {
 
     private final VisitService visitService;
@@ -34,7 +35,7 @@ public class VisitController {
     }
 
     @PutMapping("/update/{id}")
-    public Visit update(@RequestBody Visit visit, @PathVariable Long id){
+    public VisitData update(@RequestBody Visit visit, @PathVariable Long id){
         return visitService.update(visit, id);
     }
 

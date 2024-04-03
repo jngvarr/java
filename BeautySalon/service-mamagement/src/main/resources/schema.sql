@@ -12,4 +12,4 @@ create table if not exists services
     consumables text[]
 );
 
--- drop table sevices;
+--  drop table services;

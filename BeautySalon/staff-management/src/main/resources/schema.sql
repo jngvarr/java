@@ -11,5 +11,5 @@ create table if not exists employees
     dob        DATE         NOT NULL,
     function   varchar(50)  NOT NULL
 );
- drop table employees;
-drop schema employees;
+--  drop table employees;
+-- drop schema employees;

@@ -20,9 +20,10 @@ public class Servize {
     private Long id;
     @Column(name = "title")
     private String title;
+    @Column(name = "price")
     private BigDecimal price;
     @Column(name = "duration")
-    private int serviceDurationInMinutes;
+    private Integer serviceDurationInMinutes;
     @Column(name = "description")
     private String description;
     @Column(name = "consumables")

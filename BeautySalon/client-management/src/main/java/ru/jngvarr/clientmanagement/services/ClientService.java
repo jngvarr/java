@@ -1,6 +1,7 @@
 package ru.jngvarr.clientmanagement.services;
 
 import dao.people.Client;
+import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
@@ -35,14 +36,8 @@ public class ClientService {
 
     public Client addClient(Client clientToAdd) {
         if ((clientToAdd.getFirstName() != null && clientToAdd.getContact() != null)) {
-//        Client newClient = new Client();
-//        newClient.setId(clientToAdd.getId());
-//        newClient.setDob(clientToAdd.getDob());
-//        newClient.setContact(clientToAdd.getContact());
-//        newClient.setFirstName(clientToAdd.getFirstName());
-//        newClient.setLastName(clientToAdd.getLastName());
             return clientsRepository.save(clientToAdd);
-        } else throw new IllegalArgumentException("Not enough client data");
+        } else throw new NotEnoughData("Not enough client data");
     }
 
     public Client update(Client newData, Long id) {
