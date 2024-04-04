@@ -1,12 +1,14 @@
 -- create table clients;
 -- use clients;
-CREATE SCHEMA IF NOT EXISTS visits;
+-- CREATE SCHEMA IF NOT EXISTS services;
 
-create table if not exists visits
+create table if not exists clients
 (
     id         SERIAL primary key,
-    date       DATE,
-    service_id bigint,
-    client_id  bigint,
-    master_id  bigint
+    first_name varchar(25) NOT NULL,
+    last_name  VARCHAR(50) NOT NULL,
+    contact    VARCHAR(50)  NOT NULL,
+    dob        DATE  NOT NULL
 );
+
+--  drop table clients;

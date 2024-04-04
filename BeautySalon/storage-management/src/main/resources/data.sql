@@ -7,7 +7,7 @@ values ('Краска', 'штука', 255.7),
        ('Оксидант2', 'бутылка', 189.9),
        ('Оксидант3', 'бутылка', 199.9);
 
-select * from clients;
+select * from consumables;
 
-SELECT t.* FROM public.clients t;
+SELECT t.* FROM public.consumables t;
 
