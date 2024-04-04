@@ -39,6 +39,7 @@ public class VisitService {
         List<Visit> visits = new ArrayList<>();
         List<VisitData> visitData = visitRepository.findAll();
         for (VisitData vd : visitData) {
+            System.out.println(vd);
             visits.add(getVisitFromVisitData(vd));
         }
         return visits;

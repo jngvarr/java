@@ -12,7 +12,7 @@ import java.util.List;
 @Log4j2
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/clients")
+@RequestMapping("/visits")
 public class VisitController {
 
     private final VisitService visitService;

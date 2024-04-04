@@ -12,4 +12,11 @@ create table if not exists services
     consumables text[]
 );
 
+create table if not exists service_consumable
+(
+    id            SERIAL primary key,
+    service_id    int NOT NULL,
+    consumable_id int NOT NULL
+);
+
 --  drop table services;

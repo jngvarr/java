@@ -15,7 +15,7 @@ public class Consumable {
     @Column(name = "title")
     private String title;
     @Column(name = "measure")
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private Measures measure;
     @Column(name = "price")
     private double price;

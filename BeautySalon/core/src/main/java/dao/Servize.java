@@ -1,5 +1,6 @@
 package dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class Servize {
     @Column(name = "description")
     private String description;
     @Column(name = "consumables")
+    @JsonIgnore
     @ManyToMany(mappedBy = "services")
     private List<Consumable> consumables;
 }
