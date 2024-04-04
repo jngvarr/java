@@ -2,11 +2,13 @@ package ru.jngvarr.servicemanagement.controllers;
 
 import dao.Servize;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.servicemanagement.services.ServiceForServices;
 
 import java.util.List;
 
+@Log4j2
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/services")

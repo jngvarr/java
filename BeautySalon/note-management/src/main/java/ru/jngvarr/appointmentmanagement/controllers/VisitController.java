@@ -1,5 +1,8 @@
 package ru.jngvarr.appointmentmanagement.controllers;
 
+import dao.Servize;
+import dao.people.Client;
+import dao.people.Employee;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -19,9 +22,25 @@ public class VisitController {
 
     @GetMapping
     public List<Visit> getVisits() {
-        log.debug("getVisits");
+        log.debug("getVisits-VisitController");
         return visitService.getVisits();
     }
+    @GetMapping("/clients")
+    public List<Client> getClients(){
+        log.debug("getClients-VisitController");
+        return visitService.getClients();
+    }
+
+    @GetMapping("/services")
+    public List<Servize> getServices(){
+        return visitService.getServices();
+    }
+
+    @GetMapping("/staff")
+    public List<Employee> getEmployees(){
+        return visitService.getEmployees();
+    }
+
 
     @GetMapping("/{id}")
     Visit getVisit(@PathVariable Long id) {

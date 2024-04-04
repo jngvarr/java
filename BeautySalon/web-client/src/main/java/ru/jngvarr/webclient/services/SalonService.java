@@ -1,13 +1,13 @@
 package ru.jngvarr.webclient.services;
 
+import feign_clients.ClientFeignClient;
+import feign_clients.ServiceFeignClient;
+import feign_clients.StaffFeignClient;
+import feign_clients.VisitFeignClient;
 import dao.Visit;
-import ru.jngvarr.webclient.feign_clients.ServiceFGNClient;
-import ru.jngvarr.webclient.feign_clients.StaffFGNClient;
-import ru.jngvarr.webclient.feign_clients.VisitFeignClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import ru.jngvarr.webclient.feign_clients.ClientFeignClient;
 
 import java.util.List;
 
@@ -19,8 +19,8 @@ import dao.people.Client;
 public class SalonService {
     private final ClientFeignClient clientFeignClient;
     private final VisitFeignClient visitFeignClient;
-    private final ServiceFGNClient serviceFeignClient;
-    private final StaffFGNClient staffFeignClient;
+    private final ServiceFeignClient serviceFeignClient;
+    private final StaffFeignClient staffFeignClient;
 
 
     public List<Client> getAll() {

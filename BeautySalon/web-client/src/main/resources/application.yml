@@ -12,6 +12,11 @@ spring:
         config:
           clients:
             url: http://localhost:8081
+          staff:
+            url: http://localhost:8084
+          services:
+            url: http://localhost:8082
+
 feign:
   client:
     config:
@@ -19,6 +24,7 @@ feign:
         basic-auth:
           username: user
           password: pass
+
 #server:
 #  error:
 #    whitelabel:

@@ -1,15 +1,23 @@
 package dao;
 
 public enum Measures {
-    PIECE("штука"),
-    ML("милилитр"),
-    GR("грамм"),
-    BOX("коробка"),
-    PACK("упаковка"),
-    PAIR("пара"),
-    BOTTLE("бутылка");
+
+    PIECE,
+    ML,
+    GR,
+    BOX,
+    PACK,
+    PAIR,
+    BOTTLE;
+//    PIECE("штука"),
+//    ML("милилитр"),
+//    GR("грамм"),
+//    BOX("коробка"),
+//    PACK("упаковка"),
+//    PAIR("пара"),
+//    BOTTLE("бутылка");
 
 
-    Measures(String measure) {
-    }
+//    Measures(String measure) {
+//    }
 }

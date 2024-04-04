@@ -1,9 +1,8 @@
-package ru.jngvarr.webclient.feign_clients;
+package feign_clients;
 
+import dao.people.Client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
-import dao.people.Client;
-import ru.jngvarr.webclient.auth.FeignClientConfiguration;
 
 import java.util.List;
 

@@ -7,15 +7,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import dao.Visit;
-import ru.jngvarr.appointmentmanagement.feign_clients.ClientFeignClient;
-import ru.jngvarr.appointmentmanagement.feign_clients.ServiceFeignClient;
-import ru.jngvarr.appointmentmanagement.feign_clients.StaffFeignClient;
 import ru.jngvarr.appointmentmanagement.model.VisitData;
 import ru.jngvarr.appointmentmanagement.repositories.VisitRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import feign_clients.ClientFeignClient;
+import feign_clients.ServiceFeignClient;
+import feign_clients.StaffFeignClient;
 
 @Log4j2
 @Service
@@ -35,12 +36,14 @@ public class VisitService {
     }
 
     public List<Visit> getVisits() {
-        log.debug("getVisits - Service");
+        log.debug("getVisits - VisitService");
         List<Visit> visits = new ArrayList<>();
         List<VisitData> visitData = visitRepository.findAll();
         for (VisitData vd : visitData) {
             System.out.println(vd);
-            visits.add(getVisitFromVisitData(vd));
+            Visit visit = getVisitFromVisitData(vd);
+            System.out.println(visit);
+            visits.add(visit);
         }
         return visits;
     }
@@ -83,6 +86,18 @@ public class VisitService {
 
     public void delete(Long id) {
         visitRepository.deleteById(id);
+    }
+
+    public List<Client> getClients() {
+        log.debug("getClients-VisitService");
+        return clientFeignClient.getClients();
+    }
+
+    public List<Servize> getServices() {
+        return serviceFeignClient.getServices();
+    }
+    public List<Employee> getEmployees() {
+        return employeeFeignClient.getEmployees();
     }
 
 }

@@ -1,9 +1,8 @@
 package ru.jngvarr.appointmentmanagement.services;
 
+import feign_clients.ServiceFeignClient;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.jngvarr.appointmentmanagement.feign_clients.ServiceFeignClient;
 import ru.jngvarr.appointmentmanagement.model.TimeSlot;
 import ru.jngvarr.appointmentmanagement.repositories.TimeSlotRepository;
 

@@ -2,9 +2,10 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Create client</title>
+    <title>Create client &laquo;[[${client.title}]]&raquo; &ndash; BeautySalon </title>
 </head>
 <body>
+<h1>Client create &laquo;[[${client.name}]]&raquo;&raquo</h1>
 <form action="#" th:action="@{create-action}" th:object="${client}" method="post">
     <label for="firstName">First name</label>
     <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"><br>

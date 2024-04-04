@@ -4,19 +4,24 @@ import dao.people.Employee;
 import exceptions.NeededObjectNotFound;
 import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import ru.jngvarr.staffmanagement.repositories.EmployeeRepository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class StaffService {
     public final EmployeeRepository employeeRepository;
 
     public List<Employee> getEmployees() {
-        return employeeRepository.findAll();
+//        log.debug("getEmployeesService {}", employeeRepository.findAll());
+        List<Employee>employees = employeeRepository.findAll();
+        System.out.println(employees);
+        return employees;
     }
 
     public Employee getEmployee(Long id) {

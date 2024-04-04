@@ -1,10 +1,10 @@
 server:
   port: 8082
 spring:
-#  security:
-#    user:
-#      name: user
-#      password: pass
+  security:
+    user:
+      name: user
+      password: pass
 
   application:
     name: services

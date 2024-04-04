@@ -10,7 +10,7 @@ import ru.jngvarr.webclient.services.SalonService;
 import java.util.List;
 
 @Controller
-@RequestMapping("/clients")
+@RequestMapping("/visits")
 @RequiredArgsConstructor
 public class VisitController {
     private final SalonService salonService;

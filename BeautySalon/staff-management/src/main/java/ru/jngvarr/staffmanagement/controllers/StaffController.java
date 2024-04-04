@@ -2,12 +2,14 @@ package ru.jngvarr.staffmanagement.controllers;
 
 import dao.people.Employee;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.staffmanagement.services.StaffService;
 
 import java.util.List;
 
+@Log4j2
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/staff")
@@ -16,6 +18,7 @@ public class StaffController {
 
     @GetMapping
     public List<Employee> getEmployees() {
+        log.debug("getEmployees {}", staffService.getEmployees());
         return staffService.getEmployees();
     }
 

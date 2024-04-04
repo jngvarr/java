@@ -1,11 +1,20 @@
 server:
   port: 8085
 spring:
-#  security:
-#    user:
-#      name: user
-#      password: pass
-
+  security:
+    user:
+      name: user
+      password: pass
+  cloud:
+    openfeign:
+      client:
+        config:
+          clients:
+            url: http://localhost:8081
+          staff:
+            url: http://localhost:8084
+          services:
+            url: http://localhost:8082
   application:
     name: visits
 
@@ -32,3 +41,10 @@ logging:
 #    org.springframework.security: TRACE
 
 
+feign:
+  client:
+    config:
+      clients:
+        basic-auth:
+          username: user
+          password: pass

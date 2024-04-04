@@ -1,4 +1,4 @@
-package ru.jngvarr.webclient.auth;
+package feign_clients;
 
 import feign.auth.BasicAuthRequestInterceptor;
 import lombok.RequiredArgsConstructor;
