@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalogue-vmagent-cm
+data:
+  promscrape.yaml: |
+    scrape_configs:
+      - job_name: selmag_catalogue_service
+        static_configs:
+          - targets: ["http://localhost:8080"]
+            labels:
+              application: selmag-catalogue-service
+        metrics_path: /actuator/prometheus
+        oauth2:
+          client_id: victoria-metrics
+          client_secret: vTpeB59Sb2Qzh0HI4cXBlewm2ivY0dzD
+          token_url: http://keycloak.selm.ag.192.168.49.2.nip.io/realms/selmag/protocol/openid-connect/token
+          scopes:
+            - metrics
+          endpoint_params:
+            grant_type: client_credentials
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selmag-catalogue-service-deployment
+  labels:
+    app: selmag-catalogue-service
+spec:
+  selector:
+    matchLabels:
+      app: selmag-catalogue-service
+  template:
+    metadata:
+      labels:
+        app: selmag-catalogue-service
+    spec:
+      volumes:
+        - name: vmconfig
+          configMap:
+            name: catalogue-vmagent-cm
+        - name: service-config
+          configMap:
+            name: catalogue-service-config
+      containers:
+        - name: selmag-catalogue-service
+          image: 192.168.49.1:5000/selmag/catalogue-service:24.1.1
+          args:
+            - --spring.config.import=/etc/opt/catalogue-service/application-k8s.yml
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: LOKI
+              value: http://loki-svc.selmag.svc.cluster.local:3100
+          volumeMounts:
+            - mountPath: /etc/opt/catalogue-service
+              name: service-config
+        - name: vmagent
+          image: victoriametrics/vmagent:v1.93.12
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          args:
+            - -promscrape.config=/etc/opt/vmagent/promscrape.yaml
+            - -remoteWrite.url=http://vm-svc.selmag.svc.cluster.local:8428/api/v1/write
+            - -remoteWrite.label=instance=$(NODE_NAME)
+          volumeMounts:
+            - mountPath: /etc/opt/vmagent
+              name: vmconfig
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: selmag-catalogue-service-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      name: http
+  selector:
+    app: selmag-catalogue-service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: selmag-catalogue-service-ingress
+spec:
+  rules:
+    - host: catalogue.api.selm.ag.192.168.49.2.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: selmag-catalogue-service-svc
+                port:
+                  name: http

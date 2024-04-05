@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
-<meta charset="UTF-8">
-<title>Update client</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update client&laquo;[[${client.title}]]&raquo; &ndash; BeautySalon</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
 </head>
 <body>
+<h1>Update client&ndash;[[${client.firstname}]] &ndash;</h1>
 <form action="#" th:action="@{/clients/update-action}" th:object="${client}" method="post">
     <label for="id">ID</label>
     <input readonly type="number" th:field="*{id}" id="id" placeholder="ID">

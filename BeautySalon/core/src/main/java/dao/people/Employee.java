@@ -10,6 +10,6 @@ import lombok.EqualsAndHashCode;
 @Table(name = "employees")
 public class Employee extends SomeOne {
     @Column
-    @Enumerated/*(EnumType.STRING)*/
+    @Enumerated(EnumType.STRING)
     private Function function;
 }

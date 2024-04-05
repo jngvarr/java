@@ -20,3 +20,4 @@ create table if not exists service_consumable
 );
 
 --  drop table services;
+drop schema services;
