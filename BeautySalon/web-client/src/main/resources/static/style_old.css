@@ -1,0 +1,190 @@
+/*body {*/
+/*    margin: 0;*/
+/*    padding: 0;*/
+/*}*/
+
+html, body {
+    background-color: #f0f0f0; /* светло-серый */
+    font-family: Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #410505; /* бордовый */
+    color: #fff; /* белый */
+    padding: 10px 0;
+    text-align: center;
+
+}
+
+nav {
+    background-color: #8B0000; /* темно-красный (бордовый) */
+    padding: 20px;
+    height: 45%;
+    width: 12%;
+    position: relative;
+    /*bottom: 300px;*/
+}
+
+/* Кнопка выпадающего списка */
+.dropref {
+    background-color: darkred;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+}
+
+/* Контейнер <div> - необходим для размещения выпадающего содержимого */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown2 {
+    position: relative;
+    display: inline-block;
+}
+
+/* Выпадающее содержимое (скрыто по умолчанию) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #8B0000;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown2-content {
+    display: none;
+    position: absolute;
+    background-color: #8B0000;
+    min-width: 120px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* Ссылки внутри выпадающего списка */
+.dropdown-content a {
+    color: white;
+    padding: 10px 14px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px ;
+}
+
+.dropdown2-content a {
+    color: white;
+    padding: 10px 14px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px ;
+}
+
+/* Изменение цвета выпадающих ссылок при наведении курсора */
+.dropdown-content a:hover {background-color: brown;}
+
+/* Показать выпадающее меню при наведении курсора */
+.dropdown:hover .dropdown-content {display: block;}
+
+/* Изменение цвета фона кнопки раскрывающегося списка при отображении содержимого раскрывающегося списка */
+.dropdown:hover .dropref {background-color: #8B0000;}
+
+/* Изменение цвета выпадающих ссылок при наведении курсора */
+.dropdown2-content a:hover {background-color: brown;}
+
+/* Показать выпадающее меню при наведении курсора */
+.dropdown2:hover .dropdown2-content {display: block;}
+
+/* Изменение цвета фона кнопки раскрывающегося списка при отображении содержимого раскрывающегося списка */
+.dropdown2:hover .dropref {background-color: #8B0000;}
+
+nav ul {
+    list-style-type: none;
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    font-size: 20px;
+}
+
+/*nav ul li {*/
+/*    display: inline;*/
+/*    margin-right: 10px;*/
+/*    margin-bottom: 20px;*/
+/*}*/
+
+nav ul {
+    color:#fff
+}
+
+nav ul li a:hover {
+    color: white; /* белый */
+    text-decoration: none;
+}
+
+section {
+    position: absolute;
+    left: 250px;
+    top: 100px;
+    /*padding: 10px;*/
+    margin: 10px;
+    background-color: #fff; /* белый */
+    width: 90%;
+    height: 20px;
+    /*float: left*/
+    text-align: left;
+}
+
+footer {
+    background-color: #000; /* черный */
+    color: #fff; /* белый */
+    padding: 10px 0;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/*.calendar{*/
+/*    background: wheat;*/
+/*    */
+/*}*/
+
+#calendar2 {
+    width: 10%;
+    font: monospace;
+    line-height: 1.2em;
+    font-size: 15px;
+    text-align: center;
+    margin: 25px;
+    /*padding-bottom: 10px;*/
+}
+
+#calendar2 thead tr:last-child {
+    font-size: small;
+    color: rgb(85, 85, 85);
+}
+
+#calendar2 thead tr:nth-child(1) td:nth-child(2) {
+    color: rgb(50, 50, 50);
+}
+
+#calendar2 thead tr:nth-child(1) td:nth-child(1):hover, #calendar2 thead tr:nth-child(1) td:nth-child(3):hover {
+    cursor: pointer;
+}
+
+#calendar2 tbody td {
+    color: rgb(44, 86, 122);
+}
+
+#calendar2 tbody td:nth-child(n+6), #calendar2 .holiday {
+    color: rgb(231, 140, 92);
+}
+
+#calendar2 tbody td.today {
+    background: rgb(220, 0100, 100);
+    color: #fff;
+}

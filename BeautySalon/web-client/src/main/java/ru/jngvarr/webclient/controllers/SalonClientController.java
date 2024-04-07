@@ -12,14 +12,14 @@ import dao.people.Client;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/clients")
-public class SalonController {
+public class SalonClientController {
 
     private final SalonService salonService;
 
     @GetMapping
     public String showAll(Model model) {
         log.debug("show all");
-        model.addAttribute("clients", salonService.getAll());
+        model.addAttribute("clients", salonService.getClients());
         return "clients";
     }
 
@@ -40,7 +40,7 @@ public class SalonController {
     @GetMapping("/clear")
     public String getClient(Model model) {
         salonService.clear();
-        model.addAttribute("clients", salonService.getAll());
+        model.addAttribute("clients", salonService.getClients());
         return "clients";
     }
 
@@ -54,7 +54,7 @@ public class SalonController {
     public String addClient(Model model, Client client) {
         log.debug("create {}", client);
         salonService.addClient(client);
-        model.addAttribute("clients", salonService.getAll());
+        model.addAttribute("clients", salonService.getClients());
         return "clients";
     }
 
@@ -76,7 +76,7 @@ public class SalonController {
     @GetMapping("/delete-action/{id}")
     public String delete(@PathVariable Long id) {
         log.debug("delete {}", id);
-        salonService.delete(id);
+        salonService.deleteClient(id);
         return "redirect:/clients";
     }
 }

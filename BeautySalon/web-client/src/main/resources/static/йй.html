@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись клиентов</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Подключение Bootstrap Datepicker CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+    <style>
+        /* Дополнительные стили для модальных окон и кнопок */
+        .modal-header {
+            border-bottom: none;
+        }
+        .modal-footer {
+            border-top: none;
+        }
+        /* Стили для ячеек таблицы */
+        tbody td {
+            background-color: #f8f9fa; /* Цвет фона */
+            cursor: pointer; /* Курсор при наведении */
+        }
+        tbody td:hover {
+            background-color: #e9ecef; /* Цвет фона при наведении */
+        }
+        /* Стили для поля ввода даты */
+        .datepicker-container {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Контейнер с меню и таблицей записей -->
+<div class="container-fluid mt-5">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+        <a class="navbar-brand" href="#">Запись клиентов</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Главная <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Сервисы</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Контакты</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Расписание с календарем и таблицей записей -->
+    <div class="row">
+        <!-- Левая колонка с календарем -->
+        <div class="col-md-3">
+            <h2>Выберите дату записи:</h2>
+            <form id="dateForm">
+                <input type="date" id="selectedDate" name="date" class="form-control" th:value="${selectedDate}">
+            </form>
+        </div>
+        <!-- Правая колонка с таблицей записей -->
+        <div class="col-md-9">
+            <h2 id="scheduleHeading">Расписание на весь рабочий день</h2>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Время</th>
+                    <!-- Динамически формируем столбцы для каждого мастера -->
+                    <th th:each="master : ${masters}" th:text="${master.name}"></th>
+                </tr>
+                </thead>
+                <tbody id="scheduleTable">
+                <!-- Вставляем данные записей с помощью Thymeleaf -->
+                <tr th:each="record : ${records}">
+                    <!-- Отображаем время записи -->
+                    <td th:text="${record.time}"></td>
+                    <!-- Вставляем данные для каждого мастера -->
+                    <td th:each="master : ${masters}" th:text="${record[master.id]}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Подключение Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Подключение Bootstrap Datepicker JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script>
+    $(document).ready(function(){
+        // Инициализация календаря
+        var datePicker = $('#datepicker').datepicker({
+            format: 'dd/mm/yyyy', // Формат даты
+            autoclose: true, // Автоматическое закрытие календаря после выбора даты
+            inline: true // Делаем календарь немодальным (встраиваемым)
+        });
+
+        // Обработчик события изменения даты в календаре
+        $('#selectedDate').on('change', function() {
+            $('#dateForm').submit(); // Отправляем форму после выбора даты
+        });
+    });
+</script>
+
+</body>
+</html>

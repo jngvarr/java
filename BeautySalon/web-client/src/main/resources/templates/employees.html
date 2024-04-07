@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Employees</title>
+    <link rel="stylesheet" type="text/css" href="../static/style-update.css">
+</head>
+<body>
+<div th:switch="${employees}">
+    <h2 th:case="null">No employee found!</h2>
+    <div th:case="*">
+        <h2>Список сотрудников:</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>First name</th>
+                <th>Last name</th>
+                <th>Contact</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="employee : ${employees}">
+                <td th:text="${employee.id}"></td>
+                <td th:text="${employee.firstName}"></td>
+                <td th:text="${employee.lastName}"></td>
+                <td th:text="${employee.contact}"></td>
+                <td><a th:href="@{/employees/update-view/{id}(id=${employee.id})}">Edit</a></td>
+                <td><a th:href="@{/employees/delete-action/{id}(id=${employee.id})}">Delete</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><a href="employees/create-view">Create employee</a></p>
+</div>
+</body>
+</html>

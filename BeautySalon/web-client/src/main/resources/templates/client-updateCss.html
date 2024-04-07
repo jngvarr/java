@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update client</title>
+    <title>Update client&laquo;[[${client.title}]]&raquo; &ndash; BeautySalon</title>
+    <link rel="stylesheet" type="text/css" href="/static/style-update.css">
 </head>
 <body>
-<h1>Update client</h1>
+<!-- Trigger/Open The Modal -->
+<button id="myBtn">Open Modal</button>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>Some text in the Modal..</p>
+    </div>
+</div>
+<h1>Update client&ndash;[[${client.firstname}]] &ndash;</h1>
 <div class="main">
     <form action="#" th:action="@{/clients/update-action}" th:object="${client}" method="post">
         <label for="id">ID</label>
