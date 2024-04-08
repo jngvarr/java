@@ -1,5 +1,6 @@
 package ru.jngvarr.webclient.controllers;
 
+import dao.Servize;
 import dao.people.Employee;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -11,15 +12,15 @@ import ru.jngvarr.webclient.services.SalonService;
 @Log4j2
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/employees")
-public class SalonEmployeeController {
+@RequestMapping("/services")
+public class SalonServiceController {
 
     private final SalonService salonService;
 
     @GetMapping
     public String showAll(Model model) {
-        model.addAttribute("employees", salonService.getEmployees());
-        return "employees";
+        model.addAttribute("services", salonService.getServices());
+        return "services";
     }
 
     @GetMapping("/{id}")
@@ -29,9 +30,9 @@ public class SalonEmployeeController {
     }
 
     @GetMapping("/create-view")
-    public String toCreateEmployee(Model model) {
-        model.addAttribute("employee", new Employee());
-        return "employee-create";
+    public String toCreateService(Model model) {
+        model.addAttribute("service", new Servize());
+        return "service-create";
     }
 
     @PostMapping("/create-action")

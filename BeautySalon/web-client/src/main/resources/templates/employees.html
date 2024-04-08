@@ -17,6 +17,8 @@
                 <th>First name</th>
                 <th>Last name</th>
                 <th>Contact</th>
+                <th>Date of birth</th>
+                <th>Function</th>
             </tr>
             </thead>
             <tbody>
@@ -25,6 +27,8 @@
                 <td th:text="${employee.firstName}"></td>
                 <td th:text="${employee.lastName}"></td>
                 <td th:text="${employee.contact}"></td>
+                <td th:text="${employee.dob}"></td>
+                <td th:text="${employee.function}"></td>
                 <td><a th:href="@{/employees/update-view/{id}(id=${employee.id})}">Edit</a></td>
                 <td><a th:href="@{/employees/delete-action/{id}(id=${employee.id})}">Delete</a></td>
             </tr>

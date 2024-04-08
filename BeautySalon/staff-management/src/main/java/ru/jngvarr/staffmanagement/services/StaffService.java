@@ -32,6 +32,7 @@ public class StaffService {
     }
 
     public Employee addEmployee(Employee employee) {
+        log.debug("addEmployee{}", employee);
         if (employee.getFirstName() != null && employee.getFunction() != null) {
             return employeeRepository.save(employee);
         } else throw new NotEnoughData("Not enough employee data");
@@ -46,7 +47,8 @@ public class StaffService {
             if (employeeData.getFunction() != null) newEmployee.setFunction(employeeData.getFunction());
             if (employeeData.getContact() != null) newEmployee.setContact(employeeData.getContact());
             if (employeeData.getDob() != null) newEmployee.setDob(employeeData.getDob());
-            return newEmployee;
+            log.debug("update {}", newEmployee);
+            return employeeRepository.save(newEmployee);
         } else throw new NeededObjectNotFound("Employee not found");
     }
 

@@ -46,6 +46,7 @@ public class SalonClientController {
 
     @GetMapping("/create-view")
     public String toCreateClient(Model model) {
+        log.debug("create-view");
         model.addAttribute("client", new Client());
         return "client-create";
     }
@@ -67,7 +68,6 @@ public class SalonClientController {
 
     @PostMapping ("/update-action")
     public String update(@ModelAttribute("client") Client client) {
-        System.out.println(client);
         log.debug("put {}", client);
         salonService.update(client, client.getId());
         return "redirect:/clients";

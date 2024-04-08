@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Services</title>
+<!--    <link rel="stylesheet" type="text/css" href="../static/style-update.css">-->
+</head>
+<body>
+<div th:switch="${services}">
+    <h2 th:case="null">No service found!</h2>
+    <div th:case="*">
+        <h2>Список услуг:</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Duration<th>
+                <th>Description</th>
+                <th>Consumables</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="service : ${services}">
+                <td th:text="${service.id}"></td>
+                <td th:text="${service.title}"></td>
+                <td th:text="${service.price}"></td>
+                <td th:text="${service.serviceDurationInMinutes}"></td>
+                <td th:text ="${service.description}"></td>
+                <td>
+                    <ul>
+                        <li th:each="consumable : ${service.consumables}" th:text="${consumable}"></li>
+                    </ul>
+                </td>
+                <td><a th:href="@{/services/update-view/{id}(id=${service.id})}">Edit</a></td>
+                <td><a th:href="@{/services/delete-action/{id}(id=${service.id})}">Delete</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><a href="services/create-view">Create</a></p>
+</div>
+</body>
+</html>

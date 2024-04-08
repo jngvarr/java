@@ -2,10 +2,10 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Create client &laquo;[[${client.title}]]&raquo; &ndash; BeautySalon </title>
+    <title>Create client  &ndash; BeautySalon </title>
 </head>
 <body>
-<h1>Client create &laquo;[[${client.name}]]&raquo;&raquo</h1>
+<h1>Client create</h1>
 <form action="#" th:action="@{create-action}" th:object="${client}" method="post">
     <label for="firstName">First name</label>
     <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"><br>
@@ -13,6 +13,8 @@
     <input type="text" th:field="*{lastName}" id="lastName" placeholder="Last Name"><br>
     <label for="contact">Contact</label>
     <input type="text" th:field="*{contact}" id="contact" placeholder="Contact"><br>
+    <label for="dob">Date of birth</label>
+    <input type="date" th:field="*{dob}" id="dob" placeholder="Date of birth"> <br/>
     <!--    <input type="submit" value="Create dao.people.Client">-->
     <button type="submit">Create Client</button>
 </form>

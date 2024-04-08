@@ -1,5 +1,6 @@
 package ru.jngvarr.webclient.services;
 
+import dao.Servize;
 import dao.people.Employee;
 import feign_clients.ClientFeignClient;
 import feign_clients.ServiceFeignClient;
@@ -32,6 +33,10 @@ public class SalonService {
         return staffFeignClient.getEmployees();
     }
 
+    public List<Servize> getServices() {
+        return serviceFeignClient.getServices();
+    }
+
     public List<Visit> getVisits() {
         return visitFeignClient.getVisits();
     }
@@ -39,17 +44,19 @@ public class SalonService {
     public Client getClient(Long id) {
         return clientFeignClient.getClient(id);
     }
+
     public Employee getEmployee(Long id) {
         return staffFeignClient.getEmployee(id);
     }
 
-    public Client addClient(Client client) {
+    public void addClient(Client client) {
         log.debug("create {}", client);
-        return clientFeignClient.addClient(client);
+        clientFeignClient.addClient(client);
     }
-    public Employee addEmployee(Employee employee) {
+
+    public void addEmployee(Employee employee) {
         log.debug("create {}", employee);
-        return staffFeignClient.addEmployee(employee);
+        staffFeignClient.addEmployee(employee);
     }
 
     public Client getClientByContact(String contact) {
@@ -59,14 +66,18 @@ public class SalonService {
     public Client update(Client newData, Long id) {
         return clientFeignClient.update(newData, id);
     }
-    public Employee update(Employee newData, Long id) {
-        return staffFeignClient.update(newData, id);
+
+    public void updateEmployees(Employee newData, Long id) {
+        log.debug("salon service - update employees {}", newData);
+        staffFeignClient.update(newData, id);
     }
 
     public void deleteClient(Long id) {
         clientFeignClient.deleteClient(id);
     }
-    public void deleteEmployee(Long id) {        staffFeignClient.deleteEmployee(id);
+
+    public void deleteEmployee(Long id) {
+        staffFeignClient.deleteEmployee(id);
     }
 
     public void clear() {

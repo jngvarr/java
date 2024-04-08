@@ -18,7 +18,7 @@ public class StaffController {
 
     @GetMapping
     public List<Employee> getEmployees() {
-        log.debug("getEmployees {}", staffService.getEmployees());
+//        log.debug("getEmployees {}", staffService.getEmployees());
         return staffService.getEmployees();
     }
 
@@ -28,17 +28,17 @@ public class StaffController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
+    @PostMapping("/create")
     public Employee createEmployee(@RequestBody Employee employee) {
         return staffService.addEmployee(employee);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public Employee updateEmployee(@RequestBody Employee newData, @PathVariable Long id) {
         return staffService.update(newData, id);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public void deleteEmployee(@PathVariable Long id) {
         staffService.delete(id);
     }

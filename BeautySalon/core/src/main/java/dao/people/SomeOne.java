@@ -20,6 +20,6 @@ abstract class SomeOne {
     @Column(name = "contact")
     private String contact;
 
-    @Column(name = "dob")
+    @Column(name = "dob", nullable = true)
     private LocalDate dob;
 }

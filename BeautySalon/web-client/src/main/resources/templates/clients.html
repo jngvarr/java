@@ -17,6 +17,7 @@
                 <th>First name</th>
                 <th>Last name</th>
                 <th>Contact</th>
+                <th>Date of birth</th>
             </tr>
             </thead>
             <tbody>
@@ -25,6 +26,7 @@
                 <td th:text="${client.firstName}"></td>
                 <td th:text="${client.lastName}"></td>
                 <td th:text="${client.contact}"></td>
+                <td th:text="${client.dob}"></td>
                 <td><a th:href="@{/clients/update-view/{id}(id=${client.id})}">Edit</a></td>
                 <td><a th:href="@{/clients/delete-action/{id}(id=${client.id})}">Delete</a></td>
             </tr>
