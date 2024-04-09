@@ -9,15 +9,4 @@ public enum Measures {
     PACK,
     PAIR,
     BOTTLE;
-//    PIECE("штука"),
-//    ML("милилитр"),
-//    GR("грамм"),
-//    BOX("коробка"),
-//    PACK("упаковка"),
-//    PAIR("пара"),
-//    BOTTLE("бутылка");
-
-
-//    Measures(String measure) {
-//    }
 }

@@ -31,6 +31,7 @@ public class SalonServiceController {
 
     @GetMapping("/create-view")
     public String toCreateService(Model model) {
+        model.addAttribute("consumables", salonService.getConsumables() );
         model.addAttribute("service", new Servize());
         return "service-create";
     }

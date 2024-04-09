@@ -1,11 +1,9 @@
 package ru.jngvarr.webclient.services;
 
+import dao.Consumable;
 import dao.Servize;
 import dao.people.Employee;
-import feign_clients.ClientFeignClient;
-import feign_clients.ServiceFeignClient;
-import feign_clients.StaffFeignClient;
-import feign_clients.VisitFeignClient;
+import feign_clients.*;
 import dao.Visit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,6 +21,7 @@ public class SalonService {
     private final VisitFeignClient visitFeignClient;
     private final ServiceFeignClient serviceFeignClient;
     private final StaffFeignClient staffFeignClient;
+    private final StorageFeignClient storageFeignClient;
 
 
     public List<Client> getClients() {
@@ -36,6 +35,10 @@ public class SalonService {
     public List<Servize> getServices() {
         return serviceFeignClient.getServices();
     }
+
+    public List<Consumable> getConsumables() {return storageFeignClient.getConsumables();
+    }
+
 
     public List<Visit> getVisits() {
         return visitFeignClient.getVisits();

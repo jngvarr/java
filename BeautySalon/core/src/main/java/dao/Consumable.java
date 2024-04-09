@@ -1,5 +1,6 @@
 package dao;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -19,9 +20,10 @@ public class Consumable {
     private Measures measure;
     @Column(name = "price")
     private double price;
+//    @JsonIgnore
     @ManyToMany(/*mappedBy = "consumables", */ cascade = CascadeType.ALL)
     @JoinTable(name = "service_consumable",
-            joinColumns = @JoinColumn(name = "service_id"),
-            inverseJoinColumns = @JoinColumn(name = "consumable_id"))
+            joinColumns = @JoinColumn(name = "consumable_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id"))
     private List<Servize> services;
 }

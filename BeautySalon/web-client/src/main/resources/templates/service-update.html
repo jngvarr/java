@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update client</title>
+</head>
+<body>
+<h1>Update employee</h1>
+<div class="main">
+    <form action="#" th:action="@{/employees/update-action}" th:object="${employee}" method="post">
+        <label for="id">ID</label>
+        <input readonly type="number" th:field="*{id}" id="id" placeholder="ID">
+        <br/>
+        <label for="firstName">First name</label>
+        <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"> <br/>
+        <label for="lastName">Last name</label>
+        <input type="text" th:field="*{lastName}" id="lastName" placeholder="Last Name"> <br/>
+        <label for="contact">Contact</label>
+        <input type="text" th:field="*{contact}" id="contact" placeholder="Contact"> <br/>
+        <label for="dob">Date of birth</label>
+        <input type="date" th:field="*{dob}" id="dob" placeholder="Date of birth"><br>
+        <label for="function">Function</label>
+        <select th:field="*{function}" id="function" >
+            <option value="ADMIN">ADMIN</option>
+            <option value="HAIRDRESSER">HAIRDRESSER</option>
+            <option value="NAILMASTER">NAILMASTER</option>
+            <option value="CLEANING">CLEANING</option>
+        </select> <br>
+        <input type="submit" value="Update">
+    </form>
+</div>
+</body>
+</html>
