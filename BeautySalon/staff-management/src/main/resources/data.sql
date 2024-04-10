@@ -5,6 +5,6 @@
 --        ('Екатерина', 'Щеглакова', '+79545554412', '2002-05-19', 'CLEANING');
 
 
-select *from public.employees;
+select *from store;
 
 

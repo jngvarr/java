@@ -3,31 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update client</title>
+    <title>Update service</title>
 </head>
 <body>
 <h1>Update employee</h1>
 <div class="main">
-    <form action="#" th:action="@{/employees/update-action}" th:object="${employee}" method="post">
-        <label for="id">ID</label>
-        <input readonly type="number" th:field="*{id}" id="id" placeholder="ID">
-        <br/>
-        <label for="firstName">First name</label>
-        <input type="text" th:field="*{firstName}" id="firstName" placeholder="First Name"> <br/>
-        <label for="lastName">Last name</label>
-        <input type="text" th:field="*{lastName}" id="lastName" placeholder="Last Name"> <br/>
-        <label for="contact">Contact</label>
-        <input type="text" th:field="*{contact}" id="contact" placeholder="Contact"> <br/>
-        <label for="dob">Date of birth</label>
-        <input type="date" th:field="*{dob}" id="dob" placeholder="Date of birth"><br>
-        <label for="function">Function</label>
-        <select th:field="*{function}" id="function" >
-            <option value="ADMIN">ADMIN</option>
-            <option value="HAIRDRESSER">HAIRDRESSER</option>
-            <option value="NAILMASTER">NAILMASTER</option>
-            <option value="CLEANING">CLEANING</option>
-        </select> <br>
-        <input type="submit" value="Update">
+    <form action="#" th:action="@{/services/update-action}" th:object="${service}" method="post">
+        <label for="title">Title</label>
+        <input type="text" th:field="*{title}" id="title" placeholder="Title"><br>
+        <label for="price">Price</label>
+        <input type="text" th:field="*{price}" id="price" placeholder="Price"><br>
+        <label for="duration">Duration</label>
+        <input type="text" th:field="*{serviceDurationInMinutes}" id="duration" placeholder="Duration"><br>
+        <label for="description">Description</label>
+        <input type="text" th:field="*{description}" id="description" placeholder="Description"> <br/>
+        <label for="consumables">Consumables</label>
+        <select th:field="*{consumables}" multiple id="consumables">
+            <option th:each="item : ${consumables}" th:value="${item}" th:text="${item.title}"></option>
+        </select>
+        <button type="submit">Update</button>
     </form>
 </div>
 </body>

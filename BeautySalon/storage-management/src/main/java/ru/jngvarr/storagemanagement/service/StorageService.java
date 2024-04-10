@@ -19,6 +19,7 @@ public class StorageService {
     private final StorageRepository repository;
 
     public List<Consumable> getConsumables() {
+        log.debug("get");
         return repository.findAll();
     }
 

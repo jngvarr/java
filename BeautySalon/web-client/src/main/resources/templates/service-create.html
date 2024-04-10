@@ -12,12 +12,12 @@
     <label for="price">Price</label>
     <input type="text" th:field="*{price}" id="price" placeholder="Price"><br>
     <label for="duration">Duration</label>
-    <input type="text" th:field="*{duration}" id="duration" placeholder="Duration"><br>
+    <input type="text" th:field="*{serviceDurationInMinutes}" id="duration" placeholder="Duration"><br>
     <label for="description">Description</label>
     <input type="text" th:field="*{description}" id="description" placeholder="Description"> <br/>
     <label for="consumables">Consumables</label>
     <select th:field="*{consumables}" multiple id="consumables">
-        <option th:each="item : ${consumables}" th:value="${item}" th:text="${item}"></option>
+        <option th:each="item : ${consumables}" th:value="${item}" th:text="${item.title}"></option>
     </select>
     <button type="submit">Create</button>
 </form>

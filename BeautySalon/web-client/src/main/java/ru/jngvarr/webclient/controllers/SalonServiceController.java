@@ -1,7 +1,6 @@
 package ru.jngvarr.webclient.controllers;
 
 import dao.Servize;
-import dao.people.Employee;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
@@ -26,7 +25,7 @@ public class SalonServiceController {
     @GetMapping("/{id}")
     public String getEmployee(Model model, @PathVariable Long id) {
         model.addAttribute("employee", salonService.getEmployee(id));
-        return "employyee";
+        return "service";
     }
 
     @GetMapping("/create-view")
@@ -37,29 +36,32 @@ public class SalonServiceController {
     }
 
     @PostMapping("/create-action")
-    public String addEmployee(Model model, Employee employee) {
-        salonService.addEmployee(employee);
-        model.addAttribute("employees", salonService.getEmployees());
-        return "employees";
+    public String addService(Model model, Servize service) {
+        salonService.addService(service);
+        model.addAttribute("services", salonService.getServices());
+        return "services";
     }
 
     @GetMapping("/update-view/{id}")
-    public String updateEmployeeForm(Model model, @PathVariable long id) {
-        Employee oldEmployee = salonService.getEmployee(id);
-        model.addAttribute("employee", oldEmployee);
-        return "employee-update";
+    public String toUpdateService(Model model, @PathVariable long id) {
+        Servize oldService = salonService.getService(id);
+        model.addAttribute("consumables", salonService.getConsumables());
+        model.addAttribute("service", oldService);
+        log.debug("update-view Service {}", oldService);
+        return "service-update";
     }
 
     @PostMapping ("/update-action")
-    public String update(@ModelAttribute("employee") Employee employee) {
-        salonService.updateEmployees(employee, employee.getId());
-        return "redirect:/employees";
+    public String updateService(@ModelAttribute("service") Servize newData) {
+                salonService.updateService(newData, newData.getId());
+        log.debug("update-action Service {}", newData);
+        return "redirect:/services";
     }
 
     @GetMapping("/delete-action/{id}")
     public String delete(@PathVariable Long id) {
-        salonService.deleteEmployee(id);
-        return "redirect:/employees";
+        salonService.deleteService(id);
+        return "redirect:/services";
     }
 }
 

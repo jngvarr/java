@@ -30,17 +30,17 @@ public class ServiceController {
         return service.getServiceDuration(id);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public Servize addService(@RequestBody Servize newService) {
         return service.addService(newService);
     }
 
-    @PutMapping("/{id}")
-    public Servize update(@RequestBody Servize newData, @PathVariable Long id) {
+    @PutMapping("/update/{id}")
+    public Servize updateService(@RequestBody Servize newData, @PathVariable Long id) {
         return service.update(newData, id);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/delete/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

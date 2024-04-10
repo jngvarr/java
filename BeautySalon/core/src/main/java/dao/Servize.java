@@ -1,6 +1,7 @@
 package dao;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class Servize {
     @Column(name = "price")
     private BigDecimal price;
     @Column(name = "duration")
+//    @JsonProperty("duration")
     private Integer serviceDurationInMinutes;
     @Column(name = "description")
     private String description;

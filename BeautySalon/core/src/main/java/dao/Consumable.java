@@ -20,7 +20,7 @@ public class Consumable {
     private Measures measure;
     @Column(name = "price")
     private double price;
-//    @JsonIgnore
+    @JsonIgnore
     @ManyToMany(/*mappedBy = "consumables", */ cascade = CascadeType.ALL)
     @JoinTable(name = "service_consumable",
             joinColumns = @JoinColumn(name = "consumable_id"),

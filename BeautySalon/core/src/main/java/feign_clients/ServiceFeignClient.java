@@ -2,10 +2,7 @@ package feign_clients;
 
 import dao.Servize;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,4 +17,13 @@ public interface ServiceFeignClient {
 
     @RequestMapping(value = "/services/duration/{id}", method = RequestMethod.GET)
     int getServiceDuration(@PathVariable Long id);
+
+    @PostMapping("/services/create")
+    void addService(Servize service);
+
+    @RequestMapping(value = "/services/update/{id}", method = RequestMethod.PUT)
+    Servize updateService(@RequestBody Servize newData, @PathVariable Long id);
+
+    @DeleteMapping("/services/delete/{id}")
+    void deleteService(@PathVariable Long id);
 }

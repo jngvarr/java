@@ -36,13 +36,14 @@ public class SalonService {
         return serviceFeignClient.getServices();
     }
 
-    public List<Consumable> getConsumables() {return storageFeignClient.getConsumables();
+    public List<Consumable> getConsumables() {
+        return storageFeignClient.getConsumables();
     }
-
 
     public List<Visit> getVisits() {
         return visitFeignClient.getVisits();
     }
+
 
     public Client getClient(Long id) {
         return clientFeignClient.getClient(id);
@@ -51,6 +52,15 @@ public class SalonService {
     public Employee getEmployee(Long id) {
         return staffFeignClient.getEmployee(id);
     }
+
+    public Servize getService(Long id) {
+        return serviceFeignClient.getService(id);
+    }
+
+    public Consumable getConsumable(Long id) {
+        return storageFeignClient.getConsumable(id);
+    }
+
 
     public void addClient(Client client) {
         log.debug("create {}", client);
@@ -62,12 +72,17 @@ public class SalonService {
         staffFeignClient.addEmployee(employee);
     }
 
+    public void addService(Servize service) {
+        log.debug("create {}", service);
+        serviceFeignClient.addService(service);
+    }
+
     public Client getClientByContact(String contact) {
         return clientFeignClient.getClientByContact(contact);
     }
 
     public Client update(Client newData, Long id) {
-        return clientFeignClient.update(newData, id);
+        return clientFeignClient.updateClient(newData, id);
     }
 
     public void updateEmployees(Employee newData, Long id) {
@@ -75,12 +90,21 @@ public class SalonService {
         staffFeignClient.update(newData, id);
     }
 
+    public void updateService(Servize newData, Long id) {
+        serviceFeignClient.updateService(newData, id);
+    }
+
+
     public void deleteClient(Long id) {
         clientFeignClient.deleteClient(id);
     }
 
     public void deleteEmployee(Long id) {
         staffFeignClient.deleteEmployee(id);
+    }
+
+    public void deleteService(Long id) {
+        serviceFeignClient.deleteService(id);
     }
 
     public void clear() {

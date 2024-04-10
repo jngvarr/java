@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/clients")
-public class ClientsController {
+public class ClientController {
     private final ClientService clientService;
 
     @GetMapping

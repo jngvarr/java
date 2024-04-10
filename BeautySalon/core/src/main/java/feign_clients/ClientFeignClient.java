@@ -21,7 +21,7 @@ public interface ClientFeignClient {
     Client addClient(@RequestBody Client clientToAdd);
 
     @RequestMapping(value = "/clients/update/{id}", method = RequestMethod.PUT)
-    Client update(@RequestBody Client newData, @PathVariable Long id);
+    Client updateClient(@RequestBody Client newData, @PathVariable Long id);
 
     @RequestMapping(value = "/clients/delete/{id}", method = RequestMethod.DELETE)
     void deleteClient(@PathVariable Long id);
