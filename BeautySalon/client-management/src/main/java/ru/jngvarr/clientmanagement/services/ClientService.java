@@ -1,6 +1,6 @@
 package ru.jngvarr.clientmanagement.services;
 
-import dao.people.Client;
+import dao.entities.people.Client;
 import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

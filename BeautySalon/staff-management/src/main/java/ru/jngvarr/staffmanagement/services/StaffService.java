@@ -1,6 +1,6 @@
 package ru.jngvarr.staffmanagement.services;
 
-import dao.people.Employee;
+import dao.entities.people.Employee;
 import exceptions.NeededObjectNotFound;
 import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;

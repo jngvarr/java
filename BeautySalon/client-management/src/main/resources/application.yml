@@ -8,16 +8,16 @@ spring:
 
   application:
     name: clients
-#  cloud:
-#    openfeign:
-#      client:
-#        config:
-#          clients:
-#            url: http://localhost:8081
-#          staff:
-#            url: http://localhost:8084
-#          services:
-#            url: http://localhost:8082
+  #  cloud:
+  #    openfeign:
+  #      client:
+  #        config:
+  #          clients:
+  #            url: http://localhost:8081
+  #          staff:
+  #            url: http://localhost:8084
+  #          services:
+  #            url: http://localhost:8082
 
 
   jpa:
@@ -30,9 +30,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    url: jdbc:postgresql://147.45.102.248:5432/clients
+    url: jdbc:postgresql://147.45.102.248:5432/salondb
     username: user
     password: passw
+    hikari:
+      schema: salon
   sql:
     init:
       mode: always

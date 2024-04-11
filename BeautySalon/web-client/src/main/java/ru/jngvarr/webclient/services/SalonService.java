@@ -1,17 +1,17 @@
 package ru.jngvarr.webclient.services;
 
-import dao.Consumable;
-import dao.Servize;
-import dao.people.Employee;
+import dao.entities.Consumable;
+import dao.entities.Servize;
+import dao.entities.people.Employee;
 import feign_clients.*;
-import dao.Visit;
+import dao.entities.Visit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import dao.people.Client;
+import dao.entities.people.Client;
 
 @Log4j2
 @Service

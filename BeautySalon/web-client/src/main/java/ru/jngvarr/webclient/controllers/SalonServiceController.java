@@ -1,6 +1,6 @@
 package ru.jngvarr.webclient.controllers;
 
-import dao.Servize;
+import dao.entities.Servize;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;

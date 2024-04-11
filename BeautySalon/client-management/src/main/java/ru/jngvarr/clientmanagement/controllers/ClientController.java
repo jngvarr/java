@@ -1,6 +1,6 @@
 package ru.jngvarr.clientmanagement.controllers;
 
-import dao.people.Client;
+import dao.entities.people.Client;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;

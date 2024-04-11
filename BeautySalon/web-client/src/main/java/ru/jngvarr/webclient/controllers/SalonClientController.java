@@ -6,7 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.webclient.services.SalonService;
-import dao.people.Client;
+import dao.entities.people.Client;
 
 @Log4j2
 @Controller

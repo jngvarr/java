@@ -11,5 +11,5 @@ create table if not exists consumables
     services text[]
 );
 
--- drop schema consumables;
--- drop table consumables;
+drop schema consumables;
+drop table consumables;

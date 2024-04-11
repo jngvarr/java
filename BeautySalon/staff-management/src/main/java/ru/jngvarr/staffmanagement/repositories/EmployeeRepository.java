@@ -1,6 +1,6 @@
 package ru.jngvarr.staffmanagement.repositories;
 
-import dao.people.Employee;
+import dao.entities.people.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

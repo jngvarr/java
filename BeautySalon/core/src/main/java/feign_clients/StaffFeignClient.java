@@ -1,7 +1,6 @@
 package feign_clients;
 
-import dao.people.Client;
-import dao.people.Employee;
+import dao.entities.people.Employee;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

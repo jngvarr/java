@@ -1,7 +1,6 @@
 package ru.jngvarr.storagemanagement.service;
 
-import dao.Consumable;
-import dao.people.Employee;
+import dao.entities.Consumable;
 import exceptions.NeededObjectNotFound;
 import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,7 @@ public class StorageService {
     }
 
     public Consumable add(Consumable consumable) {
-        if (consumable.getTitle() != null & consumable.getMeasure() != null) return repository.save(consumable);
+        if (consumable.getTitle() != null & consumable.getUnit() != null) return repository.save(consumable);
         else throw new NotEnoughData("Not enough consumable data");
     }
 
@@ -39,7 +38,7 @@ public class StorageService {
         if (oldConsumable.isPresent()) {
             Consumable newConsumable = oldConsumable.get();
             if (newData.getTitle() != null) newConsumable.setTitle(newData.getTitle());
-            if (newData.getMeasure() != null) newConsumable.setMeasure(newConsumable.getMeasure());
+            if (newData.getUnit() != null) newConsumable.setUnit(newConsumable.getUnit());
 //            log.debug("update {}", newConsumable);
             return repository.save(newConsumable);
         } else throw new NeededObjectNotFound("Consumable not found");

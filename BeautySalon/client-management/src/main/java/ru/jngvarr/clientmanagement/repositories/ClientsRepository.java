@@ -1,6 +1,6 @@
 package ru.jngvarr.clientmanagement.repositories;
 
-import dao.people.Client;
+import dao.entities.people.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
