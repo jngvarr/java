@@ -5,5 +5,5 @@ values ('Мужская стрижка', 299, '20', 'любая стрижка')
 
 select * from services;
 
-SELECT t.* FROM public.services t;
+-- SELECT t.* FROM public.services t;
 
