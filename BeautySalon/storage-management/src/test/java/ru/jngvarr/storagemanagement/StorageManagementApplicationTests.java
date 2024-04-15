@@ -1,13 +1,13 @@
 package ru.jngvarr.storagemanagement;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class StorageManagementApplicationTests {
+public class StorageManagementApplicationTests {
 
     @Test
-    void contextLoads() {
+    public void contextLoads() {
     }
 
 }

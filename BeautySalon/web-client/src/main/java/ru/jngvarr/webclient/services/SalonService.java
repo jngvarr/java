@@ -39,6 +39,9 @@ public class SalonService {
     public List<Consumable> getConsumables() {
         return storageFeignClient.getConsumables();
     }
+    public List<String>getStringConsumables() {
+        return storageFeignClient.getConsumables().stream().map(Consumable::getTitle).toList();
+    }
 
     public List<Visit> getVisits() {
         return visitFeignClient.getVisits();

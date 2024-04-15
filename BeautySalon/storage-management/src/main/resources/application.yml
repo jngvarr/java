@@ -1,6 +1,7 @@
 server:
   port: 8083
 spring:
+
   security:
     user:
       name: user
@@ -24,6 +25,7 @@ spring:
     password: passw
     hikari:
       schema: salon
+      maximum-pool-size: 2
   sql:
     init:
       mode: always

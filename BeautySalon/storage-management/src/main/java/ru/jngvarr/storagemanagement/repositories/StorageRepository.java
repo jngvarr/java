@@ -4,4 +4,6 @@ import dao.entities.Consumable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StorageRepository extends JpaRepository<Consumable, Long> {
+
+    public Consumable getConsumableByTitle(String title);
 }

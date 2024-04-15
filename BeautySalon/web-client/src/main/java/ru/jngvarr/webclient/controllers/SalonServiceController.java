@@ -8,6 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.webclient.services.SalonService;
 
+import java.util.List;
+
 @Log4j2
 @Controller
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class SalonServiceController {
 
     @GetMapping("/create-view")
     public String toCreateService(Model model) {
-        model.addAttribute("consumables", salonService.getConsumables() );
+        model.addAttribute("consumables", salonService.getConsumables());
         model.addAttribute("service", new Servize());
         return "service-create";
     }
@@ -45,16 +47,16 @@ public class SalonServiceController {
     @GetMapping("/update-view/{id}")
     public String toUpdateService(Model model, @PathVariable long id) {
         Servize oldService = salonService.getService(id);
-        model.addAttribute("consumables", salonService.getConsumables());
+        model.addAttribute("consumables", salonService.getStringConsumables());
         model.addAttribute("service", oldService);
         log.debug("update-view Service {}", oldService);
         return "service-update";
     }
 
-    @PostMapping ("/update-action")
+    @PostMapping("/update-action")
     public String updateService(@ModelAttribute("service") Servize newData) {
-                salonService.updateService(newData, newData.getId());
         log.debug("update-action Service {}", newData);
+        salonService.updateService(newData, newData.getId());
         return "redirect:/services";
     }
 

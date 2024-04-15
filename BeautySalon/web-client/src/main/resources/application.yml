@@ -1,6 +1,9 @@
 server:
   port: 8079
 spring:
+  datasource:
+    hikari:
+      maximum-pool-size : 2
   application:
     name: web
   security:

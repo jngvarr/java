@@ -19,8 +19,9 @@
         <input type="text" th:field="*{description}" id="description" placeholder="Description"> <br/>
         <label for="consumables">Consumables</label>
         <select th:field="*{consumables}" multiple id="consumables">
-            <option th:each="item : ${consumables}" th:value="${item}" th:text="${item.title}"></option>
+            <option th:each="item : ${consumables}" th:value="${item.title}" th:text="${item.title}"></option>
         </select>
+
         <button type="submit">Update</button>
     </form>
 </div>

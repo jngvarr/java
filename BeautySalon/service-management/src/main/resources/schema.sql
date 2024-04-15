@@ -20,8 +20,10 @@ create table if not exists service_to_consumable
     consumable_id SERIAL NOT NULL
 );
 
-drop table services;
-drop schema services;
+-- drop table services;
+-- drop schema services;
+-- select *from consumables;
+
 
 alter table service_to_consumable
     add constraint service_to_consumable_consumable__fk
@@ -29,7 +31,7 @@ alter table service_to_consumable
 
 alter table service_to_consumable
     add constraint service_to_consumable_services_id_fk
-        foreign key (service_id) references public.services;
+        foreign key (service_id) references services;
 
 create table consumables
 (
