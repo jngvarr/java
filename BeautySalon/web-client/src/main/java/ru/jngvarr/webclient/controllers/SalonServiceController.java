@@ -1,5 +1,6 @@
 package ru.jngvarr.webclient.controllers;
 
+import dao.entities.ServiceDto;
 import dao.entities.Servize;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -47,16 +48,17 @@ public class SalonServiceController {
     @GetMapping("/update-view/{id}")
     public String toUpdateService(Model model, @PathVariable long id) {
         Servize oldService = salonService.getService(id);
-        model.addAttribute("consumables", salonService.getStringConsumables());
+        model.addAttribute("consumables", salonService.getConsumables());
+//        model.addAttribute("consumables", salonService.getStringConsumables());
         model.addAttribute("service", oldService);
         log.debug("update-view Service {}", oldService);
         return "service-update";
     }
 
     @PostMapping("/update-action")
-    public String updateService(@ModelAttribute("service") Servize newData) {
+    public String updateService(@ModelAttribute("service") ServiceDto newData) {
         log.debug("update-action Service {}", newData);
-        salonService.updateService(newData, newData.getId());
+        salonService.updateService(salonService.convertServiceDtoToServize(newData), newData.getId());
         return "redirect:/services";
     }
 

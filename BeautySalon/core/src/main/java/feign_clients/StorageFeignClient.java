@@ -15,4 +15,7 @@ public interface StorageFeignClient {
 
     @GetMapping("/storage/{id}")
     Consumable getConsumable(@PathVariable Long id);
+
+    @GetMapping("/storage/byTitle/{title}")
+    Consumable getConsumableByTitle(@PathVariable String title);
 }

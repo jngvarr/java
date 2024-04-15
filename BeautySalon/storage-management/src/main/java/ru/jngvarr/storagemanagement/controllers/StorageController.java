@@ -27,6 +27,12 @@ public class StorageController {
         return storageService.getConsumable(id);
     }
 
+    @GetMapping("/byTitle/{title}")
+    public Consumable getConsumable(@PathVariable String title){
+        log.debug("title {}", title);
+        return storageService.getConsumableByTitle(title);
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
     public Consumable create(@RequestBody Consumable consumable){

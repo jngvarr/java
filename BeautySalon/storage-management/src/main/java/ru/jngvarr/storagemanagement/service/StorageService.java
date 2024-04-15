@@ -28,6 +28,13 @@ public class StorageService {
         else throw new NeededObjectNotFound("Consumable not found");
     }
 
+    public Consumable getConsumableByTitle(String title) {
+        log.debug("title {}", title);
+        Consumable neededConsumable = repository.getConsumableByTitle(title);
+        if (neededConsumable != null) return neededConsumable;
+        else throw new NeededObjectNotFound("Consumable not found");
+    }
+
     public Consumable add(Consumable consumable) {
         if (consumable.getTitle() != null & consumable.getUnit() != null) return repository.save(consumable);
         else throw new NotEnoughData("Not enough consumable data");

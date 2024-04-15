@@ -1,6 +1,7 @@
 package ru.jngvarr.webclient.services;
 
 import dao.entities.Consumable;
+import dao.entities.ServiceDto;
 import dao.entities.Servize;
 import dao.entities.people.Employee;
 import feign_clients.*;
@@ -112,5 +113,21 @@ public class SalonService {
 
     public void clear() {
         clientFeignClient.clearAllData();
+    }
+
+
+    public Servize convertServiceDtoToServize(ServiceDto data){
+        log.debug("data before {}", data.getDescription());
+        Servize updatedServize = new Servize();
+        updatedServize.setId(data.getId());
+        updatedServize.setDescription(data.getDescription());
+        updatedServize.setTitle(data.getTitle());
+        updatedServize.setPrice(data.getPrice());
+        updatedServize.setServiceDurationInMinutes(data.getServiceDurationInMinutes());
+        for (String cons: data.getConsumables()){
+            log.debug("Расходник {}", cons);
+            updatedServize.getConsumables().add(storageFeignClient.getConsumableByTitle(cons));
+        }
+        return updatedServize;
     }
 }
