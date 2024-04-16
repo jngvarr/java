@@ -18,21 +18,18 @@ public class SalonClientController {
 
     @GetMapping
     public String showAll(Model model) {
-        log.debug("show all");
         model.addAttribute("clients", salonService.getClients());
         return "clients";
     }
 
     @GetMapping("/{id}")
     public String getClient(Model model, @PathVariable Long id) {
-        log.debug(id);
         model.addAttribute("client", salonService.getClient(id));
         return "client";
     }
 
     @GetMapping("/by-contact/{contact}")
     public String getClientByContact(Model model, @PathVariable String contact) {
-        log.debug(contact);
         model.addAttribute("client", salonService.getClientByContact(contact));
         return "client";
     }
@@ -53,7 +50,6 @@ public class SalonClientController {
 
     @PostMapping("/create-action")
     public String addClient(Model model, Client client) {
-        log.debug("create {}", client);
         salonService.addClient(client);
         model.addAttribute("clients", salonService.getClients());
         return "clients";

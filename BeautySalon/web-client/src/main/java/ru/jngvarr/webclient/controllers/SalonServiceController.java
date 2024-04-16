@@ -27,7 +27,7 @@ public class SalonServiceController {
 
     @GetMapping("/{id}")
     public String getEmployee(Model model, @PathVariable Long id) {
-        model.addAttribute("employee", salonService.getEmployee(id));
+        model.addAttribute("employee", salonService.getService(id));
         return "service";
     }
 
@@ -39,8 +39,8 @@ public class SalonServiceController {
     }
 
     @PostMapping("/create-action")
-    public String addService(Model model, Servize service) {
-        salonService.addService(service);
+    public String addService(Model model, ServiceDto newData) {
+        salonService.addService(newData);
         model.addAttribute("services", salonService.getServices());
         return "services";
     }
@@ -49,15 +49,12 @@ public class SalonServiceController {
     public String toUpdateService(Model model, @PathVariable long id) {
         Servize oldService = salonService.getService(id);
         model.addAttribute("consumables", salonService.getConsumables());
-//        model.addAttribute("consumables", salonService.getStringConsumables());
         model.addAttribute("service", oldService);
-        log.debug("update-view Service {}", oldService);
         return "service-update";
     }
 
     @PostMapping("/update-action")
     public String updateService(@ModelAttribute("service") ServiceDto newData) {
-        log.debug("update-action Service {}", newData);
         salonService.updateService(salonService.convertServiceDtoToServize(newData), newData.getId());
         return "redirect:/services";
     }

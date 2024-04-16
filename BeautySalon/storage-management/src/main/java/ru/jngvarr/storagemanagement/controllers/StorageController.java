@@ -35,7 +35,7 @@ public class StorageController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
-    public Consumable create(@RequestBody Consumable consumable){
+    public Consumable add(@RequestBody Consumable consumable){
         return storageService.add(consumable);
     }
 

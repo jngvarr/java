@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Consumables</title>
+    <style>
+        table, th, td {
+            text-align: center;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+<div th:switch="${consumables}">
+    <h2 th:case="null">No consumable found!</h2>
+    <div th:case="*">
+        <h2>Список расходников:</h2>
+        <table style="text-align: center">
+            <thead>
+            <tr style="text-align: center">
+                <th>Id</th>
+                <th>Title</th>
+                <th>Unit</th>
+                <th>Price</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="consumable : ${consumables}">
+                <td style="text-align: center" th:text="${consumable.id}"></td>
+                <td style="text-align: center" th:text="${consumable.title}"></td>
+                <td style="text-align: center" th:text="${consumable.unit.name}"></td>
+                <td style="text-align: center" th:text="${consumable.price}"></td>
+
+                <td><a th:href="@{/storage/update-view/{id}(id=${consumable.id})}">Edit</a></td>
+                <td><a th:href="@{/storage/delete-action/{id}(id=${consumable.id})}">Delete</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><a href="storage/create-view">Create</a></p>
+    <p><a href="https://localhost:8079/home">Back to Home page</a></p>
+</div>
+</body>
+</html>

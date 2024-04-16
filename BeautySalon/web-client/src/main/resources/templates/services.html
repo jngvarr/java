@@ -4,35 +4,40 @@
     <meta charset="UTF-8">
     <title>Services</title>
 <!--    <link rel="stylesheet" type="text/css" href="../static/style-update.css">-->
+    <style>
+        table, th, td {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 <div th:switch="${services}">
     <h2 th:case="null">No service found!</h2>
     <div th:case="*">
         <h2>Список услуг:</h2>
-        <table>
+        <table style="text-align: center">
             <thead>
-            <tr>
-                <th>Id</th>
-                <th>Title</th>
-                <th>Price</th>
-                <th>Duration<th>
-                <th>Description</th>
-                <th>Consumables</th>
-                <th>Edit</th>
-                <th>Delete</th>
+            <tr style="text-align: center">
+                <th style="text-align: center">Id</th>
+                <th style="text-align: center">Title</th>
+                <th style="text-align: center">Price</th>
+                <th style="text-align: center">Duration</th>
+                <th style="text-align: center">Description</th>
+                <th style="text-align: center">Consumables</th>
+                <th style="text-align: center">Edit</th>
+                <th style="text-align: center">Delete</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="service : ${services}">
-                <td th:text="${service.id}"></td>
-                <td th:text="${service.title}"></td>
-                <td th:text="${service.price}"></td>
-                <td th:text="${service.serviceDurationInMinutes}"></td>
-                <td th:text ="${service.description}"></td>
+                <td style="text-align: center" th:text="${service.id}"></td>
+                <td style="text-align: center" th:text="${service.title}"></td>
+                <td style="text-align: center" th:text="${service.price}"></td>
+                <td style="text-align: center" th:text="${service.serviceDurationInMinutes}"></td>
+                <td style="text-align: center" th:text ="${service.description}"></td>
                 <td>
                     <ul>
-                        <li th:each="consumable : ${service.consumables}" th:text="${consumable.title}"></li>
+                        <li style="text-align: center" th:each="consumable : ${service.consumables}" th:text="${consumable.title}"></li>
                     </ul>
                 </td>
                 <td><a th:href="@{/services/update-view/{id}(id=${service.id})}">Edit</a></td>
@@ -42,6 +47,7 @@
         </table>
     </div>
     <p><a href="services/create-view">Create</a></p>
+    <p><a href="https://localhost:8079/home">Back to Home page</a></p>
 </div>
 </body>
 </html>
