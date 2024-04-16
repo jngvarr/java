@@ -18,7 +18,7 @@ public class Consumable {
     @Convert(converter = UnitsConverter.class)
     private Unit unit;
     @Column(name = "price")
-    private double price;
+    private Double price;
 //    @JsonIgnore
 //    @ManyToMany(/*mappedBy = "consumables", */ cascade = CascadeType.ALL)
 //    @JoinTable(name = "service_consumable",

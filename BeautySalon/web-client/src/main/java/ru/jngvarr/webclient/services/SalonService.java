@@ -47,6 +47,7 @@ public class SalonService {
     }
 
     public List<Visit> getVisits() {
+        log.debug("salonService getVisits");
         return visitFeignClient.getVisits();
     }
 
@@ -63,13 +64,21 @@ public class SalonService {
         return serviceFeignClient.getService(id);
     }
 
-    public Consumable getConsumable(Long id) { return storageFeignClient.getConsumable(id); }
+    public Consumable getConsumable(Long id) {
+        return storageFeignClient.getConsumable(id);
+    }
 
-    public void addClient(Client client) { clientFeignClient.addClient(client); }
+    public void addClient(Client client) {
+        clientFeignClient.addClient(client);
+    }
 
-    public void addEmployee(Employee employee) { staffFeignClient.addEmployee(employee); }
+    public void addEmployee(Employee employee) {
+        staffFeignClient.addEmployee(employee);
+    }
 
-    public void addConsumable(Consumable consumable) { storageFeignClient.addConsumable(consumable); }
+    public void addConsumable(Consumable consumable) {
+        storageFeignClient.addConsumable(consumable);
+    }
 
     public void addService(ServiceDto service) {
         convertServiceDtoToServize(service);
@@ -92,7 +101,9 @@ public class SalonService {
         serviceFeignClient.updateService(newData, id);
     }
 
-    public void updateConsumable(Consumable newData, Long id) {  storageFeignClient.updateConsumable(newData, id); }
+    public void updateConsumable(Consumable newData, Long id) {
+        storageFeignClient.updateConsumable(newData, id);
+    }
 
 
     public void deleteClient(Long id) {
@@ -103,9 +114,14 @@ public class SalonService {
         staffFeignClient.deleteEmployee(id);
     }
 
-    public void deleteService(Long id) { serviceFeignClient.deleteService(id); }
+    public void deleteService(Long id) {
+        serviceFeignClient.deleteService(id);
+    }
 
-    public void deleteConsumable(Long id) { storageFeignClient.deleteConsumable(id);}
+    public void deleteConsumable(Long id) {
+        storageFeignClient.deleteConsumable(id);
+    }
+
     public void clear() {
         clientFeignClient.clearAllData();
     }

@@ -27,3 +27,7 @@ tbody td:hover {
 #datepicker.custom-datepicker {
     width: 70px !important; /* Уменьшаем ширину поля */
 }
+#schedule{
+    width:600px;
+    text-align: center;
+}

@@ -41,12 +41,14 @@ public class StorageService {
     }
 
     public Consumable update(Consumable newData, Long id) {
+            log.debug("update begin {}", id);
         Optional<Consumable> oldConsumable = repository.findById(id);
         if (oldConsumable.isPresent()) {
             Consumable newConsumable = oldConsumable.get();
             if (newData.getTitle() != null) newConsumable.setTitle(newData.getTitle());
-            if (newData.getUnit() != null) newConsumable.setUnit(newConsumable.getUnit());
-//            log.debug("update {}", newConsumable);
+            if (newData.getUnit() != null) newConsumable.setUnit(newData.getUnit());
+            if (newData.getPrice() != null) newConsumable.setPrice(newData.getPrice());
+            log.debug("update {}", newConsumable);
             return repository.save(newConsumable);
         } else throw new NeededObjectNotFound("Consumable not found");
     }

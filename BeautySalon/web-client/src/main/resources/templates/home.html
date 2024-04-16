@@ -76,6 +76,39 @@
     </script>
 </div>
 .
+<div class="schedule" >
+    <div th:switch="${visits}">
+        <h2 th:case="null">No visit found!</h2>
+        <div th:case="*">
+            <h2>Журнал записи клиентов</h2>:</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Visit Date</th>
+                    <th>Visit time</th>
+                    <th>Service</th>
+                    <th>Client</th>
+                    <th>Master</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="visit : ${visits}">
+                    <td th:text="${visit.id}"></td>
+                    <td th:text="${visit.visitDate}"></td>
+                    <td th:text="${visit.startTime.getHour()}"></td>
+                    <td th:text="${visit.service.title}"></td>
+                    <td th:text="${visit.client.getFirstName() + ' ' + visit.client.getLastName()}"></td>
+                    <td th:text="${visit.master.getFirstName()}"></td>
+                    <td><a th:href="@{/visits/update-view/{id}(id=${visit.id})}">Edit</a></td>
+                    <td><a th:href="@{/visits/delete-action/{id}(id=${visit.id})}">Delete</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p><a href="visits/create-view">Create visit</a></p>
+    </div>
+</div>
 <nav>
     <ul><h1>Главное меню:</h1>
         <div class="dropdown">

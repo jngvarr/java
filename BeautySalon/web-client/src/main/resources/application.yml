@@ -23,6 +23,8 @@ spring:
             url: http://localhost:8082
           storage:
             url: http://localhost:8083
+          visits:
+            url: http://localhost:8085
 
 feign:
   client:

@@ -5,7 +5,7 @@
     <title>Create service  &ndash; BeautySalon </title>
 </head>
 <body>
-<div th:insert="footer :: copy">...</div>
+<!--<div th:insert="footer :: copy">...</div>-->
 <h1>Service create</h1>
 <form action="#" th:action="@{create-action}" th:object="${service}" method="post">
     <label for="title">Title</label>
@@ -19,7 +19,7 @@
     <label for="consumables">Consumables</label>
     <select th:field="*{consumables}" multiple id="consumables">
         <option th:each="item : ${consumables}" th:value="${item.title}" th:text="${item.title}"></option>
-    </select>
+    </select> <br/>
     <button type="submit">Create</button>
 </form>
 </body>

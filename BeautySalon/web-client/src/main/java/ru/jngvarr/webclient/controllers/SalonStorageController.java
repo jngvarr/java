@@ -48,15 +48,16 @@ public class SalonStorageController {
     }
 
     @PostMapping("/update-action")
-    public String updateConsumable(@ModelAttribute("consumable") Consumable newData) {
+    public String updateConsumable(/*@ModelAttribute("consumable")*/ Consumable newData) {
         salonService.updateConsumable(newData, newData.getId());
-        return "redirect:/consumables";
+        return "redirect:/storage";
     }
 
     @GetMapping("/delete-action/{id}")
     public String deleteConsumable(@PathVariable Long id) {
         salonService.deleteConsumable(id);
-        return "redirect:/consumables";
+        log.debug("after deletind");
+        return "redirect:/storage";
 
     }
 }

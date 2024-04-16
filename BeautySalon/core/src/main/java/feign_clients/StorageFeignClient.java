@@ -18,13 +18,13 @@ public interface StorageFeignClient {
     @GetMapping("/storage/byTitle/{title}")
     Consumable getConsumableByTitle(@PathVariable String title);
 
-    @PostMapping("/storage/create")
+    @RequestMapping(value = "/storage/create", method = RequestMethod.POST)
     Consumable addConsumable(@RequestBody Consumable consumable);
 
-    @PutMapping("/storage/update/{id}")
+    @RequestMapping(value = "/storage/update/{id}", method = RequestMethod.PUT)
     Consumable updateConsumable(@RequestBody Consumable newData, @PathVariable Long id);
 
-    @DeleteMapping("/storage/delete/{id}")
+    @RequestMapping(value = "/storage/delete/{id}", method = RequestMethod.DELETE)
     void deleteConsumable(@PathVariable Long id);
 }
 

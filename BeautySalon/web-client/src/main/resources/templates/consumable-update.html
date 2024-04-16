@@ -8,7 +8,7 @@
 <body>
 <h1>Update Consumable</h1>
 <div class="main">
-    <form action="#" th:action="@{update-action}" th:object="${consumable}" method="post">
+    <form action="#" th:action="@{/storage/update-action}" th:object="${consumable}" method="post">
         <label for="id">Id</label>
         <input readonly type="text" th:field="*{id}" id="id" placeholder="id"><br>
         <label for="title">Title</label>
