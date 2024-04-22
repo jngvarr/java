@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { Client } from '../../model/entities/client';
-import { ClientService } from '../../services/client-service.service';
+import {Component, OnInit} from '@angular/core';
+import {Client} from '../../model/entities/client';
+import {ClientServiceService} from '../../services/client-service.service';
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-client-list',
@@ -11,16 +12,28 @@ export class ClientListComponent implements OnInit {
 
   clients: Client[] | undefined;
 
-  constructor(private clientService: ClientService) {
+  constructor(private clientService: ClientServiceService, private router: Router) {
   }
 
   ngOnInit() {
+    this.loadClients();
+  }
+
+  loadClients() {
     this.clientService.findAll().subscribe(data => {
       this.clients = data;
     });
   }
 
   deleteClient(client: Client) {
-    this.clientService.delete(client.id)
+    if (confirm('Вы уверены, что хотите удалить клиента?')) {
+      this.clientService.delete(client.id).subscribe(() => {
+        this.loadClients();
+      });
+    }
+  }
+
+ updateClient(client: Client) {
+   this.router.navigate(['/clients/update', client.id]);
   }
 }

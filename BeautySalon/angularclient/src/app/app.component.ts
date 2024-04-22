@@ -7,9 +7,9 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
 
-  title: string;
+  title: string | undefined;
 
-  constructor() {
-    this.title = 'AngularUI';
-  }
+  // constructor() {
+  //   this.title = 'Beauty Salon';
+  // }
 }

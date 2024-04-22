@@ -1,8 +1,7 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ClientService } from '../../services/client-service.service';
-import { Client } from '../../model/entities/client';
-import {log} from "node:util";
+import {Component} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
+import {ClientServiceService} from '../../services/client-service.service';
+import {Client} from '../../model/entities/client';
 
 @Component({
   selector: 'app-Client-form',
@@ -16,12 +15,23 @@ export class ClientFormComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private ClientService: ClientService) {
+    private clientService: ClientServiceService) {
     this.client = new Client();
   }
 
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      const clientId = params['id'];
+      if (clientId) {
+        this.clientService.findById(clientId).subscribe(data => {
+          this.client = data;
+        });
+      }
+    });
+  }
+
   onSubmit() {
-    this.ClientService.save(this.client).subscribe(result => this.gotoClientList());
+    this.clientService.save(this.client).subscribe(result => this.gotoClientList());
   }
 
   gotoClientList() {

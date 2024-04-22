@@ -4,7 +4,7 @@ import {Client} from '../model/entities/client';
 import {Observable} from 'rxjs/';
 
 @Injectable()
-export class ClientService {
+export class ClientServiceService {
 
   private clientsUrl: string;
 
@@ -28,5 +28,7 @@ export class ClientService {
     return this.http.delete<Client>(this.clientsUrl + `/delete/${id}`);
   }
 
-
+  findById(clientId: number) {
+    return this.http.get<Client>(this.clientsUrl + `/${clientId}`)
+  }
 }

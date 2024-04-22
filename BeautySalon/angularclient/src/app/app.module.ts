@@ -6,7 +6,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {AppComponent} from './app.component';
 import {ClientListComponent} from './components/client-list/client-list.component';
 import {ClientFormComponent} from './components/client-form/client-form.component';
-import {ClientService} from './services/client-service.service';
+import {ClientServiceService} from './services/client-service.service';
 
 
 @NgModule({
@@ -21,7 +21,7 @@ import {ClientService} from './services/client-service.service';
     HttpClientModule,
     FormsModule
   ],
-  providers: [ClientService],
+  providers: [ClientServiceService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
