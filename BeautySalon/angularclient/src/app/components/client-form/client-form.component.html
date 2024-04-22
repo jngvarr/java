@@ -12,25 +12,37 @@
       </div>
       <div [hidden]="!name.pristine" class="alert alert-danger">Name is required</div>
       <div class="form-group">
-        <label for="name">LastName</label>
-        <input type="text" [(ngModel)]="client.firstName"
+        <label for="last-name">LastName</label>
+        <input type="text" [(ngModel)]="client.lastName"
                class="form-control"
                id="last-name"
-               name="name"
-               placeholder="Enter your name"
+               name="Last name"
+               placeholder="Enter your Last name"
                required #name="ngModel">
       </div>
-      <div [hidden]="!name.pristine" class="alert alert-danger">Name is required</div>
+<!--      <div [hidden]="!name.pristine" class="alert alert-danger">Name is required</div>-->
       <div class="form-group">
-        <label for="email">Email</label>
+        <label for="contact">Contact</label>
         <input type="text" [(ngModel)]="client.contact"
                class="form-control"
-               id="email"
-               name="email"
-               placeholder="Enter your email address"
-               required #email="ngModel">
-        <div [hidden]="!email.pristine" class="alert alert-danger">Contact is required</div>
+               id="contact"
+               name="contact"
+               placeholder="Enter your contact"
+               required #contact="ngModel">
+        <div [hidden]="!contact.pristine" class="alert alert-danger">Contact is required</div>
       </div>
+
+      <div class="form-group">
+        <label for="dob">Date of birth</label>
+        <input type="date" [(ngModel)]="client.dob"
+               class="form-control"
+               id="dob"
+               name="dob"
+               placeholder="Enter your date of birth"
+               required #dob="ngModel">
+<!--        <div [hidden]="!contact.pristine" class="alert alert-danger">Contact is required</div>-->
+      </div>
+
       <button type="submit" [disabled]="!clientForm.form.valid"
               class="btn btn-info">Submit</button>
     </form>

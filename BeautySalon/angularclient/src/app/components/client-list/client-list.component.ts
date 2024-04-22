@@ -19,4 +19,8 @@ export class ClientListComponent implements OnInit {
       this.clients = data;
     });
   }
+
+  deleteClient(client: Client) {
+    this.clientService.delete(client.id)
+  }
 }

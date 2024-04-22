@@ -5,7 +5,11 @@
       <tr>
         <th scope="col">#</th>
         <th scope="col">Name</th>
-        <th scope="col">Email</th>
+        <th scope="col">Last name</th>
+        <th scope="col">Contact</th>
+        <th scope="col">DOB</th>
+        <th scope="col"></th>
+        <th scope="col"></th>
       </tr>
       </thead>
       <tbody>
@@ -15,7 +19,13 @@
         <td>{{ client.lastName }}</td>
         <td>{{ client.contact }}</td>
         <td>{{ client.dob }}</td>
-<!--        <td><a href="mailto:{{ client.email }}">{{ client.email }}</a></td>-->
+        <td>
+          <button routerLink="/clients/update/{id}" class="btn btn-secondary">Edit</button>
+        </td>
+        <td>
+          <button routerLink="/clients/delete/{id}" class="btn btn-dark" (click)="deleteClient(client)">X</button>
+        </td>
+        <!--        <td><a href="mailto:{{ client.email }}">{{ client.email }}</a></td>-->
       </tr>
       </tbody>
     </table>
