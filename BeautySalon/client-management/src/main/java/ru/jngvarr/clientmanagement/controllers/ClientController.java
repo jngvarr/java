@@ -1,6 +1,6 @@
 package ru.jngvarr.clientmanagement.controllers;
 
-import  dao.entities.people.Client;
+import dao.entities.people.Client;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -39,10 +39,15 @@ public class ClientController {
         return new ResponseEntity<>(clientService.getClientByContact(phoneNumber), HttpStatus.OK);
     }
 
+    @GetMapping("/by-name/{name}/{lastName}")
+    public List<Client> getClientByName(@PathVariable("name") String name, @PathVariable("lastName") String lastName) {
+        return clientService.getClientByName(name, lastName);
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
     public Client createClient(@RequestBody Client newClient) {
-        log.debug("create-client {}",newClient);
+        log.debug("create-client {}", newClient);
         return clientService.addClient(newClient);
     }
 

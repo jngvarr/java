@@ -1,19 +1,37 @@
 <div class="card my-3 ">
   <div class="container">
     <div class="row ">
-<!--      <div class="col-md-12">-->
-        <!--        <div class="card bg-dark my-5">-->
-                  <div class="card-body">
+      <!--      <div class="col-md-12">-->
+      <!--        <div class="card bg-dark my-5">-->
+      <div class="card-body">
         <h2 class="card-title text-center text-black py-0">Clients</h2>
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
             <div class="btn-group">
-              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false">
                 Search client
               </button>
-              <div class="dropdown-menu">
-                <a class="dropdown-item" routerLink="/clients">By Name</a>
-                <a class="dropdown-item" routerLink="/clients">By Phone</a>
+              <div class="dropdown-menu w-auto">
+                <form (ngSubmit)="searchByName(searchByNameInput.value, searchByLastNameInput.value)" class="px-3 py-3">
+                  <div class="mb-3">
+                    <label for="search-by-name" class="form-label">По имени</label>
+                    <input type="text" class="form-control" id="search-by-name" #searchByNameInput placeholder="Введите имя">
+                  </div>
+                  <div class="mb-3">
+                    <!--                    <label for="search-input" class="form-label">По фамилии</label>-->
+                    <input type="text" class="form-control " style="width: auto;" id="search-by-lastname" #searchByLastNameInput
+                           placeholder="Введите фамилию">
+                  </div>
+                  <button type="submit" class="btn btn-primary">Search</button>
+                  <div class="mb-3">
+                    <label for="search-by-phone" class="form-label">По телефону</label>
+                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput placeholder="Введите номер">
+                  </div>
+                  <div class="mb-3">
+                  </div>
+                  <button type="submit" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">Search</button>
+                </form>
               </div>
             </div>
           </li>

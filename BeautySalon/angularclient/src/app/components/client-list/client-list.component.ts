@@ -11,6 +11,7 @@ import {Router} from "@angular/router";
 export class ClientListComponent implements OnInit {
 
   clients: Client[] | undefined;
+  client: Client | undefined;
 
   constructor(private clientService: ClientServiceService, private router: Router) {
   }
@@ -33,7 +34,19 @@ export class ClientListComponent implements OnInit {
     }
   }
 
- updateClient(client: Client) {
-   this.router.navigate(['/clients/update', client.id]);
+  updateClient(client: Client) {
+    this.router.navigate(['/clients/update', client.id]);
+  }
+
+  searchByName(name: string, lastName: string) {
+    this.clientService.findByName(name, lastName).subscribe((data: Client) => {
+      this.client = data;
+    });
+  }
+
+  searchByPhone(value: string) {
+    this.clientService.findByPhone(value).subscribe((data: Client) => {
+      this.client = data;
+    });
   }
 }

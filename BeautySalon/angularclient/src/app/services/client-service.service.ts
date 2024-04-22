@@ -16,6 +16,13 @@ export class ClientServiceService {
     return this.http.get<Client[]>(this.clientsUrl);
   }
 
+  public findByName(name: string, lastName: string): Observable<Client> {
+    return this.http.get<Client>(this.clientsUrl + `/by-name/${name}/${lastName}`);
+  }
+  findByPhone(value: string) {
+    return this.http.get<Client>(this.clientsUrl + `/by-contact/${value}`)
+  }
+
   public save(client: Client) {
     return this.http.post<Client>(this.clientsUrl + "/create", client);
   }
@@ -31,4 +38,5 @@ export class ClientServiceService {
   findById(clientId: number) {
     return this.http.get<Client>(this.clientsUrl + `/${clientId}`)
   }
+
 }

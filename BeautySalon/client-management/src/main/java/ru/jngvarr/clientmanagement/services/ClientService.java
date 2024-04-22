@@ -5,8 +5,9 @@ import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.jngvarr.clientmanagement.repositories.ClientsRepository;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -62,5 +63,14 @@ public class ClientService {
     }
 
 
+    public List<Client> getClientByName(String name, String lastName) {
+        List<Client> clients = clientsRepository.findAll();
+        clients = clients.stream().filter(client -> client.getFirstName().equals(name))
+                .filter(client -> client.getLastName().equals(lastName)).collect(Collectors.toList());
+        Set<Client> set = new HashSet<>(clients);
+        clients.clear();
+        clients.addAll(set);
+        return clients;
+    }
 }
 

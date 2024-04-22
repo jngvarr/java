@@ -9,6 +9,10 @@ public interface ClientsRepository extends JpaRepository<Client, Long> {
 
 //    @Query(value = "SELECT client FROM Client client WHERE client.contact = :phoneNumber")
     Client findByContact(String contact);
+
+    Client findByLastName(String name);
+
+    void findByFirstName(String name);
 }
 //    @Modifying
 //    @Query("UPDATE Task SET status = :status WHERE id = :id")
