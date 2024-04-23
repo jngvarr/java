@@ -35,14 +35,26 @@ public class ClientController {
     }
 
     @GetMapping("/by-contact/{phoneNumber}")
-    public ResponseEntity<Client> getClientByPhone(@PathVariable String phoneNumber) {
-        return new ResponseEntity<>(clientService.getClientByContact(phoneNumber), HttpStatus.OK);
+    public List<Client> getClientByPhone(@PathVariable String phoneNumber) {
+        log.debug("number={}", phoneNumber);
+
+        return clientService.getClientByContact(phoneNumber);
     }
 
-    @GetMapping("/by-name/{name}/{lastName}")
-    public List<Client> getClientByName(@PathVariable("name") String name, @PathVariable("lastName") String lastName) {
-        return clientService.getClientByName(name, lastName);
+    @GetMapping("/by-name")
+    public List<Client> getClientsByName(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "lastName", required = false) String lastName) {
+        log.debug("name={}, lastname={}", name, lastName);
+        return (name.isEmpty() || lastName.isEmpty()) ?
+                (name.isEmpty() ? clientService.getClientByLastName(lastName) : clientService.getClientByName(name)) :
+                clientService.getClientByFullName(name, lastName);
     }
+//    @GetMapping("/by-name/{name}/{lastName}")
+//    public List<Client> getClientsByName(@PathVariable("name") String name, @PathVariable("lastName") String lastName) {
+//        log.debug("name={}, lastname={}", name, lastName);
+//        return clientService.getClientByName(name, lastName);
+//    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")

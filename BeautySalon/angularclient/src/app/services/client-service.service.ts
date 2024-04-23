@@ -16,11 +16,12 @@ export class ClientServiceService {
     return this.http.get<Client[]>(this.clientsUrl);
   }
 
-  public findByName(name: string, lastName: string): Observable<Client> {
-    return this.http.get<Client>(this.clientsUrl + `/by-name/${name}/${lastName}`);
+  public findByName(name: string, lastName: string): Observable<Client[]> {
+    return this.http.get<Client[]>(this.clientsUrl + `/by-name?name=${name}&lastName=${lastName}`);
   }
+
   findByPhone(value: string) {
-    return this.http.get<Client>(this.clientsUrl + `/by-contact/${value}`)
+    return this.http.get<Client[]>(this.clientsUrl + `/by-contact/${value}`)
   }
 
   public save(client: Client) {

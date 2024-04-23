@@ -25,7 +25,16 @@ export class ClientListComponent implements OnInit {
       this.clients = data;
     });
   }
-
+  searchByName(name: string, lastName: string) {
+    this.clientService.findByName(name, lastName).subscribe((data: Client[]) => {
+      this.clients = data;
+    });
+  }
+  searchByPhone(value: string) {
+    this.clientService.findByPhone(value).subscribe((data: Client[]) => {
+      this.clients = data;
+    });
+  }
   deleteClient(client: Client) {
     if (confirm('Вы уверены, что хотите удалить клиента?')) {
       this.clientService.delete(client.id).subscribe(() => {
@@ -38,15 +47,4 @@ export class ClientListComponent implements OnInit {
     this.router.navigate(['/clients/update', client.id]);
   }
 
-  searchByName(name: string, lastName: string) {
-    this.clientService.findByName(name, lastName).subscribe((data: Client) => {
-      this.client = data;
-    });
-  }
-
-  searchByPhone(value: string) {
-    this.clientService.findByPhone(value).subscribe((data: Client) => {
-      this.client = data;
-    });
-  }
 }

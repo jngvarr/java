@@ -24,14 +24,14 @@ public class ClientService {
         else throw new IllegalArgumentException("Client not found");
     }
 
-    public Client getClientByContact(String contact) {
+    public List<Client> getClientByContact(String contact) {
 //        List<Client> clients = showAll();
 //        for (Client c : clients) {
 //            if (c.getContact().equals(phoneNumber)) return c;
 //        }
 //        throw new IllegalArgumentException("Client not found");
-        Client neededClient = clientsRepository.findByContact(contact);
-        if (neededClient != null) return neededClient;
+        List<Client> neededClients = clientsRepository.findAllByContact(contact);
+        if (neededClients != null) return neededClients;
         else throw new IllegalArgumentException("Client not found");
     }
 
@@ -63,14 +63,23 @@ public class ClientService {
     }
 
 
-    public List<Client> getClientByName(String name, String lastName) {
-        List<Client> clients = clientsRepository.findAll();
-        clients = clients.stream().filter(client -> client.getFirstName().equals(name))
-                .filter(client -> client.getLastName().equals(lastName)).collect(Collectors.toList());
-        Set<Client> set = new HashSet<>(clients);
-        clients.clear();
-        clients.addAll(set);
-        return clients;
+    public List<Client> getClientByFullName(String name, String lastName) {
+//        List<Client> clients = clientsRepository.findAll();
+//        clients = clients.stream().filter(client -> client.getFirstName().equals(name))
+//                .filter(client -> client.getLastName().equals(lastName)).collect(Collectors.toList());
+//        Set<Client> set = new HashSet<>(clients);
+//        clients.clear();
+//        clients.addAll(set);
+//        return clients;
+        return clientsRepository.findAllByFirstNameAndLastName(name, lastName);
+    }
+
+    public List<Client> getClientByName(String name) {
+        return clientsRepository.findAllByFirstName(name);
+    }
+
+    public List<Client> getClientByLastName(String lastName) {
+        return clientsRepository.findAllByLastName(lastName);
     }
 }
 

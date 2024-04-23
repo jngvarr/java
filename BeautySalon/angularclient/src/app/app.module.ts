@@ -7,13 +7,15 @@ import {AppComponent} from './app.component';
 import {ClientListComponent} from './components/client-list/client-list.component';
 import {ClientFormComponent} from './components/client-form/client-form.component';
 import {ClientServiceService} from './services/client-service.service';
+import { ServiceListComponent } from './components/service-list/service-list.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     ClientListComponent,
-    ClientFormComponent
+    ClientFormComponent,
+    ServiceListComponent
   ],
   imports: [
     BrowserModule,
