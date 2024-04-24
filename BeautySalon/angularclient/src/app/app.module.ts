@@ -9,6 +9,14 @@ import {ClientFormComponent} from './components/client-form/client-form.componen
 import {ClientServiceService} from './services/client-service.service';
 import { ServiceListComponent } from './components/service-list/service-list.component';
 import { ServiceFormComponent } from './components/service-form/service-form.component';
+import { ConsumablesListComponent } from './components/storage-list/consumables-list.component';
+import { ConsumablesFormComponent } from './components/storage-form/consumables-form.component';
+import { StaffListComponent } from './components/staff-list/staff-list.component';
+import { StaffFormComponent } from './components/staff-form/staff-form.component';
+import { ApptFormComponent } from './components/appt-form/appt-form.component';
+import { ApptListComponent } from './components/appt-list/appt-list.component';
+import {ServiceForServices} from "./services/service-for-services.service";
+import {StorageService} from "./services/storage.service";
 
 
 @NgModule({
@@ -17,7 +25,13 @@ import { ServiceFormComponent } from './components/service-form/service-form.com
     ClientListComponent,
     ClientFormComponent,
     ServiceListComponent,
-    ServiceFormComponent
+    ServiceFormComponent,
+    ConsumablesListComponent,
+    ConsumablesFormComponent,
+    StaffListComponent,
+    StaffFormComponent,
+    ApptFormComponent,
+    ApptListComponent
   ],
   imports: [
     BrowserModule,
@@ -25,7 +39,7 @@ import { ServiceFormComponent } from './components/service-form/service-form.com
     HttpClientModule,
     FormsModule
   ],
-  providers: [ClientServiceService],
+  providers: [ClientServiceService, ServiceForServices, StorageService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

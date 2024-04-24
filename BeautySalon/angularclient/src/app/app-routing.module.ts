@@ -5,15 +5,25 @@ import { ClientFormComponent } from './components/client-form/client-form.compon
 import {ServiceListComponent} from "./components/service-list/service-list.component";
 import {Service} from "./model/entities/service";
 import {ServiceFormComponent} from "./components/service-form/service-form.component";
+import {ConsumablesListComponent} from "./components/storage-list/consumables-list.component";
+import {ConsumablesFormComponent} from "./components/storage-form/consumables-form.component";
 
 const routes: Routes = [
   { path: 'clients', component: ClientListComponent },
   { path: 'services', component: ServiceListComponent },
+  { path: 'storage', component: ConsumablesListComponent },
+
+  { path: 'clients/create', component: ClientFormComponent },
   { path: 'services/create', component: ServiceFormComponent },
+  { path: 'storage/create', component: ServiceFormComponent },
+
+  { path: 'clients/update/:id', component: ClientFormComponent },
+  { path: 'services/update/:id', component: ServiceFormComponent },
+  { path: 'storage/update/:id', component: ConsumablesFormComponent },
 
   { path: 'clients/delete', component: ClientListComponent },
-  { path: 'clients/create', component: ClientFormComponent },
-  { path: 'clients/update/:id', component: ClientFormComponent }
+  { path: 'services/delete', component: ServiceListComponent },
+  { path: 'storage/delete', component: ConsumablesListComponent }
 ];
 
 @NgModule({

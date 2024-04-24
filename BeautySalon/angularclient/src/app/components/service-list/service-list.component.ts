@@ -11,7 +11,7 @@ import {Router} from "@angular/router";
 })
 export class ServiceListComponent implements OnInit {
   services: Service[] | undefined;
-  servcice: Service | undefined;
+  service: Service| undefined;
 
   constructor(private serviceService: ServiceForServices, private router: Router) {
   }
@@ -22,8 +22,13 @@ export class ServiceListComponent implements OnInit {
 
   loadServices() {
     this.serviceService.findAll().subscribe(data => {
-      this.services = data;
-    });
+        console.log("Получены данные:", data); // Вывод полученных данных в консоль
+        this.services = data;
+      },
+      error => {
+        console.error("Ошибка при загрузке данных:", error); // Вывод ошибки в консоль
+
+      });
   }
 
   deleteService(service: Service) {

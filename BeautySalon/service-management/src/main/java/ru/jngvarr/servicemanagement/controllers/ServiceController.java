@@ -12,6 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/services")
+@CrossOrigin(origins = "http://localhost:4200")
 public class ServiceController {
     private final ServiceForServices service;
 

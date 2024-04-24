@@ -4,13 +4,13 @@
       <!--      <div class="col-md-12">-->
       <!--        <div class="card bg-dark my-5">-->
       <div class="card-body">
-        <h2 class="card-title text-center text-black py-0">Services</h2>
+        <h2 class="card-title text-center text-black py-0">Consumables</h2>
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
             <div class="btn-group">
               <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                       aria-expanded="false">
-                Search service
+                Search consumable
               </button>
               <div class="dropdown-menu w-auto">
                 <form (ngSubmit)="searchByTitle(searchByTitleInput.value)" class="px-3 py-3">
@@ -18,23 +18,30 @@
                   <div class="mb-3">
                     <label for="search-by-title" class="form-label">По названию</label>
                     <input type="text" class="form-control" id="search-by-title" #searchByTitleInput
-                           placeholder="Введите название">
+                           placeholder="Введите наименование">
                   </div>
+<!--                  <div class="mb-3">-->
+<!--                    <input type="text" class="form-control " style="width: auto;" id="search-by-something-else"-->
+<!--                           #searchByTitleInput-->
+<!--                           placeholder="Введите чт-то">-->
+<!--                  </div>-->
                   <button type="submit" class="btn btn-primary">Search</button>
-                  <div class="mb-3">
-                    <input type="text" class="form-control " style="width: auto;" id="search-by-description"
-                           #searchByDescriptionInput placeholder="Введите описание услуги">
-                  </div>
-                  <button type="button" class="btn btn-primary"
-                          (click)="searchByDescription(searchByDescriptionInput.value)">
-                    Search
-                  </button>
+<!--                  <div class="mb-3">-->
+<!--                    <label for="search-by-phone" class="form-label">По телефону</label>-->
+<!--                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput-->
+<!--                           placeholder="Введите номер">-->
+<!--                  </div>-->
+<!--                  <div class="mb-3">-->
+<!--                  </div>-->
+<!--                  <button type="button" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">-->
+<!--                    Search-->
+<!--                  </button>-->
                 </form>
               </div>
             </div>
           </li>
           <li class="list-inline-item">
-            <a routerLink="/services/create" class="btn btn-info">Add Service</a>
+            <a routerLink="/consumables/create" class="btn btn-info">Add Consumable</a>
           </li>
         </ul>
       </div>
@@ -50,25 +57,22 @@
         <!--        <th scope="col">#</th>-->
         <th scope="col">Title</th>
         <th scope="col">Price</th>
-        <th scope="col">Duration</th>
-        <th scope="col">Description</th>
+        <th scope="col">Unit</th>
         <th scope="col"></th>
         <th scope="col"></th>
       </tr>
       </thead>
       <tbody>
-      <tr class="head text-center" *ngFor="let service of services">
-        <!--        <td>{{ service.id }}</td>-->
-        <td>{{ service.title }}</td>
-        <td>{{ service.price }}</td>
-        <td>{{ service.serviceDurationInMinutes }}</td>
-        <td>{{ service.description }}</td>
-<!--        <td>{{ service.consumables }}</td>-->
+      <tr class="head text-center" *ngFor="let consumable of consumables">
+        <!--        <td>{{ consumable.id }}</td>-->
+        <td>{{ consumable.title }}</td>
+        <td>{{ consumable.price }}</td>
+        <td>{{ consumable.unit }}</td>
         <td>
-          <button [routerLink]="['/services/update', service.id]" class="btn btn-secondary">Edit</button>
+          <button [routerLink]="['/consumables/update', consumable.id]" class="btn btn-secondary">Edit</button>
         </td>
         <td>
-          <button class="btn btn-dark" (click)="deleteService(service)">X</button>
+          <button class="btn btn-dark" (click)="deleteConsumable(consumable)">X</button>
         </td>
       </tr>
       </tbody>
