@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
-import {Client} from "../../model/entities/client";
+import {Component} from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
-import {ClientServiceService} from "../../services/client-service.service";
 import {StorageService} from "../../services/storage.service";
 import {Consumable} from "../../model/entities/consumable";
+import {Unit} from "../../model/unit";
 
 @Component({
   selector: 'app-consumables-form',
@@ -12,6 +11,8 @@ import {Consumable} from "../../model/entities/consumable";
 })
 export class ConsumablesFormComponent {
   consumable: Consumable;
+
+  unitValues = Object.values(Unit);
 
   constructor(
     private route: ActivatedRoute,
