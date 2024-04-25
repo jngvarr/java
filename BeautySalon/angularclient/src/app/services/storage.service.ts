@@ -1,7 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {catchError, Observable, tap} from "rxjs";
-import {Client} from "../model/entities/client";
 import {Consumable} from "../model/entities/consumable";
 
 @Injectable({
@@ -22,8 +21,8 @@ export class StorageService {
       })
     );
   }
-  findById(clientId: number) {
-    return this.http.get<Client>(this.storagesUrl + `/${clientId}`)
+  findById(consumableId: number) {
+    return this.http.get<Consumable>(this.storagesUrl + `/${consumableId}`)
   }
   // public findAll(): Observable<Consumable[]> {
   //   let cons: Observable<Consumable[]> = this.http.get<Consumable[]>(this.storagesUrl);
@@ -34,8 +33,8 @@ export class StorageService {
   public findByTitle(title: string): Observable<Consumable[]> {
     return this.http.get<Consumable[]>(this.storagesUrl + `/byTitle/${title}`);
   }
-  public save(client: Client) {
-    return this.http.post<Client>(this.storagesUrl + "/create", client);
+  public save(consumable: Consumable) {
+    return this.http.post<Consumable>(this.storagesUrl + "/create", consumable);
   }
   public delete(id: number | undefined) {
     return this.http.delete<Consumable>(this.storagesUrl + `/delete/${id}`);

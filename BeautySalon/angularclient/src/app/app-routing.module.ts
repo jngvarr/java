@@ -15,7 +15,7 @@ const routes: Routes = [
 
   { path: 'clients/create', component: ClientFormComponent },
   { path: 'services/create', component: ServiceFormComponent },
-  { path: 'storage/create', component: ServiceFormComponent },
+  { path: 'storage/create', component: ConsumablesFormComponent },
 
   { path: 'clients/update/:id', component: ClientFormComponent },
   { path: 'services/update/:id', component: ServiceFormComponent },

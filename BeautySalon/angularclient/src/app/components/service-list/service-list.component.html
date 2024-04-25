@@ -52,6 +52,7 @@
         <th scope="col">Price</th>
         <th scope="col">Duration</th>
         <th scope="col">Description</th>
+        <th scope="col">Consumables</th>
         <th scope="col"></th>
         <th scope="col"></th>
       </tr>
@@ -63,7 +64,7 @@
         <td>{{ service.price }}</td>
         <td>{{ service.serviceDurationInMinutes }}</td>
         <td>{{ service.description }}</td>
-<!--        <td>{{ service.consumables }}</td>-->
+        <td>{{ service.consumables }}</td>
         <td>
           <button [routerLink]="['/services/update', service.id]" class="btn btn-secondary">Edit</button>
         </td>

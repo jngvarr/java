@@ -4,7 +4,7 @@ import {Client} from '../model/entities/client';
 import {Observable} from 'rxjs/';
 
 @Injectable()
-export class ClientServiceService {
+export class ClientService {
 
   private clientsUrl: string;
 

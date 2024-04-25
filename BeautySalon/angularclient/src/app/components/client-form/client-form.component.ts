@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
-import {ClientServiceService} from '../../services/client-service.service';
+import {ClientService} from '../../services/client.service';
 import {Client} from '../../model/entities/client';
 
 @Component({
@@ -15,7 +15,7 @@ export class ClientFormComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private clientService: ClientServiceService) {
+    private clientService: ClientService) {
     this.client = new Client();
   }
 

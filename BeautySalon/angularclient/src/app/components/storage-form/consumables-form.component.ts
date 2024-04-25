@@ -11,8 +11,9 @@ import {Unit} from "../../model/unit";
 })
 export class ConsumablesFormComponent {
   consumable: Consumable;
-
+  units: Unit[] | undefined;
   unitValues = Object.values(Unit);
+  edit: boolean | undefined;
 
   constructor(
     private route: ActivatedRoute,
@@ -23,21 +24,23 @@ export class ConsumablesFormComponent {
 
   ngOnInit() {
     this.route.params.subscribe(params => {
-      const clientId = params['id'];
-      if (clientId) {
-        this.storageService.findById(clientId).subscribe(data => {
+      const consumableId = params['id'];
+      if (consumableId) {
+        this.storageService.findById(consumableId).subscribe(data => {
           this.consumable = data;
+          this.edit = true;
         });
       }
     });
   }
 
   onSubmit() {
-    this.storageService.save(this.consumable).subscribe(result => this.gotoClientList());
+    this.storageService.save(this.consumable).subscribe(result => this.gotoConsumableList());
   }
 
-  gotoClientList() {
-    this.router.navigate(['/clients']);
+  gotoConsumableList() {
+    this.router.navigate(['/storage']);
   }
 }
+
 

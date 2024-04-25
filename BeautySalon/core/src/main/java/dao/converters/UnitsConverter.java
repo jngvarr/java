@@ -16,7 +16,7 @@ public class UnitsConverter implements AttributeConverter<Unit, String> {
 
     @Override
     public Unit convertToEntityAttribute(String dbData) {
-        return Arrays.stream(Unit.values())
+            return Arrays.stream(Unit.values())
                 .filter(unit -> unit.getName().equals(dbData))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("illegal DB value: " + dbData));

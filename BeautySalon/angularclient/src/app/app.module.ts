@@ -6,7 +6,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {AppComponent} from './app.component';
 import {ClientListComponent} from './components/client-list/client-list.component';
 import {ClientFormComponent} from './components/client-form/client-form.component';
-import {ClientServiceService} from './services/client-service.service';
+import {ClientService} from './services/client.service';
 import { ServiceListComponent } from './components/service-list/service-list.component';
 import { ServiceFormComponent } from './components/service-form/service-form.component';
 import { ConsumablesListComponent } from './components/storage-list/consumables-list.component';
@@ -39,7 +39,7 @@ import {StorageService} from "./services/storage.service";
     HttpClientModule,
     FormsModule
   ],
-  providers: [ClientServiceService, ServiceForServices, StorageService],
+  providers: [ClientService, ServiceForServices, StorageService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

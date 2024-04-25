@@ -1,86 +1,68 @@
-<div class="card my-3">
-  <div class="container">
-    <div class="row">
-      <!--      <div class="col-md-12">-->
-      <!--        <div class="card bg-dark my-5">-->
-      <div class="card-body">
-        <h2 class="card-title text-center text-black py-0">Clients</h2>
-        <ul class="text-center list-inline py-3">
-          <li class="list-inline-item">
-            <div class="btn-group">
-              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false">
-                Search client
-              </button>
-              <div class="dropdown-menu w-auto">
-                <form (ngSubmit)="searchByName(searchByNameInput.value, searchByLastNameInput.value)" class="px-3 py-3">
-
-                  <div class="mb-3">
-                    <label for="search-by-name" class="form-label">По имени</label>
-                    <input type="text" class="form-control" id="search-by-name" #searchByNameInput
-                           placeholder="Введите имя">
-                  </div>
-                  <div class="mb-3">
-                    <!--                    <label for="search-input" class="form-label">По фамилии</label>-->
-                    <input type="text" class="form-control " style="width: auto;" id="search-by-lastname"
-                           #searchByLastNameInput
-                           placeholder="Введите фамилию">
-                  </div>
-                  <button type="submit" class="btn btn-primary">Search</button>
-                  <div class="mb-3">
-                    <label for="search-by-phone" class="form-label">По телефону</label>
-                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput
-                           placeholder="Введите номер">
-                  </div>
-                  <div class="mb-3">
-                  </div>
-                  <button type="button" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">
-                    Search
-                  </button>
-                </form>
-              </div>
-            </div>
-          </li>
-          <li class="list-inline-item">
-            <a routerLink="/clients/create" class="btn btn-info">Add Client</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <router-outlet></router-outlet>
-  </div>
-  <!--    </div>-->
-  <!--  </div>-->
+<div class="card my-5">
   <div class="card-body">
-    <table class="table table-bordered table-striped">
-      <thead class="thead-dark text-center">
-      <tr>
-        <!--        <th scope="col">#</th>-->
-        <th scope="col">Name</th>
-        <th scope="col">Last name</th>
-        <th scope="col">Contact</th>
-        <th scope="col">DOB</th>
-        <th scope="col"></th>
-        <th scope="col"></th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr class="head text-center" *ngFor="let client of clients">
-        <!--        <td>{{ client.id }}</td>-->
-        <td>{{ client.firstName }}</td>
-        <td>{{ client.lastName }}</td>
-        <td>{{ client.contact }}</td>
-        <td>{{ client.dob }}</td>
-        <td>
-          <button [routerLink]="['/clients/update', client.id]" class="btn btn-secondary">Edit</button>
-        </td>
-        <td>
-          <button class="btn btn-dark" (click)="deleteClient(client)">X</button>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+    <h3 [hidden]="isEdit">Add consumable:</h3>
+    <h3 [hidden]="!isEdit">Edit consumable:</h3>
+    <form (ngSubmit)="onSubmit()" #serviceForm="ngForm">
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" [(ngModel)]="service.title"
+               class="form-control"
+               id="title"
+               name="name"
+               placeholder="Enter service title"
+               required #title="ngModel">    <!--заполнение поля обязательно-->
+      </div>
+      <div [hidden]="!title.pristine" class="alert alert-danger">Title is required</div>
+      <!--вывод поля-сообщения при незаполненном основном-->
+
+      <div class="form-group">
+        <label for="price">Price</label>
+        <input type="number" [(ngModel)]="service.price"
+               class="form-control"
+               id="price"
+               name="price"
+               placeholder="Enter service price"
+               required #price="ngModel">
+        <div [hidden]="!price.pristine" class="alert alert-danger">Price is required</div>
+      </div>
+
+      <div class="form-group">
+        <label for="duration">Duration</label>
+        <input type="number" [(ngModel)]="service.serviceDurationInMinutes"
+               class="form-control"
+               id="duration"
+               name="duration"
+               placeholder="Enter service duration"
+               required #duration="ngModel">
+        <div [hidden]="!duration.pristine" class="alert alert-danger">Duration is required</div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <input type="text" [(ngModel)]="service.description"
+               class="form-control"
+               id="description"
+               name="description"
+               placeholder="Enter service description"
+               required #description="ngModel">
+        <div [hidden]="!description.pristine" class="alert alert-danger">Description is required</div>
+      </div>
+
+      <div class="form-group">
+        <label for="consumables">Choose Consumables:</label>
+        <select [(ngModel)]="selectedConsumables" multiple id="consumables" class="form-control" required>
+          <option value="" disabled selected>Choose...</option>
+          <option *ngFor="let item of consumables" [ngValue]="item.title">{{ item.title }}</option>
+        </select>
+<!--        <div *ngIf="!selectedConsumables && !consumables" class="text-danger">Please select at least one consumable</div>  оставить если выбор обязателен-->
+        <div [hidden]="!consumables.pristine" class="alert alert-danger">Consumables is required</div>
+      </div>
+
+      <button type="submit"
+              class="btn btn-info" [disabled]="!serviceForm.form.valid">Submit
+        <!-- кнопка активнва если поля формы заполнены       -->
+      </button>
+      <a routerLink="/services" class="btn btn-info m-2">Back</a>
+    </form>
   </div>
 </div>
-
-

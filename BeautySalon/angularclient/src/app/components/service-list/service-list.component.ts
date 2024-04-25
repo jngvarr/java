@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {Service} from "../../model/entities/service";
 import {ServiceForServices} from "../../services/service-for-services.service";
-import {ClientServiceService} from "../../services/client-service.service";
+import {ClientService} from "../../services/client.service";
 import {Router} from "@angular/router";
 
 @Component({

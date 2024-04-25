@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {Client} from '../../model/entities/client';
-import {ClientServiceService} from '../../services/client-service.service';
+import {ClientService} from '../../services/client.service';
 import {Router} from "@angular/router";
 
 @Component({
@@ -13,7 +13,7 @@ export class ClientListComponent implements OnInit {
   clients: Client[] | undefined;
   client: Client | undefined;
 
-  constructor(private clientService: ClientServiceService, private router: Router) {
+  constructor(private clientService: ClientService, private router: Router) {
   }
 
   ngOnInit() {

@@ -30,7 +30,7 @@ public class StorageController {
     }
 
     @GetMapping("/byTitle/{title}")
-    public Consumable getConsumable(@PathVariable String title) {
+    public List<Consumable> getConsumable(@PathVariable String title) {
         log.debug("title {}", title);
         return storageService.getConsumableByTitle(title);
     }
@@ -38,6 +38,8 @@ public class StorageController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
     public Consumable add(@RequestBody Consumable consumable) {
+        log.debug("consumable = {}",consumable.getUnit());
+        log.debug("consumable name = {}",consumable.getUnit().getName());
         return storageService.add(consumable);
     }
 

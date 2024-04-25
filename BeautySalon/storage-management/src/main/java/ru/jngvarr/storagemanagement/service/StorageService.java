@@ -28,9 +28,9 @@ public class StorageService {
         else throw new NeededObjectNotFound("Consumable not found");
     }
 
-    public Consumable getConsumableByTitle(String title) {
+    public List<Consumable> getConsumableByTitle(String title) {
         log.debug("title {}", title);
-        Consumable neededConsumable = repository.getConsumableByTitle(title);
+        List<Consumable> neededConsumable = repository.getConsumablesByTitle(title);
         if (neededConsumable != null) return neededConsumable;
         else throw new NeededObjectNotFound("Consumable not found");
     }

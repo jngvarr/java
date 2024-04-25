@@ -8,12 +8,13 @@ import {StorageService} from "../../services/storage.service";
   templateUrl: './consumables-list.component.html',
   styleUrl: './consumables-list.component.scss'
 })
-export class ConsumablesListComponent implements OnInit{
+export class ConsumablesListComponent implements OnInit {
   consumables: Consumable[] | undefined;
-  consumable: Consumable | undefined;
+  consumable?: Consumable;
 
   constructor(private storageService: StorageService, private router: Router) {
   }
+
   ngOnInit() {
     this.loadConsumables();
   }
@@ -29,6 +30,7 @@ export class ConsumablesListComponent implements OnInit{
       }
     );
   }
+
   // loadConsumables() {
   //   this.storageService.findAll().subscribe(data => {
   //     this.consumables = data;
@@ -40,6 +42,7 @@ export class ConsumablesListComponent implements OnInit{
       this.consumables = data;
     });
   }
+
   deleteConsumable(consumable: Consumable) {
     if (confirm('Вы уверены, что хотите удалить расходник?')) {
       this.storageService.delete(consumable.id).subscribe(() => {
