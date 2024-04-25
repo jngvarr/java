@@ -1,1 +1,90 @@
-<p>staff-list works!</p>
+<div class="card my-3">
+  <div class="container">
+    <div class="row">
+      <!--      <div class="col-md-12">-->
+      <!--        <div class="card bg-dark my-5">-->
+      <div class="card-body">
+        <h2 class="card-title text-center text-black py-0">Staff</h2>
+        <ul class="text-center list-inline py-3">
+          <li class="list-inline-item">
+            <div class="btn-group">
+              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false">
+                Search employee
+              </button>
+              <div class="dropdown-menu w-auto">
+                <form (ngSubmit)="searchByName(searchByNameInput.value, searchByLastNameInput.value)" class="px-3 py-3">
+
+                  <div class="mb-3">
+                    <label for="search-by-name" class="form-label">По имени</label>
+                    <input type="text" class="form-control" id="search-by-name" #searchByNameInput
+                           placeholder="Введите имя">
+                  </div>
+
+
+                  <div class="mb-3">
+                    <!--                    <label for="search-input" class="form-label">По фамилии</label>-->
+                    <input type="text" class="form-control " style="width: auto;" id="search-by-lastname"
+                           #searchByLastNameInput
+                           placeholder="Введите фамилию">
+                  </div>
+                  <button type="submit" class="btn btn-primary">Search</button>
+                  <div class="mb-3">
+                    <label for="search-by-function" class="form-label">По телефону</label>
+                    <input type="text" class="form-control" id="search-by-function" #searchByFunctionInput
+                           placeholder="Введите номер">
+                  </div>
+                  <div class="mb-3">
+                  </div>
+                  <button type="button" class="btn btn-primary" (click)="searchByFunction(searchByFunctionInput.value)">
+                    Search
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+          <li class="list-inline-item">
+            <a routerLink="/staff/create" class="btn btn-info">Add employee</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+  <!--    </div>-->
+  <!--  </div>-->
+  <div class="card-body">
+    <table class="table table-bordered table-striped text-center align-middle" >
+      <thead class="thead-dark">
+      <tr>
+        <!--        <th scope="col">#</th>-->
+        <th scope="col">Title</th>
+        <th scope="col">Price</th>
+        <th scope="col">Duration</th>
+        <th scope="col">Description</th>
+        <th scope="col">Consumables</th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr class="head text-center" *ngFor="let employee of employees">
+        <!--        <td>{{ employee.id }}</td>-->
+        <td>{{ employee.firstName }}</td>
+        <td>{{ employee.lastName }}</td>
+        <td>{{ employee.contact }}</td>
+        <td>{{ employee.function }}</td>
+        <td>{{ employee.dob }}</td>
+        <td>
+          <button [routerLink]="['/staff/update', employee.id]" class="btn btn-warning">Edit</button>
+        </td>
+        <td>
+          <button class="btn btn-danger" (click)="deleteEmployee(employee)">X</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+

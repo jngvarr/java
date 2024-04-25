@@ -12,23 +12,24 @@
                       aria-expanded="false">
                 Search client
               </button>
-              <div class="dropdown-menu w-auto">
-                <form (ngSubmit)="searchByName(searchByNameInput.value, searchByLastNameInput.value)" class="px-3 py-3">
 
+              <div class="dropdown-menu w-auto">
+
+                <form (ngSubmit)="searchByName(searchByNameInput.value, searchByLastNameInput.value)" class="px-3 py-3">
                   <div class="mb-3">
                     <label for="search-by-name" class="form-label">По имени</label>
                     <input type="text" class="form-control" id="search-by-name" #searchByNameInput
                            placeholder="Введите имя">
                   </div>
 
-
                   <div class="mb-3">
                     <!--                    <label for="search-input" class="form-label">По фамилии</label>-->
                     <input type="text" class="form-control " style="width: auto;" id="search-by-lastname"
-                           #searchByLastNameInput
-                           placeholder="Введите фамилию">
+                           #searchByLastNameInput placeholder="Введите фамилию">
                   </div>
+
                   <button type="submit" class="btn btn-primary">Search</button>
+
                   <div class="mb-3">
                     <label for="search-by-phone" class="form-label">По телефону</label>
                     <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput
@@ -57,7 +58,7 @@
     <table class="table table-bordered table-striped">
       <thead class="thead-dark text-center">
       <tr>
-<!--        <th scope="col">#</th>-->
+        <!--        <th scope="col">#</th>-->
         <th scope="col">Name</th>
         <th scope="col">Last name</th>
         <th scope="col">Contact</th>
@@ -68,7 +69,7 @@
       </thead>
       <tbody>
       <tr class="head text-center" *ngFor="let client of clients">
-<!--        <td>{{ client.id }}</td>-->
+        <!--        <td>{{ client.id }}</td>-->
         <td>{{ client.firstName }}</td>
         <td>{{ client.lastName }}</td>
         <td>{{ client.contact }}</td>

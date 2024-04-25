@@ -49,14 +49,14 @@
       </div>
 
       <div class="form-group">
-        <label for="consumables">Choose Consumables:</label>
-        <select [(ngModel)]="selectedConsumables" multiple id="consumables" class="form-control" required>
-          <option value="" disabled selected>Choose...</option>
-          <option *ngFor="let item of consumables" [ngValue]="item.title">{{ item.title }}</option>
+        <label for="consumables">Consumables:</label>
+        <select [(ngModel)]="selectedConsumables" name="consumables" multiple id="consumables" class="form-control">
+<!--          <option value="" disabled selected>Choose consumables..</option>-->
+          <option *ngFor="let item of consumables" [ngValue]="item">{{ item.title }}</option>
         </select>
-<!--        <div *ngIf="!selectedConsumables && !consumables" class="text-danger">Please select at least one consumable</div>  оставить если выбор обязателен-->
-        <div [hidden]="!consumables.pristine" class="alert alert-danger">Consumables is required</div>
+<!--        <div *ngIf="!selectedConsumables && !consumables" class="text-danger">Please select at least one consumable</div>-->
       </div>
+
 
       <button type="submit"
               class="btn btn-info" [disabled]="!serviceForm.form.valid">Submit

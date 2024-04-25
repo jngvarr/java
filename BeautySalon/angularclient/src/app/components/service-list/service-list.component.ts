@@ -11,7 +11,7 @@ import {Router} from "@angular/router";
 })
 export class ServiceListComponent implements OnInit {
   services: Service[] | undefined;
-  service: Service| undefined;
+  service: Service | undefined;
 
   constructor(private serviceService: ServiceForServices, private router: Router) {
   }
@@ -32,7 +32,11 @@ export class ServiceListComponent implements OnInit {
   }
 
   deleteService(service: Service) {
-
+    if (confirm('Вы уверены, что хотите удалить услугу?')) {
+      this.serviceService.delete(service.id).subscribe(() => {
+        this.loadServices();
+      });
+    }
   }
 
   searchByDescription(value: string) {
@@ -43,3 +47,4 @@ export class ServiceListComponent implements OnInit {
   }
 
 }
+

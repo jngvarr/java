@@ -44,8 +44,8 @@
   <!--    </div>-->
   <!--  </div>-->
   <div class="card-body">
-    <table class="table table-bordered table-striped">
-      <thead class="thead-dark text-center">
+    <table class="table table-bordered table-striped text-center align-middle" >
+      <thead class="thead-dark">
       <tr>
         <!--        <th scope="col">#</th>-->
         <th scope="col">Title</th>
@@ -53,8 +53,8 @@
         <th scope="col">Duration</th>
         <th scope="col">Description</th>
         <th scope="col">Consumables</th>
-        <th scope="col"></th>
-        <th scope="col"></th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
       </tr>
       </thead>
       <tbody>
@@ -64,12 +64,16 @@
         <td>{{ service.price }}</td>
         <td>{{ service.serviceDurationInMinutes }}</td>
         <td>{{ service.description }}</td>
-        <td>{{ service.consumables }}</td>
         <td>
-          <button [routerLink]="['/services/update', service.id]" class="btn btn-secondary">Edit</button>
+          <ul>
+            <li *ngFor="let item of service.consumables"> {{ item.title }}</li>
+          </ul>
         </td>
         <td>
-          <button class="btn btn-dark" (click)="deleteService(service)">X</button>
+          <button [routerLink]="['/services/update', service.id]" class="btn btn-warning">Edit</button>
+        </td>
+        <td>
+          <button class="btn btn-danger" (click)="deleteService(service)">X</button>
         </td>
       </tr>
       </tbody>
