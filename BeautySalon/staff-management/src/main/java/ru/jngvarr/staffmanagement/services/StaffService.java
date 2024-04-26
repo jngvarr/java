@@ -18,10 +18,15 @@ public class StaffService {
     public final EmployeeRepository employeeRepository;
 
     public List<Employee> getEmployees() {
-//        log.debug("getEmployeesService {}", employeeRepository.findAll());
-        List<Employee>employees = employeeRepository.findAll();
+        List<Employee> employees = employeeRepository.findAll();
         System.out.println(employees);
         return employees;
+    }
+
+    public List<Employee> getEmployeeByContact(String contact) {
+        List<Employee> neededClients = employeeRepository.findAllByContact(contact);
+        if (neededClients != null) return neededClients;
+        else throw new IllegalArgumentException("Employee not found");
     }
 
     public Employee getEmployee(Long id) {
@@ -50,6 +55,18 @@ public class StaffService {
             log.debug("update {}", newEmployee);
             return employeeRepository.save(newEmployee);
         } else throw new NeededObjectNotFound("Employee not found");
+    }
+
+    public List<Employee> getClientByFullName(String name, String lastName) {
+        return employeeRepository.findAllByFirstNameAndLastName(name, lastName);
+    }
+
+    public List<Employee> getClientByName(String name) {
+        return employeeRepository.findAllByFirstName(name);
+    }
+
+    public List<Employee> getEmployeeByLastName(String lastName) {
+        return employeeRepository.findAllByLastName(lastName);
     }
 
     public void delete(Long id) {

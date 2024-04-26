@@ -1,5 +1,7 @@
 <div class="card my-5">
   <div class="card-body">
+    <h3 [hidden]="isEdit">Add client:</h3>
+    <h3 [hidden]="!isEdit">Edit client:</h3>
     <form (ngSubmit)="onSubmit()" #clientForm="ngForm">
       <div class="form-group">
         <label for="name">Name</label>
@@ -10,7 +12,8 @@
                placeholder="Enter your name"
                required #name="ngModel">    <!--заполнение поля обязательно-->
       </div>
-      <div [hidden]="!name.pristine" class="alert alert-danger">Name is required</div><!--вывод поля-сообщения при незаполненном основном-->
+      <div [hidden]="!name.pristine" class="alert alert-danger">Name is required</div>
+      <!--вывод поля-сообщения при незаполненном основном-->
       <div class="form-group">
         <label for="last-name">LastName</label>
         <input type="text" [(ngModel)]="client.lastName"
@@ -44,11 +47,8 @@
         <!--        <div [hidden]="!contact.pristine" class="alert alert-danger">Dob is required</div>-->
       </div>
 
-      <button type="submit"
-              class="btn btn-info">Submit
-        <!--              [disabled]="!clientForm.form.valid"-->
-      </button>
-      <a routerLink="/clients" class="btn btn-info m-2">Back</a>
+      <button type="submit" class="btn btn-dark btn-sm">Submit</button>
+      <a routerLink="/clients" class="btn btn-dark m-1 btn-sm">Back</a>
     </form>
   </div>
 </div>

@@ -50,11 +50,6 @@ public class ClientController {
                 (name.isEmpty() ? clientService.getClientByLastName(lastName) : clientService.getClientByName(name)) :
                 clientService.getClientByFullName(name, lastName);
     }
-//    @GetMapping("/by-name/{name}/{lastName}")
-//    public List<Client> getClientsByName(@PathVariable("name") String name, @PathVariable("lastName") String lastName) {
-//        log.debug("name={}, lastname={}", name, lastName);
-//        return clientService.getClientByName(name, lastName);
-//    }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")

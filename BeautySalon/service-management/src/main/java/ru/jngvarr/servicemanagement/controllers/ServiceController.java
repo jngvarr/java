@@ -36,6 +36,11 @@ public class ServiceController {
         return service.getServicesByDescription(description);
     }
 
+    @GetMapping("/byConsumable/{Consumable}")
+    public List<Servize> getServicesByConsumable(@PathVariable String consumable) {
+        return service.getServicesByConsumable(consumable);
+    }
+
     @GetMapping("/duration/{duration}")
     public int getServiceDuration(@PathVariable Long duration) {
         return service.getServiceDuration(duration);

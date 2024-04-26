@@ -1,84 +1,83 @@
-  <div class="card my-3">
-    <div class="container">
-      <div class="row">
-        <!--      <div class="col-md-12">-->
-        <!--        <div class="card bg-dark my-5">-->
-        <div class="card-body p-2">
-          <h2 class="card-title text-center text-black py-0">Consumables</h2>
-          <ul class="text-center list-inline py-3">
-            <li class="list-inline-item">
-              <div class="btn-group">
-                <button type="button" class="btn btn-info dropdown-toggle"  data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                  Search consumable
-                </button>
-                <div class="dropdown-menu w-auto">
-                  <form (ngSubmit)="searchByTitle(searchByTitleInput.value)" class="px-3 py-3">
+<div class="card my-3">
+  <div class="container">
+    <div class="row">
+      <!--      <div class="col-md-12">-->
+      <!--        <div class="card bg-dark my-5">-->
+      <div class="card-body p-2">
+        <h2 class="card-title text-center text-black py-0">Consumables</h2>
+        <ul class="text-center list-inline py-3">
+          <li class="list-inline-item">
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false"> Search consumable
+              </button>
+              <div class="dropdown-menu w-auto">
+                <form (ngSubmit)="searchByTitle(searchByTitleInput.value)" class="px-3 py-3">
 
-                    <div class="mb-3">
-                      <label for="search-by-title" class="form-label">По названию</label>
-                      <input type="text" class="form-control" id="search-by-title" #searchByTitleInput
-                             placeholder="Введите наименование">
-                    </div>
-<!--                                      <div class="mb-3">-->
-<!--                                        <input type="text" class="form-control " style="width: auto;" id="search-by-something-else"-->
-<!--                                               #searchByTitleInput-->
-<!--                                               placeholder="Введите чт-то">-->
-<!--                                      </div>-->
-                    <button type="submit" class="btn btn-primary">Search</button>
-                    <!--                  <div class="mb-3">-->
-                    <!--                    <label for="search-by-phone" class="form-label">По телефону</label>-->
-                    <!--                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput-->
-                    <!--                           placeholder="Введите номер">-->
-                    <!--                  </div>-->
-                    <!--                  <div class="mb-3">-->
-                    <!--                  </div>-->
-                    <!--                  <button type="button" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">-->
-                    <!--                    Search-->
-                    <!--                  </button>-->
-                  </form>
-                </div>
+                  <div class="mb-3">
+                    <label for="search-by-title" class="form-label">По названию</label>
+                    <input type="text" class="form-control" id="search-by-title" #searchByTitleInput
+                           placeholder="Введите наименование">
+                  </div>
+                  <!--                                      <div class="mb-3">-->
+                  <!--                                        <input type="text" class="form-control " style="width: auto;" id="search-by-something-else"-->
+                  <!--                                               #searchByTitleInput-->
+                  <!--                                               placeholder="Введите чт-то">-->
+                  <!--                                      </div>-->
+                  <button type="submit" class="btn btn-primary">Search</button>
+                  <!--                  <div class="mb-3">-->
+                  <!--                    <label for="search-by-phone" class="form-label">По телефону</label>-->
+                  <!--                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput-->
+                  <!--                           placeholder="Введите номер">-->
+                  <!--                  </div>-->
+                  <!--                  <div class="mb-3">-->
+                  <!--                  </div>-->
+                  <!--                  <button type="button" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">-->
+                  <!--                    Search-->
+                  <!--                  </button>-->
+                </form>
               </div>
-            </li>
-            <li class="list-inline-item">
-              <a routerLink="/storage/create" class="btn btn-info">Add Consumable</a>
-            </li>
-          </ul>
-        </div>
+            </div>
+          </li>
+          <li class="list-inline-item">
+            <a routerLink="/storage/create" class="btn btn-outline-dark">Add Consumable</a>
+          </li>
+        </ul>
       </div>
-      <router-outlet></router-outlet>
     </div>
-    <!--    </div>-->
-    <!--  </div>-->
-    <div class="card-body">
-      <table class="table table-bordered table-striped">
-        <thead class="thead-dark text-center">
-        <tr>
-          <!--        <th scope="col">#</th>-->
-          <th scope="col">Title</th>
-          <th scope="col">Price</th>
-          <th scope="col">Unit</th>
-          <th scope="col"></th>
-          <th scope="col"></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr class="head text-center" *ngFor="let consumable of consumables">
-          <!--        <td>{{ consumable.id }}</td>-->
-          <td>{{ consumable.title }}</td>
-          <td>{{ consumable.price }}</td>
-          <td>{{ consumable.unit }}</td>
-
-          <td>
-            <button [routerLink]="['/storage/update', consumable.id]" class="btn btn-secondary">Edit</button>
-          </td>
-          <td>
-            <button class="btn btn-dark" (click)="deleteConsumable(consumable)">X</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+    <router-outlet></router-outlet>
   </div>
+  <!--    </div>-->
+  <!--  </div>-->
+  <div class="card-body">
+    <table class="table table-bordered table-striped">
+      <thead class="thead-dark text-center">
+      <tr>
+        <!--        <th scope="col">#</th>-->
+        <th scope="col">Title</th>
+        <th scope="col">Price</th>
+        <th scope="col">Unit</th>
+        <th scope="col"></th>
+        <th scope="col"></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr class="head text-center" *ngFor="let consumable of consumables">
+        <!--        <td>{{ consumable.id }}</td>-->
+        <td>{{ consumable.title }}</td>
+        <td>{{ consumable.price }}</td>
+        <td>{{ consumable.unit }}</td>
+
+        <td>
+          <button [routerLink]="['/storage/update', consumable.id]" class="btn btn-warning btn-sm">Edit</button>
+        </td>
+        <td>
+          <button class="btn btn-danger btn-sm" (click)="deleteConsumable(consumable)">X</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
 

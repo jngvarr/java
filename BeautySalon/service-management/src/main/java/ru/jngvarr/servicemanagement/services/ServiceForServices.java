@@ -67,4 +67,10 @@ public class ServiceForServices {
     public void delete(Long id) {
         salonServiceRepository.deleteById(id);
     }
+
+    public List<Servize> getServicesByConsumable(String consumable) {
+        List<Servize> neededServices = salonServiceRepository.findByConsumableTitleContaining(consumable);
+        if (!neededServices.isEmpty()) return neededServices;
+        else throw new RuntimeException("Service is absent!");
+    }
 }

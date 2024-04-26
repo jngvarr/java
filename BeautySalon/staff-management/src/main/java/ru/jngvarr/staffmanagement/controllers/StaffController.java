@@ -1,6 +1,7 @@
 package ru.jngvarr.staffmanagement.controllers;
 
 import dao.entities.people.Employee;
+import dao.entities.people.Employee;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/staff")
 @CrossOrigin(origins = "http://localhost:4200")
-public class StaffController {
+public class    StaffController {
     private final StaffService staffService;
 
     @GetMapping
@@ -42,5 +43,22 @@ public class StaffController {
     @DeleteMapping("/delete/{id}")
     public void deleteEmployee(@PathVariable Long id) {
         staffService.delete(id);
+    }
+
+    @GetMapping("/by-name")
+    public List<Employee> getClientsByName(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "lastName", required = false) String lastName) {
+        log.debug("name={}, lastname={}", name, lastName);
+        return (name.isEmpty() || lastName.isEmpty()) ?
+                (name.isEmpty() ? staffService.getClientByLastName(lastName) : staffService.getClientByName(name)) :
+                staffService.getClientByFullName(name, lastName);
+    }
+
+    @GetMapping("/by-contact/{phoneNumber}")
+    public List<Employee> getClientByPhone(@PathVariable String phoneNumber) {
+        log.debug("number={}", phoneNumber);
+
+        return staffService.getClientByContact(phoneNumber);
     }
 }

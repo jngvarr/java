@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {Employee} from "../../model/entities/employee";
 import {StaffService} from "../../services/staff.service";
 import {Router} from "@angular/router";
+import {Client} from "../../model/entities/client";
 
 @Component({
   selector: 'app-staff-list',
@@ -12,6 +13,8 @@ export class StaffListComponent {
 
   employees: Employee[] | undefined;
   employee: Employee | undefined;
+  isSearching: boolean = false;
+
 
   constructor(private staffService: StaffService, private router: Router) {
   }
@@ -25,16 +28,19 @@ export class StaffListComponent {
       this.employees = data;
     });
   }
+
   searchByName(name: string, lastName: string) {
     this.staffService.findByName(name, lastName).subscribe((data: Employee[]) => {
       this.employees = data;
     });
   }
+
   searchByFunction(value: string) {
     this.staffService.findByFunction(value).subscribe((data: Employee[]) => {
       this.employees = data;
     });
   }
+
   deleteEmployee(employee: Employee) {
     if (confirm('Вы уверены, что хотите удалить клиента?')) {
       this.staffService.delete(employee.id).subscribe(() => {
@@ -43,8 +49,18 @@ export class StaffListComponent {
     }
   }
 
+  resetSearch() {
+    this.isSearching = false;
+    this.loadEmployees();
+  }
+
   updateEmployee(employee: Employee) {
     this.router.navigate(['/staff/update', employee.id]);
   }
 
+  searchByPhone(value: string) {
+    this.staffService.findByPhone(value).subscribe((data: Client[]) => {
+      this.employees = data;
+    });
+  }
 }

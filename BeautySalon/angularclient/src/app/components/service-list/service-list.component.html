@@ -8,9 +8,9 @@
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
             <div class="btn-group">
-              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false">
-                Search service
+              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="false"> Search service
               </button>
               <div class="dropdown-menu w-auto">
                 <form (ngSubmit)="searchByTitle(searchByTitleInput.value)" class="px-3 py-3">
@@ -20,22 +20,31 @@
                     <input type="text" class="form-control" id="search-by-title" #searchByTitleInput
                            placeholder="Введите название">
                   </div>
-                  <button type="submit" class="btn btn-primary ">Search</button>
+                  <button type="submit" class="btn btn-dark ">Search</button>
+
                   <div class="mb-3">
                     <label for="search-by-description" class="form-label mt-3">По описанию</label>
                     <input type="text" class="form-control" style="width: auto;" id="search-by-description"
                            #searchByDescriptionInput placeholder="Введите описание услуги">
                   </div>
-                  <button type="button" class="btn btn-primary"
-                          (click)="searchByDescription(searchByDescriptionInput.value)">
-                    Search
+                  <button type="button" class="btn btn-dark"
+                          (click)="searchByDescription(searchByDescriptionInput.value)"> Search
                   </button>
+
+<!--                  <div class="mb-3">-->
+<!--                    <label for="search-by-consumable" class="form-label mt-3">По расходнику</label>-->
+<!--                    <input type="text" class="form-control" style="width: auto;" id="search-by-consumable"-->
+<!--                           #searchByConsumableInput placeholder="Введите наименование расходного материала">-->
+<!--                  </div>-->
+<!--                  <button type="button" class="btn btn-dark"-->
+<!--                          (click)="searchByConsumable(searchByConsumableInput.value)"> Search-->
+<!--                  </button>-->
                 </form>
               </div>
             </div>
           </li>
           <li class="list-inline-item">
-            <a routerLink="/services/create" class="btn btn-info">Add Service</a>
+            <a routerLink="/services/create" class="btn btn-outline-dark">Add Service</a>
           </li>
         </ul>
       </div>
@@ -45,7 +54,7 @@
   <!--    </div>-->
   <!--  </div>-->
   <div class="card-body">
-    <table class="table table-bordered table-striped text-center align-middle" >
+    <table class="table table-bordered table-striped text-center align-middle">
       <thead class="thead-dark">
       <tr>
         <!--        <th scope="col">#</th>-->
@@ -71,16 +80,16 @@
           </ul>
         </td>
         <td>
-          <button [routerLink]="['/services/update', service.id]" class="btn btn-warning">Edit</button>
+          <button [routerLink]="['/services/update', service.id]" class="btn btn-sm btn-warning">Edit</button>
         </td>
         <td>
-          <button class="btn btn-danger" (click)="deleteService(service)">X</button>
+          <button class="btn btn-danger btn-sm  " (click)="deleteService(service)">X</button>
         </td>
       </tr>
       </tbody>
     </table>
-<!--    <a routerLink="/services" class="btn btn-info m-2" >Back</a>-->
-    <a [hidden]="!isSearching" (click)="resetSearch()" class="btn btn-info m-2">Drop search result</a>
+    <!--    <a routerLink="/services" class="btn btn-info m-2" >Back</a>-->
+    <a [hidden]="!isSearching" (click)="resetSearch()" class="btn text-white btn-sm btn-dark m-2">Drop search result</a>
   </div>
 </div>
 

@@ -8,9 +8,8 @@
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
             <div class="btn-group">
-              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false">
-                Search client
+              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false"> Search client
               </button>
 
               <div class="dropdown-menu w-auto">
@@ -28,7 +27,7 @@
                            #searchByLastNameInput placeholder="Введите фамилию">
                   </div>
 
-                  <button type="submit" class="btn btn-primary">Search</button>
+                  <button type="submit" class="btn btn-sm btn-dark">Search</button>
 
                   <div class="mb-3">
                     <label for="search-by-phone" class="form-label">По телефону</label>
@@ -37,7 +36,7 @@
                   </div>
                   <div class="mb-3">
                   </div>
-                  <button type="button" class="btn btn-primary" (click)="searchByPhone(searchByPhoneInput.value)">
+                  <button type="button" class="btn btn-sm btn-dark" (click)="searchByPhone(searchByPhoneInput.value)">
                     Search
                   </button>
                 </form>
@@ -45,7 +44,7 @@
             </div>
           </li>
           <li class="list-inline-item">
-            <a routerLink="/clients/create" class="btn btn-info">Add Client</a>
+            <a routerLink="/clients/create" class="btn btn-outline-dark">Add Client</a>
           </li>
         </ul>
       </div>
@@ -75,10 +74,10 @@
         <td>{{ client.contact }}</td>
         <td>{{ client.dob }}</td>
         <td>
-          <button [routerLink]="['/clients/update', client.id]" class="btn btn-secondary">Edit</button>
+          <button [routerLink]="['/clients/update', client.id]" class="btn btn-sm btn-warning">Edit</button>
         </td>
         <td>
-          <button class="btn btn-dark" (click)="deleteClient(client)">X</button>
+          <button class="btn btn-danger btn-sm" (click)="deleteClient(client)">X</button>
         </td>
       </tr>
       </tbody>

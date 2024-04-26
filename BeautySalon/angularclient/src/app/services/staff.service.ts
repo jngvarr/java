@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Employee} from "../model/entities/employee";
+import {Client} from "../model/entities/client";
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class StaffService {
   }
 
   public findByName(name: string, lastName: string): Observable<Employee[]> {
-    return this.http.get<Employee[]>(this.staffUrl + `/by-name/?name=${name}&lastName=${lastName}`);
+    return this.http.get<Employee[]>(this.staffUrl + `/by-name?name=${name}&lastName=${lastName}`);
   }
 
   findByFunction(value: string) {
@@ -41,4 +42,7 @@ export class StaffService {
     return this.http.get<Employee>(this.staffUrl + `/${employeeId}`)
   }
 
+  findByPhone(value: string) {
+    return this.http.get<Employee[]>(this.staffUrl + `/by-contact/${value}`)
+  }
 }

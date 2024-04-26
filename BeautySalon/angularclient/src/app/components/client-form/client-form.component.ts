@@ -9,7 +9,7 @@ import {Client} from '../../model/entities/client';
   styleUrls: ['./Client-form.component.scss']
 })
 export class ClientFormComponent {
-
+  isEdit: boolean = false;
   client: Client;
 
   constructor(

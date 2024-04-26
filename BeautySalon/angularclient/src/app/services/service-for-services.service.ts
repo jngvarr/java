@@ -32,4 +32,8 @@ export class ServiceForServices {
   findByDescription(description: string) {
     return this.http.get<Consumable[]>(this.servicesUrl + `/byDescription/${description}`);
   }
+
+  findByConsumable(value: string) {
+    return this.http.get<Consumable[]>(this.servicesUrl + `/byConsumable/${Consumable}`);
+  }
 }

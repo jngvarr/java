@@ -59,5 +59,12 @@ export class ServiceListComponent implements OnInit {
     this.isSearching=false;
     this.loadServices();
   }
+
+  searchByConsumable(value: string) {
+    this.serviceService.findByConsumable(value).subscribe((data: Service[]) => {
+      this.services = data;
+      this.isSearching=true;
+    });
+  }
 }
 

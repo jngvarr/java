@@ -8,7 +8,7 @@
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
             <div class="btn-group">
-              <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                       aria-expanded="false">
                 Search employee
               </button>
@@ -23,20 +23,31 @@
 
 
                   <div class="mb-3">
-                    <!--                    <label for="search-input" class="form-label">По фамилии</label>-->
                     <input type="text" class="form-control " style="width: auto;" id="search-by-lastname"
                            #searchByLastNameInput
                            placeholder="Введите фамилию">
                   </div>
-                  <button type="submit" class="btn btn-primary">Search</button>
+                  <button type="submit" class="btn btn-dark">Search</button>
+
                   <div class="mb-3">
-                    <label for="search-by-function" class="form-label">По телефону</label>
+                    <label for="search-by-function" class="form-label">По должности</label>
                     <input type="text" class="form-control" id="search-by-function" #searchByFunctionInput
+                           placeholder="Введите должность">
+                  </div>
+                  <div class="mb-3">
+                  </div>
+                  <button type="button" class="btn btn-dark" (click)="searchByFunction(searchByFunctionInput.value)">
+                    Search
+                  </button>
+
+                  <div class="mb-3">
+                    <label for="search-by-phone" class="form-label">По телефону</label>
+                    <input type="text" class="form-control" id="search-by-phone" #searchByPhoneInput
                            placeholder="Введите номер">
                   </div>
                   <div class="mb-3">
                   </div>
-                  <button type="button" class="btn btn-primary" (click)="searchByFunction(searchByFunctionInput.value)">
+                  <button type="button" class="btn btn-dark" (click)="searchByPhone(searchByPhoneInput.value)">
                     Search
                   </button>
                 </form>
@@ -44,7 +55,7 @@
             </div>
           </li>
           <li class="list-inline-item">
-            <a routerLink="/staff/create" class="btn btn-info">Add employee</a>
+            <a routerLink="/staff/create" class="btn btn-outline-dark">Add employee</a>
           </li>
         </ul>
       </div>
@@ -54,15 +65,15 @@
   <!--    </div>-->
   <!--  </div>-->
   <div class="card-body">
-    <table class="table table-bordered table-striped text-center align-middle" >
+    <table class="table table-bordered table-striped text-center align-middle">
       <thead class="thead-dark">
       <tr>
         <!--        <th scope="col">#</th>-->
-        <th scope="col">Title</th>
-        <th scope="col">Price</th>
-        <th scope="col">Duration</th>
-        <th scope="col">Description</th>
-        <th scope="col">Consumables</th>
+        <th scope="col">Name</th>
+        <th scope="col">Last Name</th>
+        <th scope="col">Contact</th>
+        <th scope="col">Function</th>
+        <th scope="col">Date of birth</th>
         <th scope="col">Edit</th>
         <th scope="col">Delete</th>
       </tr>
@@ -76,14 +87,15 @@
         <td>{{ employee.function }}</td>
         <td>{{ employee.dob }}</td>
         <td>
-          <button [routerLink]="['/staff/update', employee.id]" class="btn btn-warning">Edit</button>
+          <button [routerLink]="['/staff/update', employee.id]" class="btn-sm btn-warning">Edit</button>
         </td>
         <td>
-          <button class="btn btn-danger" (click)="deleteEmployee(employee)">X</button>
+          <button class="btn-sm btn-danger" (click)="deleteEmployee(employee)">X</button>
         </td>
       </tr>
       </tbody>
     </table>
+    <a [hidden]="!isSearching" (click)="resetSearch()" class="btn text-white btn-sm btn-dark m-2">Drop search result</a>
   </div>
 </div>
 
