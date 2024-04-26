@@ -51,7 +51,7 @@ public class    StaffController {
             @RequestParam(name = "lastName", required = false) String lastName) {
         log.debug("name={}, lastname={}", name, lastName);
         return (name.isEmpty() || lastName.isEmpty()) ?
-                (name.isEmpty() ? staffService.getClientByLastName(lastName) : staffService.getClientByName(name)) :
+                (name.isEmpty() ? staffService.getEmployeeByLastName(lastName) : staffService.getClientByName(name)) :
                 staffService.getClientByFullName(name, lastName);
     }
 
@@ -59,6 +59,6 @@ public class    StaffController {
     public List<Employee> getClientByPhone(@PathVariable String phoneNumber) {
         log.debug("number={}", phoneNumber);
 
-        return staffService.getClientByContact(phoneNumber);
+        return staffService.getEmployeeByContact(phoneNumber);
     }
 }
