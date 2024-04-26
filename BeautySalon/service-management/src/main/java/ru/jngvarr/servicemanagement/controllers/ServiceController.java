@@ -26,11 +26,20 @@ public class ServiceController {
         return service.getService(id);
     }
 
-    @GetMapping("/duration/{id}")
-    public int getServiceDuration(@PathVariable Long id) {
-        return service.getServiceDuration(id);
+    @GetMapping("/byTitle/{title}")
+    public List<Servize> getServicesByTitle(@PathVariable String title) {
+        return service.getServicesByTitle(title);
     }
 
+    @GetMapping("/byDescription/{description}")
+    public List<Servize> getServicesByDescription(@PathVariable String description) {
+        return service.getServicesByDescription(description);
+    }
+
+    @GetMapping("/duration/{duration}")
+    public int getServiceDuration(@PathVariable Long duration) {
+        return service.getServiceDuration(duration);
+    }
     @PostMapping("/create")
     public Servize addService(@RequestBody Servize newService) {
         return service.addService(newService);

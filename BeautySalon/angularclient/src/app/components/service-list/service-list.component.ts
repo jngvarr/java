@@ -3,6 +3,7 @@ import {Service} from "../../model/entities/service";
 import {ServiceForServices} from "../../services/service-for-services.service";
 import {ClientService} from "../../services/client.service";
 import {Router} from "@angular/router";
+import {Consumable} from "../../model/entities/consumable";
 
 @Component({
   selector: 'app-service-list',
@@ -12,6 +13,7 @@ import {Router} from "@angular/router";
 export class ServiceListComponent implements OnInit {
   services: Service[] | undefined;
   service: Service | undefined;
+  isSearching: boolean = false;
 
   constructor(private serviceService: ServiceForServices, private router: Router) {
   }
@@ -40,11 +42,22 @@ export class ServiceListComponent implements OnInit {
   }
 
   searchByDescription(value: string) {
+    this.serviceService.findByDescription(value).subscribe((data: Service[]) => {
+      this.services = data;
+      this.isSearching=true;
+    });
   }
 
-  searchByTitle(value: string) {
-
+  searchByTitle(title: string) {
+    this.serviceService.findByTitle(title).subscribe((data: Service[]) => {
+      this.services = data;
+      this.isSearching=true;
+    });
   }
 
+  resetSearch() {
+    this.isSearching=false;
+    this.loadServices();
+  }
 }
 

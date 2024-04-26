@@ -17,7 +17,7 @@ export class ClientService {
   }
 
   public findByName(name: string, lastName: string): Observable<Client[]> {
-    return this.http.get<Client[]>(this.clientsUrl + `/by-name/?name=${name}&lastName=${lastName}`);
+    return this.http.get<Client[]>(this.clientsUrl + `/by-name?name=${name}&lastName=${lastName}`);
   }
 
   findByPhone(value: string) {

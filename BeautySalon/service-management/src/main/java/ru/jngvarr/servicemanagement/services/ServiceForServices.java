@@ -5,6 +5,7 @@ import exceptions.NeededObjectNotFound;
 import exceptions.NotEnoughData;
 import lombok.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.jngvarr.servicemanagement.repositories.SalonServiceRepository;
 
 import java.util.List;
@@ -48,6 +49,18 @@ public class ServiceForServices {
     public int getServiceDuration(Long id) {
         Optional<Servize> neededService = salonServiceRepository.findById(id);
         if (neededService.isPresent()) return neededService.get().getServiceDurationInMinutes();
+        else throw new RuntimeException("Service is absent!");
+    }
+
+    public List<Servize> getServicesByTitle(String title) {
+        List<Servize> neededServices = salonServiceRepository.findAllByTitle(title);
+        if (!neededServices.isEmpty()) return neededServices;
+        else throw new RuntimeException("Service is absent!");
+    }
+
+    public List<Servize> getServicesByDescription(String description) {
+        List<Servize> neededServices = salonServiceRepository.findAllByDescriptionContainingIgnoreCase(description);
+        if (!neededServices.isEmpty()) return neededServices;
         else throw new RuntimeException("Service is absent!");
     }
 
