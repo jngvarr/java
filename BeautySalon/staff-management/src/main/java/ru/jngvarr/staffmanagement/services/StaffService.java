@@ -1,6 +1,7 @@
 package ru.jngvarr.staffmanagement.services;
 
 import dao.entities.people.Employee;
+import dao.entities.people.Function;
 import exceptions.NeededObjectNotFound;
 import exceptions.NotEnoughData;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class StaffService {
         } else throw new NotEnoughData("Not enough employee data");
     }
 
-    public Employee update(Employee employeeData, Long id) {
+    public Employee updateEmployee(Employee employeeData, Long id) {
         Optional<Employee> oldEmployee = employeeRepository.findById(id);
         if (oldEmployee.isPresent()) {
             Employee newEmployee = oldEmployee.get();
@@ -57,16 +58,20 @@ public class StaffService {
         } else throw new NeededObjectNotFound("Employee not found");
     }
 
-    public List<Employee> getClientByFullName(String name, String lastName) {
+    public List<Employee> getEmployeesByFullName(String name, String lastName) {
         return employeeRepository.findAllByFirstNameAndLastName(name, lastName);
     }
 
-    public List<Employee> getClientByName(String name) {
+    public List<Employee> getEmployeesByName(String name) {
         return employeeRepository.findAllByFirstName(name);
     }
 
-    public List<Employee> getEmployeeByLastName(String lastName) {
+    public List<Employee> getEmployeesByLastName(String lastName) {
         return employeeRepository.findAllByLastName(lastName);
+    }
+
+    public List<Employee> getEmployeeByFunction(String function) {
+        return employeeRepository.findAllByFunction(Function.valueOf(function));
     }
 
     public void delete(Long id) {

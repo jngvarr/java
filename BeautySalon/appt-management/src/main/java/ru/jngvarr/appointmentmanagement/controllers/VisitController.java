@@ -26,6 +26,7 @@ public class VisitController {
         log.debug("getVisits-VisitController");
         return visitService.getVisits();
     }
+
     @GetMapping("/clients")
     public List<Client> getClients(){
         log.debug("getClients-VisitController");

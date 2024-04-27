@@ -1,1 +1,114 @@
-<p>appt-list works!</p>
+<div class="card my-3">
+  <div class="container">
+    <div class="row">
+      <!--      <div class="col-md-12">-->
+      <!--        <div class="card bg-dark my-5">-->
+      <div class="card-body">
+        <h2 class="card-title text-center text-black py-0">Appointment</h2>
+        <ul class="text-center list-inline py-3">
+          <li class="list-inline-item">
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown"
+                      aria-haspopup="true"
+                      aria-expanded="false"> Search appointment
+              </button>
+              <div class="dropdown-menu w-auto">
+                <form (ngSubmit)="searchByVisitDate(searchByDate.value)" class="px-3 py-3">
+
+                  <div class="mb-3">
+                    <label for="search-by-date" class="form-date">По дате</label>
+                    <input type="date" class="form-control" id="search-by-date" #searchByDate="ngModel"
+                           [(ngModel)]="searchDate"
+                           placeholder="Введите дату">
+                  </div>
+                  <button type="submit" class="btn btn-dark">Search</button>
+                  <div class="mb-3">
+                    <input type="time" class="form-control " style="width: auto;" id="search-by-time"
+                           #searchByTimeInput="ngModel" [(ngModel)]="searchTime"
+                           placeholder="Введите время">
+                  </div>
+                  <button type="button " class="btn btn-dark " (click)="searchByTime(searchByTimeInput.value)">Search
+                  </button>
+
+                  <!--       тут был поиск записи по услуге           <div class="mb-3">-->
+                  <!--                    <label for="search-by-function" class="form-label">По виду услуги</label>-->
+                  <!--                    <input type="text" class="form-control" id="search-by-function" #searchByServiceInput-->
+                  <!--                           placeholder="Введите вид услуги">-->
+                  <!--                  </div>-->
+                  <!--                  <div class="mb-3">-->
+                  <!--                  </div>-->
+                  <!--                  <button type="button" class="btn btn-dark" (click)="searchByService(searchByServiceInput.value)">-->
+                  <!--                    Search-->
+                  <!--                  </button>-->
+
+                  <div class="mb-3">
+                    <label for="search-by-client" class="form-label">По клиенту</label>
+                    <input type="text" class="form-control" id="search-by-client" #searchByPhoneInput
+                           placeholder="Введите Клиента">
+                  </div>
+                  <div class="mb-3">
+                  </div>
+                  <button type="button" class="btn btn-dark" (click)="searchByClient(searchByPhoneInput.value)">
+                    Search
+                  </button>
+
+                  <div class="mb-3">
+                    <label for="search-by-master" class="form-label">По мастеру</label>
+                    <input type="text" class="form-control" id="search-by-master" #searchByMasterInput
+                           placeholder="Введите мастера">
+                  </div>
+                  <div class="mb-3">
+                  </div>
+                  <button type="button" class="btn btn-dark" (click)="searchByMaster(searchByMasterInput.value)">
+                    Search
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+          <li class="list-inline-item">
+            <a routerLink="/staff/create" class="btn btn-outline-dark">Add appointment</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+  <!--    </div>-->
+  <!--  </div>-->
+  <div class="card-body">
+    <table class="table table-bordered table-striped text-center align-middle">
+      <thead class="thead-dark">
+      <tr>
+        <!--        <th scope="col">#</th>-->
+        <th scope="col">Visit date</th>
+        <th scope="col">Visit time</th>
+        <th scope="col">Client</th>
+        <th scope="col">Service</th>
+        <th scope="col">Maser</th>
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr class="head text-center" *ngFor="let appt of appts">
+        <!--        <td>{{ employee.id }}</td>-->
+        <td>{{ appt.visitDate }}</td>
+        <td>{{ appt.startTime }}</td>
+        <td>{{ appt.client.firstName + " " + appt.client.lastName}} <br> {{appt.client.contact}} </td>
+        <td>{{ appt.service.title }}</td>
+        <td>{{ appt.master.firstName + " " + appt.master.lastName }}</td>
+        <td>
+          <button [routerLink]="['/visits/update', appt.id]" class="btn-sm btn-warning">Edit</button>
+        </td>
+        <td>
+          <button class="btn-sm btn-danger" (click)="deleteAppt(appt)">X</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <a [hidden]="!isSearching" (click)="resetSearch()" class="btn text-white btn-sm btn-dark m-2">Drop search result</a>
+  </div>
+</div>
+
+

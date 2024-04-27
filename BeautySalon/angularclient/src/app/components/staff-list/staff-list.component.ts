@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Employee} from "../../model/entities/employee";
 import {StaffService} from "../../services/staff.service";
 import {Router} from "@angular/router";
@@ -9,7 +9,7 @@ import {Client} from "../../model/entities/client";
   templateUrl: './staff-list.component.html',
   styleUrl: './staff-list.component.scss'
 })
-export class StaffListComponent {
+export class StaffListComponent implements OnInit{
 
   employees: Employee[] | undefined;
   employee: Employee | undefined;
@@ -32,12 +32,14 @@ export class StaffListComponent {
   searchByName(name: string, lastName: string) {
     this.staffService.findByName(name, lastName).subscribe((data: Employee[]) => {
       this.employees = data;
+      this.isSearching = true;
     });
   }
 
   searchByFunction(value: string) {
     this.staffService.findByFunction(value).subscribe((data: Employee[]) => {
       this.employees = data;
+      this.isSearching = true;
     });
   }
 
@@ -59,6 +61,7 @@ export class StaffListComponent {
   }
 
   searchByPhone(value: string) {
+    this.isSearching = true;
     this.staffService.findByPhone(value).subscribe((data: Client[]) => {
       this.employees = data;
     });

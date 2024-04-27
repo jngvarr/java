@@ -1,7 +1,6 @@
 package ru.jngvarr.staffmanagement.controllers;
 
 import dao.entities.people.Employee;
-import dao.entities.people.Employee;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -37,7 +36,7 @@ public class    StaffController {
 
     @PutMapping("/update/{id}")
     public Employee updateEmployee(@RequestBody Employee newData, @PathVariable Long id) {
-        return staffService.update(newData, id);
+        return staffService.updateEmployee(newData, id);
     }
 
     @DeleteMapping("/delete/{id}")
@@ -46,19 +45,23 @@ public class    StaffController {
     }
 
     @GetMapping("/by-name")
-    public List<Employee> getClientsByName(
+    public List<Employee> getEmployeesByName(
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "lastName", required = false) String lastName) {
         log.debug("name={}, lastname={}", name, lastName);
         return (name.isEmpty() || lastName.isEmpty()) ?
-                (name.isEmpty() ? staffService.getEmployeeByLastName(lastName) : staffService.getClientByName(name)) :
-                staffService.getClientByFullName(name, lastName);
+                (name.isEmpty() ? staffService.getEmployeesByLastName(lastName) : staffService.getEmployeesByName(name)) :
+                staffService.getEmployeesByFullName(name, lastName);
     }
 
     @GetMapping("/by-contact/{phoneNumber}")
-    public List<Employee> getClientByPhone(@PathVariable String phoneNumber) {
+    public List<Employee> getEmployeesByPhone(@PathVariable String phoneNumber) {
         log.debug("number={}", phoneNumber);
-
         return staffService.getEmployeeByContact(phoneNumber);
+    }
+    @GetMapping("/by-function/{function}")
+    public List<Employee> getEmployeeByFunction(@PathVariable String function) {
+        log.debug("number={}", function);
+        return staffService.getEmployeeByFunction(function);
     }
 }
