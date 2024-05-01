@@ -11,6 +11,8 @@ import dao.entities.Visit;
 import ru.jngvarr.appointmentmanagement.model.VisitData;
 import ru.jngvarr.appointmentmanagement.services.VisitService;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 @Log4j2
 @RestController
@@ -25,6 +27,11 @@ public class VisitController {
     public List<Visit> getVisits() {
         log.debug("getVisits-VisitController");
         return visitService.getVisits();
+    }
+
+    @GetMapping("/by-date/{date}")
+    public List<Visit> getVisitsByDate(@PathVariable LocalDate date){
+        return visitService.getVisitsByDate(date);
     }
 
     @GetMapping("/clients")
@@ -52,12 +59,15 @@ public class VisitController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
     public Visit create(@RequestBody Visit visit){
+        log.debug("create Visit {}",visit);
         return visitService.create(visit);
     }
 
     @PutMapping("/update/{id}")
-    public VisitData update(@RequestBody Visit visit, @PathVariable Long id){
-        return visitService.update(visit, id);
+    public Visit update(@RequestBody Visit visit, @PathVariable Long id){
+        log.debug("update {}", visit);
+        Visit update=visitService.update(visit, id);
+        return update;
     }
 
     @DeleteMapping("/delete/{id}")

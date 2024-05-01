@@ -3,6 +3,8 @@ import {Router} from "@angular/router";
 import {Visit} from "../../model/entities/visit";
 import {ApptService} from "../../services/appt.service";
 import {Time} from "@angular/common";
+import {Client} from "../../model/entities/client";
+import {Employee} from "../../model/entities/employee";
 
 @Component({
   selector: 'app-appt-list',
@@ -15,6 +17,8 @@ export class ApptListComponent implements OnInit {
   isSearching: boolean = false;
   searchDate: Date | undefined;
   searchTime: Time | undefined;
+  searchClient: Client | undefined;
+  searchMaster: Employee | undefined;
 
   constructor(private apptService: ApptService, private router: Router) {
   }
@@ -36,12 +40,12 @@ export class ApptListComponent implements OnInit {
     });
   }
 
-  searchByTime(time: Time) {
-    this.apptService.findByStartTime(time).subscribe((data: Visit[]) => {
-      this.appts = data;
-      this.isSearching = true;
-    });
-  }
+  // searchByTime(time: Time) {
+  //   this.apptService.findByStartTime(time).subscribe((data: Visit[]) => {
+  //     this.appts = data;
+  //     this.isSearching = true;
+  //   });
+  // }
 
   deleteAppt(appt: Visit) {
     if (confirm('Вы уверены, что хотите удалить запись?')) {

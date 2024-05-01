@@ -1,1 +1,90 @@
-<p>appt-form works!</p>
+<div class="card my-5">
+  <div class="card-body">
+    <h3 [hidden]="editMode">Add appointment:</h3>
+    <h3 [hidden]="!editMode">Edit appointment:</h3>
+    <form (ngSubmit)="onSubmit()" #apptForm="ngForm">
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" [(ngModel)]="appt.visitDate"
+               class="form-control"
+               id="date"
+               name="date"
+               placeholder="Enter visit date"
+               required #date="ngModel">
+        <!--заполнение поля обязательно-->
+      </div>
+      <div [hidden]="!date.pristine" class="alert alert-danger">Date is required
+        <!--вывод поля-сообщения при незаполненном основном-->
+      </div>
+
+      <div class="form-group">
+        <label for="time">Time</label>
+        <input type="datetime-local" [(ngModel)]="appt.startTime"
+               class="form-control"
+               id="time"
+               name="time"
+               placeholder="Enter visit time"
+               required #time="ngModel">
+      </div>
+      <div [hidden]="!time.pristine" class="alert alert-danger">Time is required</div>
+
+<!--      <div [hidden]="editMode" class="edit appt">-->
+        <div class="form-group">
+          <label for="client-name">Client name</label>
+          <input type="text" [(ngModel)]="client.firstName"
+                 class="form-control"
+                 id="client-name"
+                 name="client-name"
+                 placeholder="Enter client name"
+                 required #clientName="ngModel"
+                 [readonly]="editMode">
+        </div>
+        <div [hidden]="!clientName.pristine" class="alert alert-danger">Name is required</div>
+
+        <div class="form-group">
+          <label for="client-lastName">Client lastname</label>
+          <input type="text" [(ngModel)]="client.lastName"
+                 class="form-control"
+                 id="client-lastName"
+                 name="client-lastName"
+                 placeholder="Enter client lastname"
+                 [readonly]="editMode">
+        </div>
+
+        <div class="form-group">
+          <label for="client-contact">Client phone number</label>
+          <input type="text" [(ngModel)]="client.contact"
+                 class="form-control"
+                 id="client-contact"
+                 name="client-contact"
+                 placeholder="Enter client phone"
+                 required #clientContact="ngModel"
+                 [readonly]="editMode">
+        </div>
+        <div [hidden]="!clientContact.pristine" class="alert alert-danger">Phone number is required</div>
+<!--      </div>-->
+
+      <div class="form-group">
+        <label for="service">Choose the service</label>
+        <select [(ngModel)]="service" id="service" name="service" class="form-control">
+          <option *ngFor="let s of services"
+                  [ngValue]="s">{{ s.title + " (" + s.description + ")" }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="master">Choose the master</label>
+        <select [(ngModel)]="master" id="master" name="master" class="form-control">
+          <option *ngFor="let m of masters"
+                  [ngValue]="m">{{ m.firstName + " " + m.lastName + " (" + m.function + ")" }}
+          </option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-dark btn-sm">Submit</button>
+      <a routerLink="/visits" class="btn btn-dark btn-sm m-2">Back</a>
+      <button [hidden]="!editMode" class="btn-sm btn-danger btn-sm m-2" (click)="deleteAppt(this.appt.id)">Delete</button>
+    </form>
+  </div>
+</div>

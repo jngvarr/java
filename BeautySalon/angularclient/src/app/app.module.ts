@@ -17,6 +17,8 @@ import { ApptFormComponent } from './components/appt-form/appt-form.component';
 import { ApptListComponent } from './components/appt-list/appt-list.component';
 import {ServiceForServices} from "./services/service-for-services.service";
 import {StorageService} from "./services/storage.service";
+import {ApptService} from "./services/appt.service";
+import {StaffService} from "./services/staff.service";
 
 
 @NgModule({
@@ -39,7 +41,7 @@ import {StorageService} from "./services/storage.service";
     HttpClientModule,
     FormsModule
   ],
-  providers: [ClientService, ServiceForServices, StorageService],
+  providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

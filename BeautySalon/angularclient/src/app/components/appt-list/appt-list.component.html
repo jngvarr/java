@@ -17,33 +17,16 @@
 
                   <div class="mb-3">
                     <label for="search-by-date" class="form-date">По дате</label>
-                    <input type="date" class="form-control" id="search-by-date" #searchByDate="ngModel"
+                    <input type="date" class="form-control" id="search-by-date" name="by-date" #searchByDate="ngModel"
                            [(ngModel)]="searchDate"
                            placeholder="Введите дату">
                   </div>
                   <button type="submit" class="btn btn-dark">Search</button>
-                  <div class="mb-3">
-                    <input type="time" class="form-control " style="width: auto;" id="search-by-time"
-                           #searchByTimeInput="ngModel" [(ngModel)]="searchTime"
-                           placeholder="Введите время">
-                  </div>
-                  <button type="button " class="btn btn-dark " (click)="searchByTime(searchByTimeInput.value)">Search
-                  </button>
-
-                  <!--       тут был поиск записи по услуге           <div class="mb-3">-->
-                  <!--                    <label for="search-by-function" class="form-label">По виду услуги</label>-->
-                  <!--                    <input type="text" class="form-control" id="search-by-function" #searchByServiceInput-->
-                  <!--                           placeholder="Введите вид услуги">-->
-                  <!--                  </div>-->
-                  <!--                  <div class="mb-3">-->
-                  <!--                  </div>-->
-                  <!--                  <button type="button" class="btn btn-dark" (click)="searchByService(searchByServiceInput.value)">-->
-                  <!--                    Search-->
-                  <!--                  </button>-->
 
                   <div class="mb-3">
                     <label for="search-by-client" class="form-label">По клиенту</label>
-                    <input type="text" class="form-control" id="search-by-client" #searchByPhoneInput
+                    <input type="text" class="form-control" id="search-by-client" #searchByPhoneInput="ngModel"
+                           [(ngModel)]="searchClient" name="by-client"
                            placeholder="Введите Клиента">
                   </div>
                   <div class="mb-3">
@@ -54,7 +37,8 @@
 
                   <div class="mb-3">
                     <label for="search-by-master" class="form-label">По мастеру</label>
-                    <input type="text" class="form-control" id="search-by-master" #searchByMasterInput
+                    <input type="text" class="form-control" id="search-by-master" #searchByMasterInput="ngModel"
+                           [(ngModel)]="searchMaster" name="by-master"
                            placeholder="Введите мастера">
                   </div>
                   <div class="mb-3">
@@ -67,7 +51,7 @@
             </div>
           </li>
           <li class="list-inline-item">
-            <a routerLink="/staff/create" class="btn btn-outline-dark">Add appointment</a>
+            <a routerLink="/visits/create" class="btn btn-outline-dark">Add appointment</a>
           </li>
         </ul>
       </div>
@@ -94,8 +78,10 @@
       <tr class="head text-center" *ngFor="let appt of appts">
         <!--        <td>{{ employee.id }}</td>-->
         <td>{{ appt.visitDate }}</td>
-        <td>{{ appt.startTime }}</td>
-        <td>{{ appt.client.firstName + " " + appt.client.lastName}} <br> {{appt.client.contact}} </td>
+        <td>{{ appt.startTime}}</td>
+        <td>{{ appt.client.firstName + " " + (appt.client.lastName ? appt.client.lastName : "") }}
+          <br> {{ appt.client.contact }}
+        </td>
         <td>{{ appt.service.title }}</td>
         <td>{{ appt.master.firstName + " " + appt.master.lastName }}</td>
         <td>
