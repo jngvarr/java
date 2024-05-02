@@ -24,7 +24,8 @@ spring:
     password: passw
     hikari:
       schema: salon
-      maximum-pool-size : 2
+      maximum-pool-size: 2
+      minimum-idle: 5
   sql:
   init:
       mode: always

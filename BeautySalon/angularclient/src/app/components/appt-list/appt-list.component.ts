@@ -7,6 +7,7 @@ import {Client} from "../../model/entities/client";
 import {Employee} from "../../model/entities/employee";
 import {Service} from "../../model/entities/service";
 import {ServiceForServices} from "../../services/service-for-services.service";
+import {StaffService} from "../../services/staff.service";
 
 @Component({
   selector: 'app-appt-list',
@@ -20,16 +21,24 @@ export class ApptListComponent implements OnInit {
   searchDate: Date | undefined;
   searchTime: Time | undefined;
   searchClient: Client | undefined;
-  searchMaster: Employee | undefined;
+  master: Employee | undefined;
+  masters: Employee[] | undefined;
   service: Service | undefined;
   services: Service[] | undefined;
 
   constructor(private apptService: ApptService,
               private router: Router,
-              private serviceService: ServiceForServices) {
+              private serviceService: ServiceForServices,
+              private staffService: StaffService) {
     this.serviceService.findAll().subscribe(
       (data: Service[]) => {
         this.services = data;
+      }, (error) => {
+        console.error('Error fetching masters:', error);
+      });
+    this.staffService.findAll().subscribe(
+      (data: Employee[]) => {
+        this.masters = data;
       }, (error) => {
         console.error('Error fetching masters:', error);
       });
@@ -77,7 +86,7 @@ export class ApptListComponent implements OnInit {
     this.router.navigate(['/visits/update', appt.id]);
   }
 
-  searchByService(value: string) {
+  searchByServiceId(value: number) {
     this.isSearching = true;
     this.apptService.findByService(value).subscribe((data: Visit[]) => {
       this.appts = data;
@@ -91,7 +100,7 @@ export class ApptListComponent implements OnInit {
     });
   }
 
-  searchByMaster(value: string) {
+  searchByMaster(value: number) {
     this.isSearching = true;
     this.apptService.findByMaster(value).subscribe((data: Visit[]) => {
       this.appts = data;

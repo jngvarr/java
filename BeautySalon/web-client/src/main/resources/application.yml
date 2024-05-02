@@ -3,7 +3,9 @@ server:
 spring:
   datasource:
     hikari:
-      maximum-pool-size : 2
+      schema: salon
+      maximum-pool-size: 2
+      minimum-idle: 5
   application:
     name: web
   security:

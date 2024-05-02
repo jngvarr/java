@@ -7,8 +7,8 @@
         <h2 class="card-title text-center text-black py-0">Appointment</h2>
         <ul class="text-center list-inline py-3">
           <li class="list-inline-item">
-            <div class="btn-group">
-              <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown"
+            <div class="btn-group w-auto">
+              <button type="button" class="btn btn-outline-dark dropdown-toggle w-auto" data-toggle="dropdown"
                       aria-haspopup="true"
                       aria-expanded="false"> Search appointment
               </button>
@@ -21,45 +21,50 @@
                            [(ngModel)]="searchDate"
                            placeholder="Введите дату">
                   </div>
-                  <button type="submit" class="btn btn-dark">Search</button>
+                  <button type="submit" class="btn btn-dark btn-sm">Search</button>
 
                   <div class="mb-3">
                     <label for="search-by-client" class="form-label">По клиенту</label>
-                    <input type="text" class="form-control" id="search-by-client" #searchByPhoneInput="ngModel"
+                    <input type="text" class="form-control" id="search-by-client" #searchByClientInput="ngModel"
                            [(ngModel)]="searchClient" name="by-client"
-                           placeholder="Введите Клиента">
+                           placeholder="Введите клиента">
                   </div>
                   <div class="mb-3">
                   </div>
-                  <button type="button" class="btn btn-dark" (click)="searchByClient(searchByPhoneInput.value)">
+                  <button type="button" class="btn btn-dark btn-sm" (click)="searchByClient(searchByClientInput.value)">
                     Search
                   </button>
 
                   <div class="mb-3">
-                    <label for="search-by-master" class="form-label">По мастеру</label>
-                    <input type="text" class="form-control" id="search-by-master" #searchByMasterInput="ngModel"
-                           [(ngModel)]="searchMaster" name="by-master"
-                           placeholder="Введите мастера">
+                    <label for="search-by-master">По мастеру</label>
+                    <select [(ngModel)]="master" id="search-by-master" #searchByMasterInput="ngModel"
+                            name="rearch-by-master" class="form-control w-300" (click)="$event.stopPropagation()">
+                      <option value="" disabled selected>Выберите мастера:</option>
+                      <option *ngFor="let m of masters"
+                              [ngValue]="m.id">{{ m.firstName + " " + m.lastName }}
+                      </option>
+                    </select>
                   </div>
-                  <div class="mb-3">
-                  </div>
-                  <button type="button" class="btn btn-dark" (click)="searchByMaster(searchByMasterInput.value)">
+
+                  <button type="button" class="btn btn-dark btn-sm" (click)="searchByMaster(searchByMasterInput.value)">
                     Search
                   </button>
+
                   <div class="mb-3">
-<!--                    <div class="inner-dropdown w-auto">-->
-                    <label for="service">По услуге</label>
-                      <select [(ngModel)]="service" id="service" name="service" class="form-control" (click)="$event.stopPropagation()">
-                        <option *ngFor="let s of services"
-                                [ngValue]="s">{{ s.title + " (" + s.description + ")" }}
-                        </option>
-                      </select>
-                    </div>
-<!--                  </div>-->
+                    <label for="search-by-service">По услуге</label>
+                    <select [(ngModel)]="service" id="search-by-service" #searchByServiceInput="ngModel"
+                            name="rearch-by-service" class="form-control" (click)="$event.stopPropagation()">
+                      <option value="" disabled selected>Выберите услугу:</option>
+                      <option *ngFor="let s of services"
+                              [ngValue]="s.id">{{ s.title + " (" + s.description + ")" }}
+                      </option>
+                    </select>
+                  </div>
 
                   <div class="mb-3">
                   </div>
-                  <button type="button" class="btn btn-dark" (click)="searchByMaster(searchByMasterInput.value)">
+                  <button type="button" class="btn btn-dark btn-sm"
+                          (click)="searchByServiceId(searchByServiceInput.value)">
                     Search
                   </button>
                 </form>

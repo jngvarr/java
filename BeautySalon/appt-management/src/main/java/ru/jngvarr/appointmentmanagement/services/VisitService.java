@@ -132,18 +132,9 @@ public class VisitService {
                 .orElseThrow();
     }
 
-    public Employee getEmployeeByFullName(String name) {
-        String[] fullName = name.split(" ");
-        return getEmployees().stream()
-                .filter(e -> e.getFirstName().equals(fullName[0]))
-                .filter(e -> e.getLastName().equals(fullName[1]))
-                .findFirst()
-                .orElseThrow();
-    }
-
-    public List<Visit> getVisitsByMaster(String masterFullName) {
+    public List<Visit> getVisitsByMaster(Long masterId) {
         return visitRepository.
-                findAllVisitsByEmployeeId(getEmployeeByFullName(masterFullName).getId()).stream()
+                findAllVisitsByEmployeeId(masterId).stream()
                 .map(this::getVisitFromVisitData)
                 .collect(Collectors.toList());
     }
@@ -153,5 +144,4 @@ public class VisitService {
                 .map(this::getVisitFromVisitData)
                 .collect(Collectors.toList());
     }
-
 }

@@ -3,8 +3,6 @@ import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Visit} from "../model/entities/visit";
 import {Time} from "@angular/common";
-import {Client} from "../model/entities/client";
-import {ClientService} from "./client.service";
 
 @Injectable({
   providedIn: 'root'
@@ -37,7 +35,7 @@ export class ApptService {
     return this.http.put<Visit>(this.apptUrl + `/update/${updatedVisit.id}`, updatedVisit);
   }
 
-  public delete(id: number | undefined) {
+    public delete(id: number | undefined) {
     return this.http.delete<Visit>(this.apptUrl + `/delete/${id}`);
   }
 
@@ -45,15 +43,15 @@ export class ApptService {
     return this.http.get<Visit>(this.apptUrl + `/${apptId}`)
   }
 
-  findByService(value: string) {
-    return this.http.get<Visit[]>(this.apptUrl + `/by-contact/${value}`)
+  findByService(id: number) {
+    return this.http.get<Visit[]>(this.apptUrl + `/by-service/${id}`)
   }
 
   findByClient(value: string) {
     return this.http.get<Visit[]>(this.apptUrl + `/by-client/${value}`)
   }
 
-  findByMaster(value: string) {
+  findByMaster(value: number) {
     return this.http.get<Visit[]>(this.apptUrl + `/by-master/${value}`)
   }
 

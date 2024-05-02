@@ -40,14 +40,15 @@ public class VisitController {
         return visitService.getVisitsByClient(client);
     }
 
-    @GetMapping("/by-master/{master}")
-    public List<Visit> getVisitsByMaster(@PathVariable String master) {
-        return visitService.getVisitsByMaster(master);
+    @GetMapping("/by-master/{masterId}")
+    public List<Visit> getVisitsByMaster(@PathVariable Long masterId) {
+        return visitService.getVisitsByMaster(masterId);
     }
 
-    @GetMapping("/by-service/{service}")
-    public List<Visit> getVisitsByService(@PathVariable Servize service) {
-        return visitService.getVisitsByService(service.getId());
+    @GetMapping("/by-service/{serviceId}")
+    public List<Visit> getVisitsByService(@PathVariable Long serviceId) {
+        List<Visit> visits = visitService.getVisitsByService(serviceId);
+        return visits;
     }
 
 //    @GetMapping("/clients")
