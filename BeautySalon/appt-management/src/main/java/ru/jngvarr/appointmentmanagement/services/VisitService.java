@@ -70,7 +70,6 @@ public class VisitService {
             newVisit.setClientId(visit.getClient().getId());
             newVisit.setEmployeeId(visit.getMaster().getId());
             visitRepository.save(newVisit);
-            log.debug("точка 2");
 //            } else throw new IllegalArgumentException("Not enough visit data");
         }
         return getVisitFromVisitData(newVisit);
@@ -112,8 +111,47 @@ public class VisitService {
     }
 
     public List<Visit> getVisitsByDate(LocalDate searchDate) {
-        return visitRepository.findAllByVisitDate(searchDate).stream()
+        return visitRepository.findAllVisitsByVisitDate(searchDate).stream()
                 .map(this::getVisitFromVisitData)
                 .collect(Collectors.toList());
     }
+
+    public List<Visit> getVisitsByClient(String clientFullName) {
+        return visitRepository
+                .findAllVisitsByClientId(getClientByFullName(clientFullName).getId()).stream()
+                .map(this::getVisitFromVisitData)
+                .collect(Collectors.toList());
+    }
+
+    public Client getClientByFullName(String name) {
+        String[] fullName = name.split(" ");
+        return getClients().stream()
+                .filter(client1 -> client1.getFirstName().equals(fullName[0]))
+                .filter(client1 -> client1.getLastName().equals(fullName[1]))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    public Employee getEmployeeByFullName(String name) {
+        String[] fullName = name.split(" ");
+        return getEmployees().stream()
+                .filter(e -> e.getFirstName().equals(fullName[0]))
+                .filter(e -> e.getLastName().equals(fullName[1]))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    public List<Visit> getVisitsByMaster(String masterFullName) {
+        return visitRepository.
+                findAllVisitsByEmployeeId(getEmployeeByFullName(masterFullName).getId()).stream()
+                .map(this::getVisitFromVisitData)
+                .collect(Collectors.toList());
+    }
+
+    public List<Visit> getVisitsByService(Long serviceId) {
+        return visitRepository.findAllVisitsByServiceId(serviceId).stream()
+                .map(this::getVisitFromVisitData)
+                .collect(Collectors.toList());
+    }
+
 }

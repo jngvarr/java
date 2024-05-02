@@ -5,6 +5,8 @@ import {ApptService} from "../../services/appt.service";
 import {Time} from "@angular/common";
 import {Client} from "../../model/entities/client";
 import {Employee} from "../../model/entities/employee";
+import {Service} from "../../model/entities/service";
+import {ServiceForServices} from "../../services/service-for-services.service";
 
 @Component({
   selector: 'app-appt-list',
@@ -19,8 +21,18 @@ export class ApptListComponent implements OnInit {
   searchTime: Time | undefined;
   searchClient: Client | undefined;
   searchMaster: Employee | undefined;
+  service: Service | undefined;
+  services: Service[] | undefined;
 
-  constructor(private apptService: ApptService, private router: Router) {
+  constructor(private apptService: ApptService,
+              private router: Router,
+              private serviceService: ServiceForServices) {
+    this.serviceService.findAll().subscribe(
+      (data: Service[]) => {
+        this.services = data;
+      }, (error) => {
+        console.error('Error fetching masters:', error);
+      });
   }
 
   ngOnInit() {
@@ -46,6 +58,7 @@ export class ApptListComponent implements OnInit {
   //     this.isSearching = true;
   //   });
   // }
+
 
   deleteAppt(appt: Visit) {
     if (confirm('Вы уверены, что хотите удалить запись?')) {

@@ -1,8 +1,10 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Visit} from "../model/entities/visit";
 import {Time} from "@angular/common";
+import {Client} from "../model/entities/client";
+import {ClientService} from "./client.service";
 
 @Injectable({
   providedIn: 'root'
@@ -46,10 +48,13 @@ export class ApptService {
   findByService(value: string) {
     return this.http.get<Visit[]>(this.apptUrl + `/by-contact/${value}`)
   }
+
   findByClient(value: string) {
-    return this.http.get<Visit[]>(this.apptUrl + `/by-contact/${value}`)
+    return this.http.get<Visit[]>(this.apptUrl + `/by-client/${value}`)
   }
+
   findByMaster(value: string) {
-    return this.http.get<Visit[]>(this.apptUrl + `/by-contact/${value}`)
+    return this.http.get<Visit[]>(this.apptUrl + `/by-master/${value}`)
   }
+
 }

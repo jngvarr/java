@@ -46,6 +46,22 @@
                   <button type="button" class="btn btn-dark" (click)="searchByMaster(searchByMasterInput.value)">
                     Search
                   </button>
+                  <div class="mb-3">
+<!--                    <div class="inner-dropdown w-auto">-->
+                    <label for="service">По услуге</label>
+                      <select [(ngModel)]="service" id="service" name="service" class="form-control" (click)="$event.stopPropagation()">
+                        <option *ngFor="let s of services"
+                                [ngValue]="s">{{ s.title + " (" + s.description + ")" }}
+                        </option>
+                      </select>
+                    </div>
+<!--                  </div>-->
+
+                  <div class="mb-3">
+                  </div>
+                  <button type="button" class="btn btn-dark" (click)="searchByMaster(searchByMasterInput.value)">
+                    Search
+                  </button>
                 </form>
               </div>
             </div>
@@ -78,7 +94,7 @@
       <tr class="head text-center" *ngFor="let appt of appts">
         <!--        <td>{{ employee.id }}</td>-->
         <td>{{ appt.visitDate }}</td>
-        <td>{{ appt.startTime}}</td>
+        <td>{{ appt.startTime }}</td>
         <td>{{ appt.client.firstName + " " + (appt.client.lastName ? appt.client.lastName : "") }}
           <br> {{ appt.client.contact }}
         </td>
