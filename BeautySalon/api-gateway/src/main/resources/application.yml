@@ -1,0 +1,38 @@
+server:
+  port: 8765
+
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    active: eclient
+
+  config:
+    import: configserver:http://localhost:8888
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+
+
+      routes:
+        ##        - id: web
+        ##          uri: http://localhost:8080/
+        ##          predicates:
+        ##            - Path=/web/**
+        - id: storage
+          uri: http://localhost:8081/
+          predicates:
+            - Path=/storage/**
+        - id: payment
+          uri: http://localhost:8082/
+          predicates:
+            - Path=/payment/**
+#        - id: eserver
+#          uri: http://localhost:8761/
+#          predicates:
+#            - Path=/eureka/**
