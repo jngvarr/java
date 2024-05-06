@@ -9,7 +9,9 @@ spring:
 
   application:
     name: storage
-
+  config:
+    import:
+      configserver:http://localhost:8888
   jpa:
     show-sql: true
     generate-ddl: false

@@ -12,7 +12,9 @@ spring:
     user:
       name: user
       password: pass
-
+  config:
+    import:
+      configserver:http://localhost:8888
   cloud:
     openfeign:
       client:
