@@ -1,3 +1,35 @@
-.table td{
+.table td {
   vertical-align: middle;
 }
+
+.col-md-10 {
+  //overflow: hidden;
+  //display: flex;
+  //justify-content: center;
+
+  background-repeat: no-repeat;
+  background-position: 0 60px;
+  width: 100%;
+  height: auto;
+  background-image: url("../assets/images/background2.jpg");
+  background-size: contain;
+  align-content: normal;
+}
+
+body {
+  margin: 0;
+}
+
+.col-md-2 {
+  height: 100vh;
+  align-items: center;
+}
+
+#opacity{
+  opacity: .9;
+}
+.footimage {
+  width: 20px;
+  height: 20px;
+}
+

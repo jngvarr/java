@@ -2,6 +2,7 @@ package dao.entities;
 
 import dao.entities.people.Client;
 import dao.entities.people.Employee;
+import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 

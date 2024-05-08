@@ -11,6 +11,7 @@ import {StaffListComponent} from "./components/staff-list/staff-list.component";
 import {StaffFormComponent} from "./components/staff-form/staff-form.component";
 import {ApptListComponent} from "./components/appt-list/appt-list.component";
 import {ApptFormComponent} from "./components/appt-form/appt-form.component";
+import {ApptRegistrationFormComponent} from "./components/appt-refistration-form/appt-registration-form.component";
 
 const routes: Routes = [
   { path: 'clients', component: ClientListComponent },
@@ -33,7 +34,11 @@ const routes: Routes = [
 
   { path: 'clients/delete', component: ClientListComponent },
   { path: 'services/delete', component: ServiceListComponent },
-  { path: 'storage/delete', component: ConsumablesListComponent }
+  { path: 'storage/delete', component: ConsumablesListComponent },
+
+  { path: 'registration', component: ApptRegistrationFormComponent },
+  { path: 'login', component: ApptLoginFormComponent }
+
 
 ];
 

@@ -23,11 +23,11 @@ spring:
         - id: clients
           uri: http://localhost:8081/
           predicates:
-            - Path=/clients/** -
+            - Path=/clients/**
         - id: services
           uri: http://localhost:8082/
           predicates:
-        - Path=/services/**
+            - Path=/services/**
         - id: storage
           uri: http://localhost:8083/
           predicates:
@@ -44,3 +44,5 @@ spring:
           uri: http://localhost:8761/
           predicates:
             - Path=/eureka/**
+#  main:
+#    web-application-type: reactive

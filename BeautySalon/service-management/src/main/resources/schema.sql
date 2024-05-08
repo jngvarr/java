@@ -25,15 +25,16 @@ create table if not exists service_to_consumable
 -- select *from consumables;
 
 
-alter table service_to_consumable
-    add constraint service_to_consumable_consumable__fk
-        foreign key () references consumable ();
+-- alter table service_to_consumable
+--     add constraint service_to_consumable_consumable__fk
+--         foreign key (consumable_id) references consumables (id);
+--         foreign key () references salon.consumables ();
 
-alter table service_to_consumable
-    add constraint service_to_consumable_services_id_fk
-        foreign key (service_id) references services;
+-- alter table service_to_consumable
+--     add constraint service_to_consumable_services_id_fk
+--         foreign key (service_id) references services;
 
-create table consumables
+create table if not exists consumables
 (
     id       integer primary key   not null default nextval('consumables_id_seq'::regclass),
     title    character varying(50) not null,

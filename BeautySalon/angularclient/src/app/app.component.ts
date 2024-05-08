@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -8,8 +8,15 @@ import { Component } from '@angular/core';
 export class AppComponent {
 
   title: string | undefined;
-
+  image = '../assets/images/background.jpg';
   // constructor() {
   //   this.title = 'Beauty Salon';
   // }
+  login() {
+
+  }
+
+  registration() {
+
+  }
 }

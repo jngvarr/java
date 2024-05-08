@@ -19,6 +19,8 @@ import {ServiceForServices} from "./services/service-for-services.service";
 import {StorageService} from "./services/storage.service";
 import {ApptService} from "./services/appt.service";
 import {StaffService} from "./services/staff.service";
+import {NgOptimizedImage} from "@angular/common";
+import { ApptRegistrationFormComponent } from './components/appt-refistration-form/appt-registration-form.component';
 
 
 @NgModule({
@@ -33,14 +35,16 @@ import {StaffService} from "./services/staff.service";
     StaffListComponent,
     StaffFormComponent,
     ApptFormComponent,
-    ApptListComponent
+    ApptListComponent,
+    ApptRegistrationFormComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    FormsModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        HttpClientModule,
+        FormsModule,
+        NgOptimizedImage
+    ],
   providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService],
   bootstrap: [AppComponent]
 })

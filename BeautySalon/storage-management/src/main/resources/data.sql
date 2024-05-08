@@ -13,3 +13,4 @@ from consumables;
 -- SELECT t.*
 -- FROM public.consumables t;
 
+--

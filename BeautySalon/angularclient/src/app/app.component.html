@@ -1,14 +1,18 @@
-<div class="container-fluid">
+<div class="container-fluid" xmlns:float="http://www.w3.org/1999/xhtml">
   <!-- Хедер -->
-  <header class="opacity-25 row bg-dark py-3">
+  <header class="row bg-dark py-3">
+
     <div class="col-md-12">
       <h1 class="text-white text-center">Beauty Salon</h1>
+      <div class="buttons" style="float: right">
+        <button type="button" routerLink="/login" class="btn btn-outline-light m-1 btn-sm">Login</button>
+        <button type="button" routerLink="/registration" class="btn btn-outline-light mr-2 btn-sm">Registration</button>
+      </div>
     </div>
 
   </header>
-
   <div class="row">
-    <div class="col-md-2 bg-dark height: height: calc(100vh - headerHeight - footerHeight">
+    <div class="col-md-2 bg-dark p-6">
       <!-- Нижняя часть (боковое меню) -->
       <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark text-center" style="width: 200px;">
         <!-- Ваше боковое меню -->
@@ -21,11 +25,11 @@
           </a>
           <hr>
           <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-              <a href="#" class="nav-link " aria-current="page">
-                Home
-              </a>
-            </li>
+<!--            <li class="nav-item">-->
+<!--              <a href="#" class="nav-link " aria-current="page">-->
+<!--                Home-->
+<!--              </a>-->
+<!--            </li>-->
             <li>
               <a routerLink="/staff" class="btn">
                 Staff
@@ -56,18 +60,21 @@
       </div>
     </div>
     <div class="col-md-10 ">
-      <router-outlet></router-outlet>
+      <div id="opacity">
+        <!--  <div id="background" [ngStyle]="{backgroundImage:'url('+ image +')'}">-->
+        <router-outlet></router-outlet>
+      </div>
     </div>
+
+    <!-- Футер -->
+    <footer class="row bg-secondary py-3 mt-5 footer fixed-bottom">
+      <div class="col-md-12">
+        <img class="footimage m-2" src="favicon.ico" alt="salon.img">
+        <span class="text-white p-1">Footer Content</span>
+      </div>
+    </footer>
   </div>
-
-  <!-- Футер -->
-  <footer class="row bg-secondary py-3 mt-5 footer fixed-bottom">
-    <div class="col-md-12">
-      <p class="text-white text-center">Footer Content</p>
-    </div>
-  </footer>
 </div>
-
 
 
 

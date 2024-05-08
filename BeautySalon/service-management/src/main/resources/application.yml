@@ -5,7 +5,9 @@ spring:
     user:
       name: user
       password: pass
-
+  config:
+    import:
+      configserver:http://localhost:8888
   application:
     name: services
 
@@ -17,6 +19,7 @@ spring:
 
     properties:
       hibernate:
+#        enable_lazy_load_no_trans: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
     url: jdbc:postgresql://147.45.102.248:5432/salondb
@@ -27,7 +30,7 @@ spring:
       maximum-pool-size: 2
       minimum-idle: 5
   sql:
-  init:
+    init:
       mode: always
 
 logging:

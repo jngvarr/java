@@ -69,6 +69,7 @@ export class ApptListComponent implements OnInit {
   // }
 
 
+
   deleteAppt(appt: Visit) {
     if (confirm('Вы уверены, что хотите удалить запись?')) {
       this.apptService.delete(appt.id).subscribe(() => {

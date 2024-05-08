@@ -21,6 +21,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring-cloud.version>2023.0.1</spring-cloud.version>
     </properties>
 
     <modules>
@@ -33,6 +34,7 @@
         <module>web-client</module>
         <module>eureka</module>
         <module>config-server</module>
+        <module>api-gateway</module>
     </modules>
 
     <dependencies>

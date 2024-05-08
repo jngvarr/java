@@ -22,8 +22,7 @@ public class ServiceForServices {
 
     public Servize getService(Long id) {
         Optional<Servize> neededService = salonServiceRepository.findById(id);
-        if (neededService.isPresent()) return neededService.get();
-        else throw new NeededObjectNotFound("Service not found");
+        return neededService.orElseThrow(() -> new NeededObjectNotFound("Service not found: " + id));
     }
 
     public Servize addService(Servize newService) {

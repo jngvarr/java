@@ -1,0 +1,81 @@
+<div class="card my-5">
+  <div class="card-body">
+    <h3 [hidden]="editMode">User Registration Form:</h3>
+    <h3 [hidden]="!editMode">Please Login:</h3>
+    <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" [(ngModel)]="user?.userName"
+               class="form-control"
+               id="username"
+               name="username"
+               placeholder="Enter user name (nick name):"
+               required #userName="ngModel">
+        <!--заполнение поля обязательно-->
+      </div>
+      <div [hidden]="!userName.pristine" class="alert alert-danger">User name is required
+        <!--вывод поля-сообщения при незаполненном основном-->
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input type="email" [(ngModel)]="user?.email"
+               class="form-control"
+               id="email"
+               name="email"
+               placeholder="Enter user email"
+               required #email="ngModel">
+      </div>
+      <div [hidden]="!email.pristine" class="alert alert-danger">E-mail is required</div>
+
+      <div class="form-group">
+        <label for="firstname">User name</label>
+        <input type="text" [(ngModel)]="user?.firstName"
+               class="form-control"
+               id="firstname"
+               name="firstname"
+               placeholder="Enter firstname"
+               required #firstName="ngModel"
+               [readonly]="editMode">
+      </div>
+      <div [hidden]="!firstName.pristine" class="alert alert-danger">Firstname is required</div>
+
+      <div class="form-group">
+        <label for="lastName">User lastname</label>
+        <input type="text" [(ngModel)]="user?.lastName"
+               class="form-control"
+               id="lastName"
+               name="lastName"
+               placeholder="Enter lastname"
+               required #lastName="ngModel"
+               [readonly]="editMode">
+      </div>
+      <div [hidden]="!lastName.pristine" class="alert alert-danger">Lastname is required</div>
+
+      <div class="form-group">
+        <label for="user-contact">Phone number</label>
+        <input type="text" [(ngModel)]="user?.contact"
+               class="form-control"
+               id="user-contact"
+               name="user-contact"
+               placeholder="Enter phone number"
+               required #userContact="ngModel"
+               [readonly]="editMode">
+      </div>
+      <div [hidden]="!userContact.pristine" class="alert alert-danger">Phone number is required</div>
+
+      <div class="form-group">
+        <label for="user-dob">Phone number</label>
+        <input type="datetime-local" [(ngModel)]="user?.dob"
+               class="form-control"
+               id="user-dob"
+               name="user-dob"
+               placeholder="Enter date of birth"
+               [readonly]="editMode">
+      </div>
+
+      <button type="submit" class="btn btn-dark btn-sm">Register</button>
+      <a routerLink="/home" class="btn btn-dark btn-sm m-2">Back</a>
+    </form>
+  </div>
+</div>
