@@ -33,7 +33,6 @@ export class ServiceFormComponent implements OnInit {
         console.error('Ошибка при загрузке данных о расходных материалах:', error);
       }
     );
-
     this.route.params.subscribe(params => {
       const serviceId = params['id'];
       if (serviceId) {

@@ -1,12 +1,13 @@
 <div class="container-fluid" xmlns:float="http://www.w3.org/1999/xhtml">
   <!-- Хедер -->
-  <header class="row bg-dark py-3">
+  <header class="row bg-dark p-1">
 
     <div class="col-md-12">
-      <h1 class="text-white text-center">Beauty Salon</h1>
-      <div class="buttons" style="float: right">
-        <button type="button" routerLink="/login" class="btn btn-outline-light m-1 btn-sm">Login</button>
-        <button type="button" routerLink="/registration" class="btn btn-outline-light mr-2 btn-sm">Registration</button>
+      <h1 class="text-white text-center pt-3 ">Beauty Salon</h1>
+      <div class="buttons">
+        <button type="button" (click)="login()" routerLink="/login" class="btn btn-outline-light m-1 btn-sm">Login
+        </button>
+        <button type="button" (click)="login()" routerLink="/registration" class="btn btn-outline-light mr-2 btn-sm">Registration</button>
       </div>
     </div>
 
@@ -25,11 +26,6 @@
           </a>
           <hr>
           <ul class="nav nav-pills flex-column mb-auto">
-<!--            <li class="nav-item">-->
-<!--              <a href="#" class="nav-link " aria-current="page">-->
-<!--                Home-->
-<!--              </a>-->
-<!--            </li>-->
             <li>
               <a routerLink="/staff" class="btn">
                 Staff
@@ -67,7 +63,7 @@
     </div>
 
     <!-- Футер -->
-    <footer class="row bg-secondary py-3 mt-5 footer fixed-bottom">
+    <footer class="row bg-dark py-1 mt-1 footer fixed-bottom">
       <div class="col-md-12">
         <img class="footimage m-2" src="favicon.ico" alt="salon.img">
         <span class="text-white p-1">Footer Content</span>
