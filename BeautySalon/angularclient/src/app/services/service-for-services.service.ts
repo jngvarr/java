@@ -11,7 +11,8 @@ export class ServiceForServices {
   private servicesUrl: string;
 
   constructor(private http: HttpClient) {
-    this.servicesUrl = 'http://localhost:8082/services';
+    this.servicesUrl = 'http://localhost:8765/services';
+    // this.servicesUrl = 'http://localhost:8082/services';
   }
   public findAll(): Observable<Service[]> {
     return this.http.get<Service[]>(this.servicesUrl);

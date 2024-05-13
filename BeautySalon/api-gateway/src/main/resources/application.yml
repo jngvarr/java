@@ -17,8 +17,6 @@ spring:
           enabled: true
           lower-case-service-id: true
 
-
-
       routes:
         - id: clients
           uri: http://localhost:8081/

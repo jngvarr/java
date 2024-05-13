@@ -1,6 +1,7 @@
 export enum empFunction {
-  ADMIN = "Администратор",
+  MANAGER = "Администратор",
   HAIRDRESSER = "Парикмахер",
   NAILMASTER = "Ногтевой мастер",
-  CLEANING = "Уборщица"
+  CLEANING = "Уборщица",
+  ADMIN = "Системный администратор"
 }

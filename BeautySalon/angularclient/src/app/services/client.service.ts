@@ -9,7 +9,7 @@ export class ClientService {
   private clientsUrl: string;
 
   constructor(private http: HttpClient) {
-    this.clientsUrl = 'http://localhost:8081/clients';
+    this.clientsUrl = 'http://localhost:8765/clients';
   }
 
   public findAll(): Observable<Client[]> {

@@ -10,7 +10,8 @@ export class StorageService {
   private storagesUrl: string;
 
   constructor(private http: HttpClient) {
-    this.storagesUrl = 'http://localhost:8083/storage';
+    // this.storagesUrl = 'http://localhost:8083/storage';
+    this.storagesUrl = 'http://localhost:8765/storage';
   }
   public findAll(): Observable<Consumable[]> {
     return this.http.get<Consumable[]>(this.storagesUrl).pipe(

@@ -7,8 +7,8 @@ import {User} from "../../model/entities/user";
   styleUrl: './appt-registration-form.component.scss'
 })
 export class ApptRegistrationFormComponent {
-  protected user: User | undefined;
-  editMode: boolean;
+  protected user: User = new User();
+  editMode: boolean = false;
 
   onSubmit() {
 

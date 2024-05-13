@@ -5,7 +5,7 @@
     <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" [(ngModel)]="user?.userName"
+        <input type="text" [(ngModel)]="user.userName"
                class="form-control"
                id="username"
                name="username"
@@ -19,7 +19,7 @@
 
       <div class="form-group">
         <label for="email">E-mail</label>
-        <input type="email" [(ngModel)]="user?.email"
+        <input type="email" [(ngModel)]="user.email"
                class="form-control"
                id="email"
                name="email"
@@ -30,7 +30,7 @@
 
       <div class="form-group">
         <label for="firstname">User name</label>
-        <input type="text" [(ngModel)]="user?.firstName"
+        <input type="text" [(ngModel)]="user.firstName"
                class="form-control"
                id="firstname"
                name="firstname"
@@ -42,7 +42,7 @@
 
       <div class="form-group">
         <label for="lastName">User lastname</label>
-        <input type="text" [(ngModel)]="user?.lastName"
+        <input type="text" [(ngModel)]="user.lastName"
                class="form-control"
                id="lastName"
                name="lastName"
@@ -54,7 +54,7 @@
 
       <div class="form-group">
         <label for="user-contact">Phone number</label>
-        <input type="text" [(ngModel)]="user?.contact"
+        <input type="text" [(ngModel)]="user.contact"
                class="form-control"
                id="user-contact"
                name="user-contact"
@@ -66,7 +66,7 @@
 
       <div class="form-group">
         <label for="user-dob">Phone number</label>
-        <input type="datetime-local" [(ngModel)]="user?.dob"
+        <input type="datetime-local" [(ngModel)]="user.dob"
                class="form-control"
                id="user-dob"
                name="user-dob"

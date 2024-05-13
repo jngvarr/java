@@ -37,7 +37,7 @@ const routes: Routes = [
   { path: 'storage/delete', component: ConsumablesListComponent },
 
   { path: 'registration', component: ApptRegistrationFormComponent },
-  { path: 'login', component: ApptLoginFormComponent }
+  { path: 'login', component: ApptRegistrationFormComponent }
 
 
 ];
