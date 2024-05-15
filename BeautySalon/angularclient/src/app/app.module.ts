@@ -21,8 +21,7 @@ import {ApptService} from "./services/appt.service";
 import {StaffService} from "./services/staff.service";
 import {NgOptimizedImage} from "@angular/common";
 import { RegistrationFormComponent } from './components/registration-form/registration-form.component';
-import { LoginComponentComponent } from './components/login-component/login-component.component';
-
+import { LoginFormComponent } from './components/login-component/login-form.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +37,7 @@ import { LoginComponentComponent } from './components/login-component/login-comp
     ApptFormComponent,
     ApptListComponent,
     RegistrationFormComponent,
-    LoginComponentComponent
+    LoginFormComponent
   ],
     imports: [
         BrowserModule,

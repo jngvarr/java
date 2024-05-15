@@ -1,9 +1,8 @@
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
-import { ClientListComponent } from './components/client-list/client-list.component';
-import { ClientFormComponent } from './components/client-form/client-form.component';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
+import {ClientListComponent} from './components/client-list/client-list.component';
+import {ClientFormComponent} from './components/client-form/client-form.component';
 import {ServiceListComponent} from "./components/service-list/service-list.component";
-import {Service} from "./model/entities/service";
 import {ServiceFormComponent} from "./components/service-form/service-form.component";
 import {ConsumablesListComponent} from "./components/storage-list/consumables-list.component";
 import {ConsumablesFormComponent} from "./components/storage-form/consumables-form.component";
@@ -12,10 +11,11 @@ import {StaffFormComponent} from "./components/staff-form/staff-form.component";
 import {ApptListComponent} from "./components/appt-list/appt-list.component";
 import {ApptFormComponent} from "./components/appt-form/appt-form.component";
 import {RegistrationFormComponent} from "./components/registration-form/registration-form.component";
+import {LoginFormComponent} from "./components/login-component/login-form.component";
 
 const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
+  // { path: '', component: HomeComponent },
+  // { path: 'login', component: LoginComponent },
   { path: 'clients', component: ClientListComponent },
   { path: 'services', component: ServiceListComponent },
   { path: 'storage', component: ConsumablesListComponent },
@@ -39,7 +39,7 @@ const routes: Routes = [
   { path: 'storage/delete', component: ConsumablesListComponent },
 
   { path: 'registration', component: RegistrationFormComponent },
-  { path: 'login', component: RegistrationFormComponent }
+  { path: 'login', component: LoginFormComponent }
 
 
 ];

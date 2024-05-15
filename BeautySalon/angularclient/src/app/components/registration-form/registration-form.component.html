@@ -1,10 +1,10 @@
 <div class="card my-5">
   <div class="card-body">
-    <h3 [hidden]="log">User Registration Form:</h3>
-    <h3 [hidden]="!log">Please Login:</h3>
-    <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
+    <h3>User Registration Form:</h3>
+
+    <form (ngSubmit)="onSubmit(registrationForm)" #registrationForm="ngForm">
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username">Username<span class="required-field">*</span></label>
         <input type="text" [(ngModel)]="user.userName"
                class="form-control"
                id="username"
@@ -13,69 +13,99 @@
                required #userName="ngModel">
         <!--заполнение поля обязательно-->
       </div>
-      <div [hidden]="!userName.pristine" class="alert alert-danger">User name is required
-        <!--вывод поля-сообщения при незаполненном основном-->
+      <div *ngIf="registrationForm.submitted && !userName.valid" class="alert alert-danger">User name is required
+        <!--      <div [hidden]="!userName.pristine" class="alert alert-danger">User name is required-->
       </div>
 
       <div class="form-group">
-        <label for="email">E-mail</label>
+        <label for="password">Password<span class="required-field">*</span></label>
+        <input type="password" [(ngModel)]="user.password"
+               class="form-control"
+               id="password"
+               name="password"
+               placeholder="Enter password:"
+               minlength="8"
+               [ngClass]="{'has-error': password.dirty && password.invalid}"
+               required #password="ngModel">
+        <div *ngIf="registrationForm.submitted && password.invalid" class="alert alert-danger">
+          Password is required and must be at least 8 characters.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password<span class="required-field">*</span></label>
+        <input type="password" [(ngModel)]="confirmPassword"
+               class="form-control"
+               id="confirmPassword"
+               name="confirmPassword"
+               placeholder="Confirm password"
+               minlength="8"
+               [ngClass]="{'has-error': confirmPasswordField.dirty && confirmPasswordField.invalid || (registrationForm.submitted && !passwordsMatch())}"
+               required #confirmPasswordField="ngModel">
+        <div *ngIf="registrationForm.submitted && !passwordsMatch()" class="alert alert-danger">
+          Passwords do not match.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail<span class="required-field">*</span></label>
         <input type="email" [(ngModel)]="user.email"
                class="form-control"
                id="email"
                name="email"
                placeholder="Enter user email"
-               required #email="ngModel">
+               required #email="ngModel"
+               email
+               [ngClass]="{'has-error': email.dirty && email.invalid}">
       </div>
-      <div [hidden]="!email.pristine" class="alert alert-danger">E-mail is required</div>
+      <div *ngIf="registrationForm.submitted && !email.valid && emailFormatValid()" class="alert alert-danger">Wrong format of e-mail</div>
 
       <div class="form-group">
-        <label for="firstname">User name</label>
+        <label for="firstname">First name</label>
         <input type="text" [(ngModel)]="user.firstName"
                class="form-control"
                id="firstname"
                name="firstname"
                placeholder="Enter firstname"
-               required #firstName="ngModel"
-               [readonly]="log">
+               required #firstName="ngModel">
+
       </div>
-      <div [hidden]="!firstName.pristine" class="alert alert-danger">Firstname is required</div>
 
       <div class="form-group">
-        <label for="lastName">User lastname</label>
+        <label for="lastName">Lastname</label>
         <input type="text" [(ngModel)]="user.lastName"
                class="form-control"
                id="lastName"
                name="lastName"
                placeholder="Enter lastname"
                required #lastName="ngModel"
-               [readonly]="log">
+        >
       </div>
-      <div [hidden]="!lastName.pristine" class="alert alert-danger">Lastname is required</div>
 
       <div class="form-group">
-        <label for="user-contact">Phone number</label>
+        <label for="user-contact">Phone number<span class="required-field">*</span></label>
         <input type="text" [(ngModel)]="user.contact"
                class="form-control"
                id="user-contact"
                name="user-contact"
                placeholder="Enter phone number"
-               required #userContact="ngModel"
-               [readonly]="log">
+               required #userContact="ngModel">
       </div>
-      <div [hidden]="!userContact.pristine" class="alert alert-danger">Phone number is required</div>
+      <div *ngIf="registrationForm.submitted && !userContact.valid" class="alert alert-danger">Phone number is
+        required
+      </div>
 
       <div class="form-group">
-        <label for="user-dob">Phone number</label>
+        <label for="user-dob">Date of birth</label>
         <input type="datetime-local" [(ngModel)]="user.dob"
                class="form-control"
                id="user-dob"
                name="user-dob"
-               placeholder="Enter date of birth"
-               [readonly]="log">
+               placeholder="Enter date of birth">
       </div>
 
       <button type="submit" class="btn btn-dark btn-sm">Register</button>
-      <a routerLink="/home" class="btn btn-dark btn-sm m-2">Back</a>
+      <a routerLink="/" class="btn btn-dark btn-sm m-2">Back</a>
     </form>
   </div>
 </div>

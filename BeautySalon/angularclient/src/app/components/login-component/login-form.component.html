@@ -1,0 +1,27 @@
+<div class="card my-5">
+  <div class="card-body">
+    <h3>User Login:</h3>
+    <form name="form" (ngSubmit)="f.form.valid && login()" #f="ngForm" novalidate>
+      <div [ngClass]="{ 'has-error': f.submitted && !username.valid }">
+        <label class="lbl m-2" for="username">Username</label>
+        <input type="text"
+               name="username" [(ngModel)]="user.userName"
+               id="username"
+               #username="ngModel" required/>
+        <div *ngIf="f.submitted && !username.valid">Username is required
+        </div>
+      </div>
+      <div [ngClass]="{ 'has-error': f.submitted && !password.valid }">
+        <label class="lbl m-2" for="password">Password</label>
+        <input type="password"
+               name="password" [(ngModel)]="user.password"
+               id="password"
+               #password="ngModel" required/>
+        <div *ngIf="f.submitted && !password.valid">Password is required
+        </div>
+      </div>
+      <button [disabled]="!f.valid" type="submit" class="btn btn-dark btn-sm">Login</button>
+      <a routerLink="/" class="btn btn-dark btn-sm m-2">Back</a>
+    </form>
+  </div>
+</div>

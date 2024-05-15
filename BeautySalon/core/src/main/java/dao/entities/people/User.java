@@ -1,11 +1,7 @@
 package dao.entities.people;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +18,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @NoArgsConstructor(force = true)
 public class User extends SomeOne implements UserDetails {
+    @Column(name = "user_name")
     private final String userName;
+    @Column(name = "password")
+    private final String password;
+    @Column(name = "email")
     private final String email;
 
     @Override
@@ -33,14 +33,10 @@ public class User extends SomeOne implements UserDetails {
     }
 
     @Override
-    public String getPassword() {
-        return null;
-    }
-
-    @Override
     public String getUsername() {
         return null;
     }
+
 
     @Override
     public boolean isAccountNonExpired() {

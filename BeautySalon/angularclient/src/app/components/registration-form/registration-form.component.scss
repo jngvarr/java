@@ -1,3 +1,11 @@
 //.hiding block {
 // [hidden]="!log";
 //}
+.required-field {
+  color: red; /* Цвет звездочки */
+  margin-left: 2px; /* Отступ слева от метки */
+}
+
+.has-error {
+  border-color: red;
+}
