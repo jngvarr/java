@@ -4,6 +4,7 @@ import dao.entities.Servize;
 import dao.entities.Visit;
 import dao.entities.people.Client;
 import dao.entities.people.Employee;
+import exceptions.NeededObjectNotFound;
 import feign_clients.ClientFeignClient;
 import feign_clients.ServiceFeignClient;
 import feign_clients.StaffFeignClient;
@@ -49,8 +50,7 @@ public class VisitService {
 
     public Visit getVisit(Long id) {
         Optional<VisitData> neededVisit = visitRepository.findById(id);
-        if (neededVisit.isPresent()) return getVisitFromVisitData(neededVisit.get());
-        else throw new IllegalArgumentException("Visit not found");
+        return getVisitFromVisitData(neededVisit.orElseThrow(() -> new NeededObjectNotFound("Visit not found: " + id)));
     }
 
     public Visit create(Visit visit) {
@@ -81,17 +81,27 @@ public class VisitService {
     }
 
     public Visit update(Visit newData, Long id) {
-        Optional<VisitData> oldVisit = visitRepository.findById(id);
-        if (oldVisit.isPresent()) {
-            VisitData newVisit = oldVisit.get();
-            if (newData.getVisitDate() != null) newVisit.setVisitDate(newData.getVisitDate());
-            if (newData.getStartTime() != null) newVisit.setStartTime(newData.getStartTime());
-            if (newData.getClient().getId() != null) newVisit.setClientId(newData.getClient().getId());
-            if (newData.getService().getId() != null) newVisit.setServiceId(newData.getService().getId());
-            if (newData.getMaster().getId() != null) newVisit.setEmployeeId(newData.getMaster().getId());
-            return getVisitFromVisitData(visitRepository.save(newVisit));
-        } else throw new IllegalArgumentException("Visit not found");
+        Optional<VisitData> oldVisitOpt = visitRepository.findById(id);
+        VisitData oldVisit = oldVisitOpt.orElseThrow(() -> new NeededObjectNotFound("Visit not found: " + id));
+        if (newData.getVisitDate() != null) {
+            oldVisit.setVisitDate(newData.getVisitDate());
+        }
+        if (newData.getStartTime() != null) {
+            oldVisit.setStartTime(newData.getStartTime());
+        }
+        if (newData.getClient() != null && newData.getClient().getId() != null) {
+            oldVisit.setClientId(newData.getClient().getId());
+        }
+        if (newData.getService() != null && newData.getService().getId() != null) {
+            oldVisit.setServiceId(newData.getService().getId());
+        }
+        if (newData.getMaster() != null && newData.getMaster().getId() != null) {
+            oldVisit.setEmployeeId(newData.getMaster().getId());
+        }
+        VisitData savedVisitData = visitRepository.save(oldVisit);
+        return getVisitFromVisitData(savedVisitData);
     }
+
 
     public void delete(Long id) {
         visitRepository.deleteById(id);
