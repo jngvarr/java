@@ -20,7 +20,7 @@ export class RegistrationFormComponent {
   }
 
   onSubmit() {
-    this.registrationService.save(this.user).subscribe(result => this.gotoUserList());
+    // this.registrationService.save(this.user).subscribe(result => this.gotoUserList());
   }
 
   gotoUserList() {

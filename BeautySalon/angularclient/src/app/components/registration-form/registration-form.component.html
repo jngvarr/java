@@ -1,7 +1,7 @@
 <div class="card my-5">
   <div class="card-body">
-    <h3 [hidden]="editMode">User Registration Form:</h3>
-    <h3 [hidden]="!editMode">Please Login:</h3>
+    <h3 [hidden]="log">User Registration Form:</h3>
+    <h3 [hidden]="!log">Please Login:</h3>
     <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
       <div class="form-group">
         <label for="username">Username</label>
@@ -36,7 +36,7 @@
                name="firstname"
                placeholder="Enter firstname"
                required #firstName="ngModel"
-               [readonly]="editMode">
+               [readonly]="log">
       </div>
       <div [hidden]="!firstName.pristine" class="alert alert-danger">Firstname is required</div>
 
@@ -48,7 +48,7 @@
                name="lastName"
                placeholder="Enter lastname"
                required #lastName="ngModel"
-               [readonly]="editMode">
+               [readonly]="log">
       </div>
       <div [hidden]="!lastName.pristine" class="alert alert-danger">Lastname is required</div>
 
@@ -60,7 +60,7 @@
                name="user-contact"
                placeholder="Enter phone number"
                required #userContact="ngModel"
-               [readonly]="editMode">
+               [readonly]="log">
       </div>
       <div [hidden]="!userContact.pristine" class="alert alert-danger">Phone number is required</div>
 
@@ -71,7 +71,7 @@
                id="user-dob"
                name="user-dob"
                placeholder="Enter date of birth"
-               [readonly]="editMode">
+               [readonly]="log">
       </div>
 
       <button type="submit" class="btn btn-dark btn-sm">Register</button>

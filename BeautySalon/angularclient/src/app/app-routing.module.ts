@@ -11,9 +11,11 @@ import {StaffListComponent} from "./components/staff-list/staff-list.component";
 import {StaffFormComponent} from "./components/staff-form/staff-form.component";
 import {ApptListComponent} from "./components/appt-list/appt-list.component";
 import {ApptFormComponent} from "./components/appt-form/appt-form.component";
-import {ApptRegistrationFormComponent} from "./components/appt-refistration-form/appt-registration-form.component";
+import {RegistrationFormComponent} from "./components/registration-form/registration-form.component";
 
 const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'login', component: LoginComponent },
   { path: 'clients', component: ClientListComponent },
   { path: 'services', component: ServiceListComponent },
   { path: 'storage', component: ConsumablesListComponent },
@@ -36,8 +38,8 @@ const routes: Routes = [
   { path: 'services/delete', component: ServiceListComponent },
   { path: 'storage/delete', component: ConsumablesListComponent },
 
-  { path: 'registration', component: ApptRegistrationFormComponent },
-  { path: 'login', component: ApptRegistrationFormComponent }
+  { path: 'registration', component: RegistrationFormComponent },
+  { path: 'login', component: RegistrationFormComponent }
 
 
 ];
