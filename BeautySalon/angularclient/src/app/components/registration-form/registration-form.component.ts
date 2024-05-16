@@ -23,7 +23,7 @@ export class RegistrationFormComponent {
   onSubmit(form: NgForm) {
     if (form.valid && this.passwordsMatch()) {
       this.registration(this.user);
-      this.router.navigate(['/login']);
+
       console.log('Form Submitted!', this.user);
     } else {
       console.error('Form is invalid or passwords do not match');
@@ -40,10 +40,14 @@ export class RegistrationFormComponent {
   }
 
   registration(user: User){
-
+    this.registrationService.save(user).subscribe(result => this.regSuccess());
   }
 
   emailFormatValid() {
     return this.user.email?.includes("@") && this.user.email?.includes(".");
+  }
+
+  private regSuccess() {
+    this.router.navigate(['/login']);
   }
 }
