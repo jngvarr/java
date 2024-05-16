@@ -20,29 +20,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests()
-                .antMatchers("/registration").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                .permitAll()
-                .and()
-                .logout()
-                .permitAll();
-
-//        // Для доступа к H2 консоли
-//        http.csrf().disable();
-//        http.headers().frameOptions().disable();
+        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                                .requestMatchers("/users/create").permitAll()
+                                .requestMatchers("/login").permitAll()
+//                .requestMatchers("/public/**").permitAll()
+//                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+//                ).formLogin(form -> form
+//                        .loginPage("/login")
+//                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                );
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationManagerBuilder configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-        return auth;
     }
 
     @Bean

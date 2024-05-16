@@ -47,8 +47,7 @@ public class VisitController {
 
     @GetMapping("/by-service/{serviceId}")
     public List<Visit> getVisitsByService(@PathVariable Long serviceId) {
-        List<Visit> visits = visitService.getVisitsByService(serviceId);
-        return visits;
+        return visitService.getVisitsByService(serviceId);
     }
 
 //    @GetMapping("/clients")

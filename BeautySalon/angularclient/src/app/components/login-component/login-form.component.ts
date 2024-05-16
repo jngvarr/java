@@ -26,7 +26,7 @@ export class LoginFormComponent implements OnInit{
   }
 
   login() {
-    let url = 'http://localhost:8082/login';
+    let url = 'http://localhost:8765/login';
     this.http.post(url, {
       userName: this.user.userName,
       password: this.user.password

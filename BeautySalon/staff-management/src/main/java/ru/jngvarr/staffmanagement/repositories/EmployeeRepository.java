@@ -19,4 +19,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findAllByContact(String contact);
 
     List<Employee> findAllByFunction(Function function);
+
+    Employee getEmployeeByContact(String phoneNumber);
 }

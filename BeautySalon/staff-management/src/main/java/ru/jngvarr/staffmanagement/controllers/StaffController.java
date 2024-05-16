@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/staff")
 @CrossOrigin(origins = "http://localhost:4200")
-public class    StaffController {
+public class StaffController {
     private final StaffService staffService;
 
     @GetMapping
@@ -26,6 +26,11 @@ public class    StaffController {
     @GetMapping("/{id}")
     public Employee getEmployee(@PathVariable Long id) {
         return staffService.getEmployee(id);
+    }
+
+    @GetMapping("/by-phone/{phoneNumber}")
+    public Employee getEmployeeByPhone(@PathVariable String phoneNumber) {
+        return staffService.getEmployeeByPhone(phoneNumber);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -59,6 +64,7 @@ public class    StaffController {
         log.debug("number={}", phoneNumber);
         return staffService.getEmployeeByContact(phoneNumber);
     }
+
     @GetMapping("/by-function/{function}")
     public List<Employee> getEmployeeByFunction(@PathVariable String function) {
         log.debug("number={}", function);

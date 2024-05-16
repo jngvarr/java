@@ -3,11 +3,13 @@ package ru.jngvarr.clientmanagement.controllers;
 import dao.entities.people.User;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
 
 @Data
+@Log4j2
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public class UserController {
 
     @PostMapping("/create")
     public UserDetails createUser(@RequestBody User user) {
+        log.debug("create{} ", user.getId());
         return userService.addUser(user);
     }
 }

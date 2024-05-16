@@ -77,4 +77,8 @@ public class StaffService {
     public void delete(Long id) {
         employeeRepository.deleteById(id);
     }
+
+    public Employee getEmployeeByPhone(String phoneNumber) {
+        return employeeRepository.getEmployeeByContact(phoneNumber);
+    }
 }
