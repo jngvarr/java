@@ -7,37 +7,39 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import ru.jngvarr.clientmanagement.repositories.UserRepository;
+import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
 
 import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
 public class AuthenticationProviderImpl implements AuthenticationProvider {
-    private final UserRepository userRepository;
+    private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        //Ищем пользователя с указанным адресом электронной почты
+        //Ищем пользователя с указанным логином
         String requestUsername = authentication.getName();
-        User user;
+        UserDetails userDetails;
         if (requestUsername != null) {
-            user = userRepository.getUserByUserName(requestUsername);
+            userDetails = userDetailsService.loadUserByUsername(requestUsername);
         } else throw new BadCredentialsException("Пользователь с таким логином не найден");
 
         //Сравниваем пароли из запроса и пользователя из БД
         String requestPassword = authentication.getCredentials().toString();
-        if (!passwordEncoder.matches(requestPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(requestPassword, userDetails.getPassword())) {
             throw new BadCredentialsException("Пароль не подходит к учетной записи пользователя");
         }
-        return new UsernamePasswordAuthenticationToken(user, user.getPassword(), Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return false;
+        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
 }

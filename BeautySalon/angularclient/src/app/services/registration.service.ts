@@ -14,6 +14,6 @@ export class RegistrationService {
   }
 
   save(user: User) {
-    return this.http.post<User>(this.usersUrl + "/create", user);
+    return this.http.post<User>(this.usersUrl + "/registration", user);
   }
 }

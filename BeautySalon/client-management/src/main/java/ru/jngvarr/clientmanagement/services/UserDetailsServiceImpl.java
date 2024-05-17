@@ -20,29 +20,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final StaffFeignClient staffFeignClient;
-
-    public boolean isUserIsManager(User user) { //TODO дописать метод
-        return user
-        if (isUserIsManager(this)) auths.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
-    }
-
-    public boolean getClientByUserContact(User user) {
-        Employee employee = staffFeignClient.getEmployeeByPhone(user.getContact());
-        return employee != null && employee.getContact().equals(user.getContact());
-    }
-
-    public UserDetails getUserByEmail(String email) {
-        return userRepository.getUserByEmail(email);
-    }
-
-    public User addUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        if(isUserIsManager(user))user.get
-        return userRepository.save(user);
-    }
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.getUserByUserName(username);
