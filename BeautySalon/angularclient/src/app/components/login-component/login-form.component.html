@@ -5,7 +5,7 @@
       <div [ngClass]="{ 'has-error': f.submitted && !username.valid }">
         <label class="lbl m-2" for="username">Username</label>
         <input type="text"
-               name="username" [(ngModel)]="user.userName"
+               name="username" [(ngModel)]="user.username"
                id="username"
                #username="ngModel" required/>
         <div *ngIf="f.submitted && !username.valid">Username is required

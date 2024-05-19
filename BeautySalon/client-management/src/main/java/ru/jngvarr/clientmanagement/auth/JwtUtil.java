@@ -1,4 +1,4 @@
-package ru.jngvarr.clientmanagement.config;
+package ru.jngvarr.clientmanagement.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -16,19 +16,27 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Генерация ключа для HMAC-SHA256
+    private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60 * 10; // 10 часов
+    private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7; // 7 дней
 
-    public String generateToken(String username) {
+
+    public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, userDetails.getUsername(), REFRESH_TOKEN_VALIDITY); // 7 days expiration
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long expirationTimeMillis) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 часов
-                .signWith(key, SignatureAlgorithm.HS256) // Используем новый метод
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeMillis))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -61,4 +69,5 @@ public class JwtUtil {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
 }

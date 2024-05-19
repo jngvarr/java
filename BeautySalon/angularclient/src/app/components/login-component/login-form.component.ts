@@ -10,7 +10,7 @@ import {User} from "../../model/entities/user";
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.scss'
 })
-export class LoginFormComponent implements OnInit{
+export class LoginFormComponent implements OnInit {
   user: User = new User();
   loading: boolean = false;
 
@@ -28,7 +28,7 @@ export class LoginFormComponent implements OnInit{
   login() {
     let url = 'http://localhost:8765/login';
     this.http.post(url, {
-      userName: this.user.userName,
+      username: this.user.username,
       password: this.user.password
     }).pipe(
       map((res: any) => res.token),
@@ -45,7 +45,8 @@ export class LoginFormComponent implements OnInit{
       }
     });
   }
-  loadedData(){
-return
+
+  loadedData() {
+    return
   }
 }

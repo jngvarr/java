@@ -1,6 +1,5 @@
-package ru.jngvarr.clientmanagement.config;
+package ru.jngvarr.clientmanagement.auth;
 
-import dao.entities.people.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,14 +9,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import ru.jngvarr.clientmanagement.repositories.UserRepository;
 import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
-
-import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
-public class AuthenticationProviderImpl implements AuthenticationProvider {
+public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
