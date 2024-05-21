@@ -32,3 +32,10 @@ logging:
   level:
     ru.jngvarr: DEBUG
 #    org.springframework.security: TRACE
+#feign:
+#  client:
+#    config:
+#      clients:
+#        basic-auth:
+#          username: user
+#          password: pass

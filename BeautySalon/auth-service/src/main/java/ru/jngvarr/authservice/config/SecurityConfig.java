@@ -19,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ru.jngvarr.authservice.CustomAuthenticationProvider;
+import ru.jngvarr.authservice.services.CustomAuthenticationProvider;
 import ru.jngvarr.authservice.services.UserDetailsServiceImpl;
 import security_config.JwtRequestFilter;
 
@@ -42,8 +42,7 @@ public class SecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                                .requestMatchers("/users/registration").permitAll()
-                                .requestMatchers("/users/login").permitAll()
+                                .requestMatchers("/users/registration", "/users/login").permitAll()
 //                .requestMatchers("/public/**").permitAll()
 //                .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
@@ -83,12 +82,13 @@ public class SecurityConfig {
                 new CustomAuthenticationProvider(userDetailsService, passwordEncoder());
         return new ProviderManager(List.of(authenticationProvider));
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         //Make the below setting as * to allow connection from any hos
         corsConfiguration.setAllowedOrigins(List.of("http://localhost:4200"));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST"));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         corsConfiguration.setAllowCredentials(true);
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setMaxAge(3600L);

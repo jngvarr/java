@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "clients", configuration = FeignClientConfiguration.class)
+@FeignClient(name = "clients", configuration = JwtFeignConfig.class)
 public interface ClientFeignClient {
     @GetMapping("/clients")
     List<Client> getClients();

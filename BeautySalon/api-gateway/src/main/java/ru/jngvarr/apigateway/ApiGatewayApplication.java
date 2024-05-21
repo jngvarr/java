@@ -18,7 +18,7 @@ public class ApiGatewayApplication {
                 .route("clients", r -> r.path("/clients/**")
                         .uri("http://localhost:8081/"))
                 .route("users", r -> r.path("/users/**")
-                        .uri("http://localhost:8081/"))
+                        .uri("http://localhost:8089/"))
                 .route("services", r -> r.path("/services/**")
                         .uri("http://localhost:8082/"))
                 .route("storage", r -> r.path("/storage/**")

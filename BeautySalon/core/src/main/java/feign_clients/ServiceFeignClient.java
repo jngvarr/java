@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 
-@FeignClient(name = "services", configuration = FeignClientConfiguration.class)
+@FeignClient(name = "services", configuration = JwtFeignConfig.class)
 public interface ServiceFeignClient {
     @GetMapping("/services")
     public List<Servize> getServices();

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "storage", configuration = FeignClientConfiguration.class)
+@FeignClient(name = "storage", configuration = JwtFeignConfig.class)
 public interface StorageFeignClient {
     @GetMapping("/storage")
     List<Consumable> getConsumables();

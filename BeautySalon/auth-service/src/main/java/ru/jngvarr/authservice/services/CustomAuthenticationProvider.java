@@ -1,4 +1,4 @@
-package ru.jngvarr.authservice;
+package ru.jngvarr.authservice.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -9,7 +9,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import ru.jngvarr.authservice.services.UserDetailsServiceImpl;
 
 @Component
 @RequiredArgsConstructor

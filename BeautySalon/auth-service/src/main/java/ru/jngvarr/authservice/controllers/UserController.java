@@ -1,4 +1,4 @@
-package ru.jngvarr.authservice;
+package ru.jngvarr.authservice.controllers;
 
 import dao.entities.RefreshToken;
 import dao.entities.people.User;
@@ -42,12 +42,15 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository tokenRepository;
 
-
+//    @GetMapping("/registration")
+//    public String getUsers() {
+//        return "Привет от users";
+//    }
     @GetMapping("/byEmail/{email}")
     public User getUserByEmail(@PathVariable String email) {
         return userService.getUserByEmail(email);
     }
-
+    @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/registration")
     public User userRegistration(@RequestBody User user) {
         log.debug("user registration, id: {} ", user.getId());
