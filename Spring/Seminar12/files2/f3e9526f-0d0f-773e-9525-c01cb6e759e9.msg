@@ -1,1 +1,0 @@
-Российский грузовой самолет Ан-72 и военный Ил-76 едва не столкнулись в небе Константин Лысяков https://lenta.ru/news/2024/02/16/rossiyskiy-gruzovoy-samolet-an-72-i-voennyy-il-76-edva-ne-stolknulis-v-nebe/

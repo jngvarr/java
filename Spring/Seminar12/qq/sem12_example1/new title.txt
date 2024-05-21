@@ -1,1 +1,0 @@
-Note(id=null, title=new title, body=new body, creation=2024-02-26T15:20:24.233493800)

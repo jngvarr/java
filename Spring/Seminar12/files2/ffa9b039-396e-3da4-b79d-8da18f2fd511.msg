@@ -1,1 +1,0 @@
-Захарова назвала саморазоблачительной реакцию Запада на смерть Навального Виктория Кондратьева https://lenta.ru/news/2024/02/16/zaharova-nazvala-samorazoblachitelnoy-reaktsiyu-zapada-na-smert-navalnogo/

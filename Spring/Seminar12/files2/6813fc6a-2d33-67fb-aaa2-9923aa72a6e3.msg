@@ -1,1 +1,0 @@
-Женщина рассказала о трудностях жизни с аллергией на воду и собственный пот Алиса Удовик https://lenta.ru/news/2024/02/16/zhenschina-rasskazala-o-trudnostyah-zhizni-s-allergiey-na-vodu-i-sobstvennyy-pot/

@@ -1,7 +1,0 @@
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: none
-    generate-ddl: false
-server:
-  port : 8090

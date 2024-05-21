@@ -1,1 +1,0 @@
-Врач указала на сигнализирующие о проблемах со здоровьем изменения во внешности Алиса Дмитриева https://lenta.ru/news/2024/02/16/vrach-ukazala-na-signaliziruyuschie-o-problemah-so-zdoroviem-izmeneniyah-vo-vneshnosti/

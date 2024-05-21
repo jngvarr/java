@@ -1,5 +1,0 @@
-springdoc:
-  swagger-ui:
-    oauth:
-      client-id: catalogue-service-swagger-ui-nip-io
-      use-pkce-with-authorization-code-grant: true

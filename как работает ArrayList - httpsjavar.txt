@@ -1,7 +1,0 @@
-как работает ArrayList - https://javarush.com/groups/posts/1936-rabota-arraylist-v-kartinkakh--
-о классе Collection - https://javarush.com/groups/posts/1937-klass-collections
-LinkedList - https://javarush.com/groups/posts/1938-linkedlist
-HashMap — https://javarush.com/groups/posts/1940-klass-hashmap-
-
-Как не потеряться во времени — DateTime и Calendar
-https://javarush.com/groups/posts/1941-kak-ne-poterjatjhsja-vo-vremeni--datetime-i-calendar

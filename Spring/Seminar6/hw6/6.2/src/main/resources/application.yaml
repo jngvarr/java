@@ -1,5 +1,0 @@
-external:
-  api:
-    url: https://rickandmortyapi.com/api/character
-pagination:
-  perPage: 20
