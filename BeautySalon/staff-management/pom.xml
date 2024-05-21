@@ -9,7 +9,6 @@
     </parent>
 
     <artifactId>staff-management</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>staff-management</name>
     <description>staff-management</description>
 

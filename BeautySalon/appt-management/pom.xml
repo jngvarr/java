@@ -9,9 +9,8 @@
     </parent>
 
     <artifactId>appt-management</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>note-management</name>
-    <description>note-management</description>
+    <name>appt-management</name>
+    <description>appt-management</description>
 
     <dependencies>
         <dependency>

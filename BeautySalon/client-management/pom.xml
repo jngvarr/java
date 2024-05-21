@@ -9,7 +9,6 @@
     </parent>
 
     <artifactId>client-management</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>client-management</name>
     <description>client-management</description>
 

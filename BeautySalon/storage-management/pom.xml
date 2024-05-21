@@ -10,7 +10,6 @@
     </parent>
 
     <artifactId>storage-management</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>storage-management</name>
     <description>storage-management</description>
 
