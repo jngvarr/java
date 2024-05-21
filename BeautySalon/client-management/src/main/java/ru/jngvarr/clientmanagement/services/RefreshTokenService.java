@@ -8,6 +8,10 @@ import ru.jngvarr.clientmanagement.auth.JwtUtil;
 import ru.jngvarr.clientmanagement.repositories.RefreshTokenRepository;
 import ru.jngvarr.clientmanagement.repositories.UserRepository;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
@@ -19,7 +23,7 @@ public class RefreshTokenService {
     public void saveRefreshToken(String refreshToken) {
         RefreshToken newRefreshToken = new RefreshToken();
         newRefreshToken.setToken(refreshToken);
-        newRefreshToken.setExpiryDate(jwtUtil.extractExpiration(refreshToken));
+        newRefreshToken.setExpiryDate(convertToLocalDateTime(jwtUtil.extractExpiration (refreshToken)));
         refreshTokenRepository.save(newRefreshToken);
     }
 
@@ -29,6 +33,11 @@ public class RefreshTokenService {
         return jwtUtil.validateToken(refreshToken, userDetails);
     }
 
+    private LocalDateTime convertToLocalDateTime(Date date) {
+        return date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
     public RefreshToken findByToken(String token){
         return tokenRepository.findByToken(token);
     }

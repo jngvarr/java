@@ -3,6 +3,7 @@ package dao.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -17,5 +18,5 @@ public class RefreshToken {
     private String token;
 
     @Column(nullable = false, name = "valid_thru")
-    private Date expiryDate;
+    private LocalDateTime expiryDate;
 }

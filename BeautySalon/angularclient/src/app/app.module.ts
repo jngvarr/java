@@ -22,6 +22,7 @@ import {StaffService} from "./services/staff.service";
 import {NgOptimizedImage} from "@angular/common";
 import { RegistrationFormComponent } from './components/registration-form/registration-form.component';
 import { LoginFormComponent } from './components/login-component/login-form.component';
+import {RegistrationService} from "./services/registration.service";
 
 @NgModule({
   declarations: [
@@ -46,7 +47,7 @@ import { LoginFormComponent } from './components/login-component/login-form.comp
         FormsModule,
         NgOptimizedImage
     ],
-  providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService],
+  providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService, ApptService, RegistrationService ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

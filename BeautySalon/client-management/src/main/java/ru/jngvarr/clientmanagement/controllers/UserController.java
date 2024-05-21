@@ -23,6 +23,7 @@ import ru.jngvarr.clientmanagement.services.RefreshTokenService;
 import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
 import ru.jngvarr.clientmanagement.services.UserService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -41,7 +42,6 @@ public class UserController {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository tokenRepository;
-
 
 
     @GetMapping("/byEmail/{email}")
@@ -94,7 +94,7 @@ public class UserController {
         }
         // Ищем токен в базе данных
         RefreshToken refreshTokenEntity = tokenRepository.findByToken(refreshToken);
-        if (refreshTokenEntity == null || refreshTokenEntity.getExpiryDate().before(Date.now())) {
+        if (refreshTokenEntity == null || refreshTokenEntity.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Invalid or expired refresh token");
         }
 

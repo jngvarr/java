@@ -45,7 +45,7 @@ public class User extends SomeOne implements UserDetails {
     }
 
     public void setAuthorities(Authority authority) {
-        authorities = (List<Authority>) getAuthorities();
+//        authorities = List<Authority> getAuthorities();
         authorities.add(authority);
     }
 

@@ -33,9 +33,9 @@ const routes: Routes = [
   { path: 'staff/update/:id', component: StaffFormComponent },
   { path: 'visits/update/:id', component: ApptFormComponent },
 
-  { path: 'clients/delete', component: ClientListComponent },
-  { path: 'services/delete', component: ServiceListComponent },
-  { path: 'storage/delete', component: ConsumablesListComponent },
+  // { path: 'clients/delete', component: ClientListComponent },
+  // { path: 'services/delete', component: ServiceListComponent },
+  // { path: 'storage/delete', component: ConsumablesListComponent },
 
   { path: 'registration', component: RegistrationFormComponent },
   { path: 'login', component: LoginFormComponent }

@@ -5,9 +5,16 @@
     <div class="col-md-12">
       <h1 class="text-white text-center pt-3 ">Beauty Salon</h1>
       <div class="buttons">
-        <button type="button" (click)="login()" routerLink="/login" class="btn btn-outline-light m-1 btn-sm">Login
+        <button [hidden]="!logged" type="button" (click)="logout()"
+                class="btn btn-outline-light m-1 btn-sm">Logout
         </button>
-        <button type="button" (click)="login()" routerLink="/registration" class="btn btn-outline-light mr-2 btn-sm">Registration</button>
+        <button [hidden]="logged" type="button"  routerLink="login"
+                class="btn btn-outline-light m-1 btn-sm">Login
+        </button>
+        <button [hidden]="logged" type="button" routerLink="registration"
+                class="btn btn-outline-light mr-2 btn-sm">
+          Registration
+        </button>
       </div>
     </div>
 

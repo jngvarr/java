@@ -1,4 +1,5 @@
-import {Component} from '@angular/core';
+import {AfterViewInit, Component, ViewChild} from '@angular/core';
+import {LoginFormComponent} from "./components/login-component/login-form.component";
 
 @Component({
   selector: 'app-root',
@@ -6,19 +7,22 @@ import {Component} from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  @ViewChild(LoginFormComponent) loginForm!: LoginFormComponent; // Использование ViewChild для получения ссылки на компонент
   log: boolean = false;
   title: string | undefined;
   image = '../assets/images/background.jpg';
-  // constructor() {
-  //   this.title = 'Beauty Salon';
-  // }
-  login() {
-    if (!this.log) {
-      this.log = true;
+  logged: boolean = false;
+
+  logout() {
+    if (this.loginForm) {
+      // this.logged = false;
+      this.loginForm.logout();
+    } else {
+      console.error('LoginFormComponent не найден');
     }
   }
 
-  registration() {
+  login() {
 
   }
 }
