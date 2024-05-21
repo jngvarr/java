@@ -1,13 +1,15 @@
-package ru.jngvarr.clientmanagement.config;
+package ru.jngvarr.authservice.config;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,10 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ru.jngvarr.clientmanagement.auth.CustomAuthenticationProvider;
-import ru.jngvarr.clientmanagement.auth.JwtRequestFilter;
-import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import ru.jngvarr.authservice.CustomAuthenticationProvider;
+import ru.jngvarr.authservice.services.UserDetailsServiceImpl;
+import security_config.JwtRequestFilter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.Map;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@ComponentScan(basePackages = {"security_config"})
 public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;

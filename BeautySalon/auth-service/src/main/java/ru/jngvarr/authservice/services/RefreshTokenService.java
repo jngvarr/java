@@ -1,12 +1,12 @@
-package ru.jngvarr.clientmanagement.services;
+package ru.jngvarr.authservice.services;
 
 import dao.entities.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import ru.jngvarr.clientmanagement.auth.JwtUtil;
-import ru.jngvarr.clientmanagement.repositories.RefreshTokenRepository;
-import ru.jngvarr.clientmanagement.repositories.UserRepository;
+import ru.jngvarr.authservice.repositories.RefreshTokenRepository;
+import ru.jngvarr.authservice.repositories.UserRepository;
+import security_config.JwtUtil;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

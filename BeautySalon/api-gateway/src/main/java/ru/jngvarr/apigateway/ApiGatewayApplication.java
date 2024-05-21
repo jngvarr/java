@@ -8,7 +8,6 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 
 @SpringBootApplication
 public class ApiGatewayApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
     }

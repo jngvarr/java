@@ -1,4 +1,4 @@
-//package ru.jngvarr.clientmanagement.auth.dto;
+//package security.dto;
 //
 //import lombok.Data;
 //

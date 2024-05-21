@@ -6,10 +6,11 @@ spring:
     name: api-gateway
   profiles:
     active: eclient
-
   config:
     import: configserver:http://localhost:8888
-
+    main:
+      web-application-type:
+        reactive
   cloud:
     gateway:
       discovery:

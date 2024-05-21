@@ -1,4 +1,4 @@
-package ru.jngvarr.clientmanagement.auth.dto;
+package ru.jngvarr.authservice.dto;
 
 
 import lombok.Data;

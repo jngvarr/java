@@ -1,4 +1,4 @@
-package ru.jngvarr.clientmanagement.controllers;
+package ru.jngvarr.authservice;
 
 import dao.entities.RefreshToken;
 import dao.entities.people.User;
@@ -14,16 +14,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import ru.jngvarr.clientmanagement.auth.JwtUtil;
-import ru.jngvarr.clientmanagement.auth.dto.AuthenticationRequest;
-import ru.jngvarr.clientmanagement.auth.dto.AuthenticationResponse;
-import ru.jngvarr.clientmanagement.repositories.RefreshTokenRepository;
-import ru.jngvarr.clientmanagement.repositories.UserRepository;
-import ru.jngvarr.clientmanagement.services.RefreshTokenService;
-import ru.jngvarr.clientmanagement.services.UserDetailsServiceImpl;
-import ru.jngvarr.clientmanagement.services.UserService;
+import ru.jngvarr.authservice.dto.AuthenticationRequest;
+import ru.jngvarr.authservice.dto.AuthenticationResponse;
+import ru.jngvarr.authservice.repositories.RefreshTokenRepository;
+import ru.jngvarr.authservice.repositories.UserRepository;
+import ru.jngvarr.authservice.services.RefreshTokenService;
+import ru.jngvarr.authservice.services.UserDetailsServiceImpl;
+import ru.jngvarr.authservice.services.UserService;
+import security_config.JwtUtil;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -120,18 +119,4 @@ public class UserController {
         }
         return null;
     }
-
-
-//    @PostMapping("/refresh")
-//    public AuthenticationResponse refreshAuthenticationToken(@RequestBody TokenRefreshRequest tokenRefreshRequest, HttpServletResponse response) {
-//        final UserDetails userDetails = userDetailsService.loadUserByUsername(tokenRefreshRequest.getUsername());
-//        final String refreshToken = tokenRefreshRequest.getRefreshToken();
-//
-//        if (jwtUtil.validateToken(refreshToken, userDetails)) {
-//            final String newAccessToken = jwtUtil.generateAccessToken(userDetails);
-//            return new AuthenticationResponse(newAccessToken);
-//        } else {
-//            throw new RuntimeException("Invalid refresh token");
-//        }
-//    }
 }
