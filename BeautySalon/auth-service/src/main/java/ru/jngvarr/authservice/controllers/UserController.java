@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://localhost:4200")
 public class UserController {
     private final UserDetailsServiceImpl userDetailsService;
     private final UserService userService;
@@ -50,7 +50,7 @@ public class UserController {
     public User getUserByEmail(@PathVariable String email) {
         return userService.getUserByEmail(email);
     }
-    @CrossOrigin(origins = "http://localhost:4200")
+    @CrossOrigin(origins = "https://localhost:4200")
     @PostMapping("/registration")
     public User userRegistration(@RequestBody User user) {
         log.debug("user registration, id: {} ", user.getId());

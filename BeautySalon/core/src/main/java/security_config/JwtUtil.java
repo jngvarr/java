@@ -1,3 +1,4 @@
+
 package security_config;
 
 
@@ -17,7 +18,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-        private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Генерация ключа для HMAC-SHA256
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Генерация ключа для HMAC-SHA256
     private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60 * 10; // 10 часов
     private static final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7; // 7 дней
 

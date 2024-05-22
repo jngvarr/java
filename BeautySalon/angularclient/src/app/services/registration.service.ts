@@ -9,7 +9,7 @@ export class RegistrationService {
   private usersUrl: string;
 
   constructor(private http: HttpClient) {
-    this.usersUrl = 'http://localhost:8765/users';
+    this.usersUrl = 'https://localhost:8765/users';
   }
 
   save(user: User) {
