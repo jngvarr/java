@@ -11,6 +11,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ import ru.jngvarr.authservice.services.UserService;
 import security_config.JwtUtil;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Data
@@ -42,15 +45,23 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository tokenRepository;
 
-//    @GetMapping("/registration")
-//    public String getUsers() {
-//        return "Привет от users";
-//    }
+    @GetMapping("/registration")
+    public String getHello() {
+        return "Привет от users";
+    }
+
+    @GetMapping
+    public List<User> getUsers() {
+        log.debug("getUsers");
+//        return null;
+        return userService.getUsers();
+    }
+
     @GetMapping("/byEmail/{email}")
     public User getUserByEmail(@PathVariable String email) {
         return userService.getUserByEmail(email);
     }
-    @CrossOrigin(origins = "https://localhost:4200")
+
     @PostMapping("/registration")
     public User userRegistration(@RequestBody User user) {
         log.debug("user registration, id: {} ", user.getId());
@@ -61,11 +72,13 @@ public class UserController {
     public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest,
                                                             HttpServletResponse response) throws Exception {
         try {
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authenticationRequest.getUsername(),
                             authenticationRequest.getPassword())
             );
+            // Устанавливаем аутентификацию в SecurityContext
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (BadCredentialsException e) {
             throw new Exception("Incorrect username or password", e);
         }
