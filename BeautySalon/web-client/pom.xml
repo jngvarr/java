@@ -4,12 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ru.jngvarr</groupId>
-        <artifactId>BeautySalon</artifactId>
+        <artifactId>OLDBeautySalon</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>web-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>web-client</name>
     <description>web-client</description>
 

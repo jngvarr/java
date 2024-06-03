@@ -30,7 +30,7 @@ export class LoginFormComponent implements OnInit {
   }
 
   login() {
-    this.loading = true;
+    // this.loading = true;
     this.http.post(this.apiUrl, {
       username: this.user.username,
       password: this.user.password
@@ -41,7 +41,7 @@ export class LoginFormComponent implements OnInit {
         return of(null);
       })
     ).subscribe(token => {
-      this.loading = false;
+      // this.loading = false;
       if (token) {
         sessionStorage.setItem('token', token);
         this.router.navigate(['']);

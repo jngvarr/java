@@ -2,7 +2,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {AppRoutingModule} from './app-routing.module';
 import {FormsModule} from '@angular/forms';
-import {HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {AppComponent} from './app.component';
 import {ClientListComponent} from './components/client-list/client-list.component';
 import {ClientFormComponent} from './components/client-form/client-form.component';
@@ -23,6 +23,7 @@ import {NgOptimizedImage} from "@angular/common";
 import { RegistrationFormComponent } from './components/registration-form/registration-form.component';
 import { LoginFormComponent } from './components/login-component/login-form.component';
 import {RegistrationService} from "./services/registration.service";
+import {AuthInterceptor} from "./model/interceptors/auth.interceptor";
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import {RegistrationService} from "./services/registration.service";
         FormsModule,
         NgOptimizedImage
     ],
-  providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService, ApptService, RegistrationService ],
+  providers: [ClientService, ServiceForServices, StorageService, ApptService, StaffService, ApptService, RegistrationService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true } ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

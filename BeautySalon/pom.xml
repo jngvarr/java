@@ -10,11 +10,11 @@
     </parent>
 
     <groupId>ru.jngvarr</groupId>
-    <artifactId>BeautySalon</artifactId>
+    <artifactId>OLDBeautySalon</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>BeautySalon</name>
-    <description>BeautySalon</description>
+    <name>OLDBeautySalon</name>
+    <description>OLDBeautySalon</description>
 
     <properties>
         <java.version>21</java.version>
