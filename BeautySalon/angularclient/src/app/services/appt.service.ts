@@ -3,6 +3,7 @@ import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Visit} from "../model/entities/visit";
 import {Time} from "@angular/common";
+import {ApiService} from "./api-service";
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +12,8 @@ export class ApptService {
 
   private apptUrl: string;
 
-  constructor(private http: HttpClient) {
-    // this.apptUrl = 'http://localhost:8085/visits';
-    this.apptUrl = 'http://localhost:8765/visits';
+  constructor(private http: HttpClient, private apiService : ApiService) {
+    this.apptUrl = apiService.apiUrl + '/visits';
   }
 
   public findAll(): Observable<Visit[]> {

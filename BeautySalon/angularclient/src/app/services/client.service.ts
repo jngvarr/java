@@ -2,14 +2,15 @@ import {Injectable} from "@angular/core";
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Client} from '../model/entities/client';
 import {Observable} from 'rxjs/';
+import {ApiService} from "./api-service";
 
 @Injectable()
 export class ClientService {
 
   private clientsUrl: string;
 
-  constructor(private http: HttpClient) {
-    this.clientsUrl = 'http://localhost:8765/clients';
+  constructor(private http: HttpClient, private apiService: ApiService) {
+    this.clientsUrl = this.apiService.apiUrl + '/clients';
   }
 
   public findAll(): Observable<Client[]> {

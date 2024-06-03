@@ -80,6 +80,10 @@
               "buildTarget": "angularclient:build:development"
             }
           },
+          "options": {
+            "buildTarget": "BeautySalon:build",
+            "proxyConfig": "proxy.conf.json"
+          },
           "defaultConfiguration": "development"
         },
         "extract-i18n": {

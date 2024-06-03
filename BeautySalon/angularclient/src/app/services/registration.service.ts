@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {User} from "../model/entities/user";
+import {ApiService} from "./api-service";
 
 @Injectable({
   providedIn: 'root'
@@ -8,8 +9,8 @@ import {User} from "../model/entities/user";
 export class RegistrationService {
   private usersUrl: string;
 
-  constructor(private http: HttpClient) {
-    this.usersUrl = 'https://localhost:8765/users';
+  constructor(private http: HttpClient, apiService : ApiService) {
+    this.usersUrl = apiService.apiUrl + '/users';
   }
 
   save(user: User) {

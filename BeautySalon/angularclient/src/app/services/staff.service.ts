@@ -3,6 +3,7 @@ import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {Employee} from "../model/entities/employee";
 import {Client} from "../model/entities/client";
+import {ApiService} from "./api-service";
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +11,8 @@ import {Client} from "../model/entities/client";
 export class StaffService {
   private staffUrl: string;
 
-  constructor(private http: HttpClient) {
-    this.staffUrl = 'http://localhost:8765/staff';
-    // this.staffUrl = 'http://localhost:8084/staff';
+  constructor(private http: HttpClient, apiService: ApiService) {
+    this.staffUrl = apiService.apiUrl + '/staff';
   }
 
   public findAll(): Observable<Employee[]> {

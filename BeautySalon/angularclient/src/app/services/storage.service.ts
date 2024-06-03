@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {catchError, Observable, tap} from "rxjs";
 import {Consumable} from "../model/entities/consumable";
+import {ApiService} from "./api-service";
 
 @Injectable({
   providedIn: 'root'
@@ -9,9 +10,8 @@ import {Consumable} from "../model/entities/consumable";
 export class StorageService {
   private storagesUrl: string;
 
-  constructor(private http: HttpClient) {
-    // this.storagesUrl = 'http://localhost:8083/storage';
-    this.storagesUrl = 'http://localhost:8765/storage';
+  constructor(private http: HttpClient, apiService : ApiService) {
+    this.storagesUrl = apiService.apiUrl + '/storage';
   }
   public findAll(): Observable<Consumable[]> {
     return this.http.get<Consumable[]>(this.storagesUrl).pipe(
