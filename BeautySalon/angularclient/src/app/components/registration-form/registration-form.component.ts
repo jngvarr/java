@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {User} from "../../model/entities/user";
 import {ActivatedRoute, Router} from "@angular/router";
-import {RegistrationService} from "../../services/registration.service";
+import {AuthService} from "../../services/auth.service";
 import {NgForm} from "@angular/forms";
 
 @Component({
@@ -16,7 +16,7 @@ export class RegistrationFormComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private registrationService: RegistrationService,
+    private authService: AuthService,
   ) {
   }
 
@@ -40,7 +40,7 @@ export class RegistrationFormComponent {
   }
 
   registration(user: User){
-    this.registrationService.save(user).subscribe(result => this.regSuccess());
+    this.authService.save(user).subscribe(result => this.regSuccess());
   }
 
   emailFormatValid() {
