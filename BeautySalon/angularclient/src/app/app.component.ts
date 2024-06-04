@@ -12,17 +12,19 @@ export class AppComponent {
   title: string | undefined;
   image = '../assets/images/background.jpg';
   logged: boolean = false;
+  // username : String = sessionStorage.getItem('token');
+
 
   logout() {
     if (this.loginForm) {
-      // this.logged = false;
+      this.logged = false;
       this.loginForm.logout();
     } else {
       console.error('LoginFormComponent не найден');
     }
   }
 
-  login() {
-
+  loginSuccessfull() {
+    if (sessionStorage.length !== 0) this.logged = true;
   }
 }

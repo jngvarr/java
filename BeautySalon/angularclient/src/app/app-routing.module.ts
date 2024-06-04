@@ -14,7 +14,6 @@ import {RegistrationFormComponent} from "./components/registration-form/registra
 import {LoginFormComponent} from "./components/login-component/login-form.component";
 
 const routes: Routes = [
-  // { path: '', component: HomeComponent },
   { path: 'clients', component: ClientListComponent },
   { path: 'services', component: ServiceListComponent },
   { path: 'storage', component: ConsumablesListComponent },

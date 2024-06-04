@@ -4,12 +4,12 @@ import {ClientService} from '../../services/client.service';
 import {Client} from '../../model/entities/client';
 
 @Component({
-  selector: 'app-Client-form',
-  templateUrl: './Client-form.component.html',
-  styleUrls: ['./Client-form.component.scss']
+  selector: 'app-client-form',
+  templateUrl: './client-form.component.html',
+  styleUrls: ['./client-form.component.scss']
 })
 export class ClientFormComponent {
-  isEdit: boolean = false;
+  isEdit: boolean | undefined;
   client: Client;
 
   constructor(
@@ -25,6 +25,7 @@ export class ClientFormComponent {
       if (clientId) {
         this.clientService.findById(clientId).subscribe(data => {
           this.client = data;
+          this.isEdit = true;
         });
       }
     });

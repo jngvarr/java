@@ -4,6 +4,8 @@ import {HttpClient} from "@angular/common/http";
 import {catchError, map} from 'rxjs/operators';
 import {of} from 'rxjs';
 import {User} from "../../model/entities/user";
+import {ApiService} from "../../services/api-service";
+import {AppComponent} from "../../app.component";
 
 
 @Component({
@@ -12,16 +14,17 @@ import {User} from "../../model/entities/user";
   styleUrl: './login-form.component.scss'
 })
 export class LoginFormComponent implements OnInit {
-  @Output() loginSuccess: EventEmitter<any> = new EventEmitter<any>(); // Добавляем EventEmitter уведомлении родителя о событии
+  // @Output() loginSuccess: EventEmitter<any> = new EventEmitter<any>(); // Добавляем EventEmitter уведомлении родителя о событии
   user: User = new User();
   loading: boolean = false;
-  apiUrl: string = 'http://localhost:8765/login';
-
+  apiUrl: string = this.apiService.apiUrl + '/users/login';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private apiService: ApiService,
+    private appComp: AppComponent
   ) {
   }
 
@@ -30,32 +33,70 @@ export class LoginFormComponent implements OnInit {
   }
 
   login() {
-    // this.loading = true;
     this.http.post(this.apiUrl, {
       username: this.user.username,
       password: this.user.password
     }).pipe(
-      map((res: any) => res.token),
+      map((res: any) => {
+        console.log("Server response: ", res); // Логирование ответа сервера
+        if (res && res.accessToken) {
+          console.log("Access token: ", res.accessToken); // Логирование access token
+          return res.accessToken;
+        } else {
+          console.error("No access token found in response");
+          return null;
+        }
+      }),
       catchError(error => {
         console.error('Login failed', error);
         return of(null);
       })
     ).subscribe(token => {
-      // this.loading = false;
+      console.log("Token received: ", token); // Логирование полученного токена
       if (token) {
-        sessionStorage.setItem('token', token);
-        this.router.navigate(['']);
-        this.loginSuccess.emit(true); // Оповещаем родительский компонент об успешном входе
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('token', token);
+          console.log("Token saved in sessionStorage: ", sessionStorage.getItem('token')); // Логирование сохраненного токена
+          this.router.navigate(['']);
+          this.appComp.logged = true;
+          // this.loginSuccess.emit(true); // Оповещаем родительский компонент об успешном входе
+        } else {
+          console.error("sessionStorage is not available");
+        }
       } else {
         alert("Authentication failed. Please check your username and password.");
       }
     });
   }
 
+
+  // login() {
+  //   // this.loading = true;
+  //   this.http.post(this.apiUrl, {
+  //     username: this.user.username,
+  //     password: this.user.password
+  //   }).pipe(
+  //     map((res: any) => res.token),
+  //     catchError(error => {
+  //       console.error('Login failed', error);
+  //       return of(null);
+  //     })
+  //   ).subscribe(token => {
+  //     // this.loading = false;
+  //     if (token) {
+  //       sessionStorage.setItem('token', token);
+  //       this.router.navigate(['']);
+  //       this.loginSuccess.emit(true); // Оповещаем родительский компонент об успешном входе
+  //     } else {
+  //       alert("Authentication failed. Please check your username and password.");
+  //     }
+  //   });
+  // }
+
   logout() {
     sessionStorage.removeItem('token'); // Удаление токена из sessionStorage
+    this.appComp.logged = false;
     this.router.navigate(['/login']); // Перенаправление на страницу входа или другую страницу
-    this.loginSuccess.emit(false); // Оповещаем родительский компонент о выходе из системы
   }
 
   loadedData() {
