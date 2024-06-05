@@ -1,29 +1,26 @@
-import {Component, Injectable} from '@angular/core';
-import {AuthService} from "./services/auth.service";
-@Injectable({
-  providedIn: 'root'
-})
+import {AfterViewInit, Component, ViewChild} from '@angular/core';
+import {LoginFormComponent} from "./components/login-component/login-form.component";
+import {User} from "./model/entities/user";
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  // @ViewChild(LoginFormComponent) loginForm!: LoginFormComponent; // Использование ViewChild для получения ссылки на компонент
+  @ViewChild(LoginFormComponent) loginForm!: LoginFormComponent; // Использование ViewChild для получения ссылки на компонент
+  log: boolean = false;
   title: string | undefined;
   image = '../assets/images/background.jpg';
   logged: boolean = false;
-  username: string | undefined;
+  username: String | undefined;
 
-  constructor(protected authService: AuthService) {
+  logout() {
+    if (this.loginForm) {
+      this.logged = false;
+      this.loginForm.logout();
+    } else {
+      console.error('LoginFormComponent не найден');
+    }
   }
-
-  // ngOnInit(): void {
-  //   if (typeof window !== 'undefined') {  // Проверка, что код выполняется в браузере
-  //     const token = sessionStorage.getItem('token');
-  //     if (token) {
-  //       this.isLoggedIn();
-  //     }
-  //   }
-  // }
 }

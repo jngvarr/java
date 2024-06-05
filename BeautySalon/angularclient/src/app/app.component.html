@@ -6,9 +6,8 @@
       <h1 class="text-white text-center pt-3 ">Beauty Salon</h1>
       <div class="buttons">
         <!--        <li>-->
-        <div class="text-white" *ngIf="logged">Welcome, {{ username }}!
-
-          <button [hidden]="!logged" type="button" (click)="authService.logout()"
+        <div [hidden]="!logged">{{ username }}
+          <button [hidden]="!logged" type="button" (click)="logout()"
                   class="btn btn-outline-light m-1 btn-sm">Logout
           </button>
         </div>
@@ -16,7 +15,8 @@
                 class="btn btn-outline-light m-1 btn-sm">Login
         </button>
         <button [hidden]="logged" type="button" routerLink="registration"
-                class="btn btn-outline-light mr-2 btn-sm"> Registration
+                class="btn btn-outline-light mr-2 btn-sm">
+          Registration
         </button>
       </div>
     </div>
