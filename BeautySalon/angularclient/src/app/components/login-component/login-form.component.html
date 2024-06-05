@@ -1,7 +1,11 @@
 <div class="card my-5">
   <div class="card-body">
-    <h3>User Login:</h3>
-    <form name="form" (ngSubmit)="f.form.valid && onSubmit" #f="ngForm" novalidate>
+    <h3 *ngIf="!loading">User Login:</h3>
+
+    <div *ngIf="loading" class="loading-spinner">
+      <p>Loading...</p>
+    </div>
+    <form *ngIf="!loading" name="form" (ngSubmit)="f.form.valid && login()" #f="ngForm" novalidate>
       <div [ngClass]="{ 'has-error': f.submitted && !username.valid }">
         <label class="lbl m-2" for="username">Username</label>
         <input type="text"
