@@ -10,29 +10,31 @@ import {Router} from "@angular/router";
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
 
-  constructor(private http: HttpClient, private router : Router) {
+  constructor(private http: HttpClient, private router: Router) {
   }
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = sessionStorage.getItem("token")
     let authRequest = req;
     if (token) {
       authRequest = this.addToken(req, token);
     }
+    return next.handle(authRequest)
 
-    return next.handle(authRequest).pipe(
-      catchError(error => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
-          // Перенаправляем пользователя на сервер для повторной аутентификации
-          //TODO реализовать обновление accessToken
-          this.router.navigate(['/login'], {
-            queryParams: {
-              returnUrl: req.url
-            }
-          });
-        }
-        return throwError(error);
-      })
-    );
+    //   .pipe(
+    //   catchError(error => {
+    //     if (error instanceof HttpErrorResponse && error.status === 401) {
+    //       // Перенаправляем пользователя на сервер для повторной аутентификации
+    //       //TODO реализовать обновление accessToken
+    //       this.router.navigate(['/login'], {
+    //         queryParams: {
+    //           returnUrl: req.url
+    //         }
+    //       });
+    //     }
+    //     return throwError(error);
+    //   })
+    // );
   }
 
   private addToken(req: HttpRequest<any>, token: string): HttpRequest<any> {
