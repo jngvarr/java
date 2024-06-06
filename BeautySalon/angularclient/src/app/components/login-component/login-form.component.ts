@@ -12,7 +12,7 @@ import {AuthService} from "../../services/auth.service";
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.scss'
 })
-export class LoginFormComponent implements OnInit {
+export class LoginFormComponent {
   user: User = new User();
   loading: boolean = false;
   apiUrl: string = this.apiService.apiUrl + '/users/login';
@@ -25,7 +25,9 @@ export class LoginFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    sessionStorage.setItem('token', '');
+    if (sessionStorage.getItem('token')) {
+      sessionStorage.setItem('token', '');
+    }
   }
 
   login() {
@@ -54,7 +56,8 @@ export class LoginFormComponent implements OnInit {
           this.authService.login(this.user.username, token);
         } else {
           console.error("Username is undefined");
-        }      } else {
+        }
+      } else {
         alert("Authentication failed. Please check your username and password.");
       }
     });

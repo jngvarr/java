@@ -14,7 +14,7 @@ export class RegistrationFormComponent {
   confirmPassword: string = '';
 
   constructor(
-    private route: ActivatedRoute,
+    // private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
   ) {
@@ -23,7 +23,6 @@ export class RegistrationFormComponent {
   onSubmit(form: NgForm) {
     if (form.valid && this.passwordsMatch()) {
       this.registration(this.user);
-
       console.log('Form Submitted!', this.user);
     } else {
       console.error('Form is invalid or passwords do not match');
@@ -39,7 +38,7 @@ export class RegistrationFormComponent {
     return this.user.password === this.confirmPassword;
   }
 
-  registration(user: User){
+  registration(user: User) {
     this.authService.save(user).subscribe(result => this.regSuccess());
   }
 

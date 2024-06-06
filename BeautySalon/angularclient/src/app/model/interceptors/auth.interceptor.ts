@@ -5,6 +5,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 
+
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
@@ -31,7 +32,11 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private addToken(req: HttpRequest<any>, token: string): HttpRequest<any> {
     return req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+      headers: req.headers.set('Authorization', `Bearer ${token}`),
+      // Добавляем заголовок Content-Type: application/json
+      setHeaders: {
+        'Content-Type': 'application/json'
+      }
     });
   }
 
@@ -40,12 +45,16 @@ export class AuthInterceptor implements HttpInterceptor {
       this.isRefreshing = true;
       return this.http.post<any>('/users/refresh', { token: sessionStorage.getItem('refreshToken') })
         .pipe(
-          tap(response => {
-            sessionStorage.setItem('token', response.token);
+          catchError(error => {
             this.isRefreshing = false;
+            return throwError(error);
           }),
-          switchMap(response => {
-            return next.handle(this.addToken(req, response.token));
+          catchError(() => {
+            this.isRefreshing = false;
+            return throwError('Refresh token failed');
+          }),
+          catchError(() => {
+            return next.handle(req);
           })
         );
     } else {
