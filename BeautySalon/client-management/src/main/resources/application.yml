@@ -28,7 +28,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    url: jdbc:postgresql://147.45.102.248:5432/salondb
+    url: jdbc:postgresql://62.76.142.52:5432/salondb
     username: user
     password: passw
     hikari:
