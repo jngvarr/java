@@ -1,6 +1,9 @@
 package org.example;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -8,10 +11,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class ExcelMerger {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         String folderPath = "d:\\Downloads\\пто\\";
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
 
@@ -47,9 +52,12 @@ public class ExcelMerger {
                         continue;
                     }
 
+                    // Сохраняем ширину столбцов
+                    copyColumnWidths(inputSheet, targetSheet);
+
                     int lastRowNum = targetSheet.getLastRowNum() + 1;
 
-                    // Копируем строки (включая заголовок только из первого файла соответствующего типа)
+                    // Копируем строки и стили
                     while (rowIterator.hasNext()) {
                         Row row = rowIterator.next();
 
@@ -61,33 +69,7 @@ public class ExcelMerger {
                         // Создаем новую строку в целевом листе
                         Row newRow = targetSheet.createRow(lastRowNum++);
 
-                        // Копируем ячейки
-                        for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
-                            Cell cell = row.getCell(i);
-                            Cell newCell = newRow.createCell(i);
-
-                            if (cell != null) {
-                                // Копируем тип ячейки и значение
-                                newCell.setCellType(cell.getCellType());
-                                switch (cell.getCellType()) {
-                                    case STRING:
-                                        newCell.setCellValue(cell.getStringCellValue());
-                                        break;
-                                    case NUMERIC:
-                                        newCell.setCellValue(cell.getNumericCellValue());
-                                        break;
-                                    case BOOLEAN:
-                                        newCell.setCellValue(cell.getBooleanCellValue());
-                                        break;
-                                    case FORMULA:
-                                        newCell.setCellFormula(cell.getCellFormula());
-                                        break;
-                                    // Добавьте дополнительные типы по необходимости
-                                    default:
-                                        break;
-                                }
-                            }
-                        }
+                        copyRowWithStyles(inputSheet, targetSheet, row, newRow);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -104,5 +86,55 @@ public class ExcelMerger {
             e.printStackTrace();
         }
     }
-}
 
+    private static void copyColumnWidths(Sheet sourceSheet, Sheet targetSheet) {
+        for (int i = 0; i < sourceSheet.getRow(0).getLastCellNum(); i++) {
+            targetSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
+        }
+    }
+
+    private static void copyRowWithStyles(Sheet sourceSheet, Sheet targetSheet, Row sourceRow, Row targetRow) {
+        Map<Integer, CellStyle> styleMap = new HashMap<>();
+
+        for (int i = 0; i < sourceRow.getLastCellNum(); i++) {
+            Cell oldCell = sourceRow.getCell(i);
+            Cell newCell = targetRow.createCell(i);
+
+            if (oldCell != null) {
+                if (oldCell.getSheet().getWorkbook() == newCell.getSheet().getWorkbook()) {
+                    newCell.setCellStyle(oldCell.getCellStyle());
+                } else {
+                    // Копируем стиль, если исходный и целевой workbook разные
+                    CellStyle newCellStyle = styleMap.get(oldCell.getCellStyle().hashCode());
+                    if (newCellStyle == null) {
+                        newCellStyle = targetSheet.getWorkbook().createCellStyle();
+                        newCellStyle.cloneStyleFrom(oldCell.getCellStyle());
+                        styleMap.put(oldCell.getCellStyle().hashCode(), newCellStyle);
+                    }
+                    newCell.setCellStyle(newCellStyle);
+                }
+
+                // Копируем тип ячейки и значение
+                switch (oldCell.getCellType()) {
+                    case STRING:
+                        newCell.setCellValue(oldCell.getStringCellValue());
+                        break;
+                    case NUMERIC:
+                        newCell.setCellValue(oldCell.getNumericCellValue());
+                        break;
+                    case BOOLEAN:
+                        newCell.setCellValue(oldCell.getBooleanCellValue());
+                        break;
+                    case FORMULA:
+                        newCell.setCellFormula(oldCell.getCellFormula());
+                        break;
+                    case BLANK:
+                        newCell.setBlank();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
