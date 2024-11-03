@@ -3,117 +3,101 @@ package org.example;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataFiller {
     public static void main(String[] args) {
-        String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД.xlsx";
-        String profileFilePath = "d:\\Downloads\\профили2\\Профили нагрузки c 07.10.2024 по 07.10.2024 (1).xlsx";
+        String folderPath = "d:\\Downloads\\профили2\\";
+        String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
+        String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД — копия (2).xlsx";
+        String profileFilesPath = "d:\\Downloads\\профили2";
 
         // Extract month from the profile filename
-        String profileFileName = new File(profileFilePath).getName();
         String summaryFileName = new File(summaryFilePath).getName();
         String monthFromFileName = extractMonthFromFileName(summaryFilePath.toLowerCase());
-        String profileDate = extractDateFromFileName(profileFileName);
+
+        Map<String, Double> profileData = new HashMap<>();
+        Map<String, List<String>> countersByDate = new HashMap<>();
+        Map<String, String> dateByCounters = new HashMap<>();
 
         try {
             // Load summary workbook and sheet
             Workbook summaryWorkbook = new XSSFWorkbook(new FileInputStream(new File(summaryFilePath)));
             Sheet summarySheet = summaryWorkbook.getSheetAt(0);
 
-            // Load profile workbook and sheet
-            Workbook profileWorkbook = new XSSFWorkbook(new FileInputStream(new File(profileFilePath)));
-            Sheet profileSheet = profileWorkbook.getSheetAt(0);
-
-            // Create a map to hold profile data (counter number as key and value from column Q)
-            Map<String, Double> profileData = new HashMap<>();
-
-            // Read profile data from column C and Q
-            for (Row profileRow : profileSheet) {
-                Cell counterCell = profileRow.getCell(2); // Column C (№ счетчика)
-                Cell valueCell = profileRow.getCell(16); // Column Q (Показания на 12:00)
-
-                String counterNumber = getCellStringValue(counterCell);
-                Double value = getCellNumericValue(valueCell);
-
-                if (counterNumber != null && value != null) {
-                    profileData.put(counterNumber.trim(), value); // Store the value in the map
-                }
+            int monthColumnIndex = findMonthColumnIndex(summarySheet, monthFromFileName);
+            if (monthColumnIndex == -1) {
+                System.out.println("Month column not found.");
+                return;
             }
 
             // Fill AD column in the summary file based on date match
             for (Row summaryRow : summarySheet) {
-                Cell dateCell = summaryRow.getCell(27); // Column AB (дата)
-                Cell counterCell = summaryRow.getCell(10); // Column K (Номер счетчика)
+                // Extract date from the month column
+                Cell monthCell = summaryRow.getCell(monthColumnIndex); // Get cell in the month column
+                Cell counterCell = summaryRow.getCell(10);
+                if (monthCell != null) {
+                    String monthValue = monthCell.getStringCellValue(); // Assuming "Фамилия_дата"
+                    String[] parts = monthValue.split("_");
+                    if (parts.length > 1) {
+                        String dateString = parts[1]; // Get date part
+                        String counterNumber = getCellStringValue(counterCell);
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                            sdf.parse(dateString); // Validate date format
+                            countersByDate.putIfAbsent(dateString, new ArrayList<>()); // Если даты нет в мапе, создаем новый список
+                            countersByDate.get(dateString).add(counterNumber); // Добавляем номер счетчика в список для этой даты
+                            dateByCounters.put(counterNumber, dateString);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
 
-                String summaryDate = getCellStringValue(dateCell); // Get the date value safely
-                String counterNumber = getCellStringValue(counterCell); // Get the counter number safely
+            }
 
-                // Check if both date and counter number are valid
-                if (summaryDate != null && counterNumber != null) {
-                    // Check if the date matches and counter number is in profileData
-                    if (summaryDate.equals(profileDate) && profileData.containsKey(counterNumber.trim())) {
-                        Double fillValue = profileData.get(counterNumber.trim());
-                        Cell adCell = summaryRow.createCell(29); // Create or get existing AD cell
-                        adCell.setCellValue(fillValue); // Fill the cell with numeric value
+            for (String date : countersByDate.keySet()) {
+                String profileFilePath = profileFilesPath + "/" + "Профили нагрузки c " + date + " по " + date + ".xlsx"; // Формируем путь к файлу профиля
+                File profileFile = new File(profileFilePath);
+
+                if (profileFile.exists()) {
+                    loadProfileData(profileFile, profileData, date, countersByDate); // Загружаем данные профиля
+                }
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        try (Workbook summaryWorkbook = new XSSFWorkbook(new FileInputStream(new File(summaryFilePath)))) {
+            Sheet summarySheet = summaryWorkbook.getSheetAt(0);
+
+            for (Row summaryRow : summarySheet) {
+                Cell counterCell = summaryRow.getCell(10); // Номер счетчика
+                String counterNumber = getCellStringValue(counterCell); // Получаем значение счетчика
+
+                // Проверяем, если есть данные для этого счетчика
+                if (counterNumber != null) {
+                    String key = counterNumber.trim() + "_" + dateByCounters.get(counterNumber.trim()); // Используем номер счетчика как ключ
+                    if (profileData.containsKey(key)) {
+                        Cell adCell = summaryRow.createCell(27); // Создаем или получаем AD ячейку
+                        adCell.setCellValue(profileData.get(key)); // Заполняем ячейку числовым значением
                     }
                 }
             }
-//            // Find the column index for the month in the summary file
-//            int monthColumnIndex = findMonthColumnIndex(summarySheet, monthFromFileName);
-//            if (monthColumnIndex == -1) {
-//                System.out.println("Month column not found.");
-//                return;
-//            }
-//
-//            // Fill AD column in the summary file based on extracted dates
-//            for (Row summaryRow : summarySheet) {
-//                Cell counterCell = summaryRow.getCell(10); // Column K (Номер счетчика)
-//
-//                String counterNumber = getCellStringValue(counterCell); // Get the counter number safely
-//
-//                // Check if counter number is valid
-//                if (counterNumber != null) {
-//                    Double fillValue = profileData.get(counterNumber.trim());
-//                    if (fillValue != null) {
-//                        Cell adCell = summaryRow.createCell(29); // Create or get existing AD cell
-//                        adCell.setCellValue(fillValue); // Fill the cell with numeric value
-//                    }
-//                }
-//                // Extract date from the month column
-//                Cell monthCell = summaryRow.getCell(monthColumnIndex); // Get cell in the month column
-//                if (monthCell != null) {
-//                    String monthValue = monthCell.getStringCellValue(); // Assuming "Фамилия_дата"
-//                    String[] parts = monthValue.split("_");
-//                    if (parts.length > 1) {
-//                        String dateString = parts[1]; // Get date part
-//                        try {
-//                            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-//                            sdf.parse(dateString); // Validate date format
-//                            // Use this date instead of AB for further processing if needed
-//                        } catch (ParseException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//            }
+
 
             // Write changes to the summary file
             try (FileOutputStream fileOut = new FileOutputStream(summaryFilePath)) {
                 summaryWorkbook.write(fileOut);
             }
             summaryWorkbook.close();
-            profileWorkbook.close();
 
             System.out.println("Data filled successfully!");
 
@@ -141,7 +125,7 @@ public class DataFiller {
     }
 
     private static int findMonthColumnIndex(Sheet sheet, String month) {
-        Row headerRow = sheet.getRow(0); // Assuming the first row is the header
+        Row headerRow = sheet.getRow(1); // Assuming the first row is the header
         if (headerRow != null) {
             for (int colIndex = 0; colIndex < headerRow.getLastCellNum(); colIndex++) {
                 Cell cell = headerRow.getCell(colIndex);
@@ -205,4 +189,27 @@ public class DataFiller {
         }
         return null;
     }
+
+    private static void loadProfileData(File profileFile, Map<String, Double> profileData, String date, Map<String, List<String>> counters) {
+        try (Workbook profileWorkbook = new XSSFWorkbook(new FileInputStream(profileFile))) {
+            Sheet profileSheet = profileWorkbook.getSheetAt(0);
+
+            for (Row profileRow : profileSheet) {
+                Cell counterCell = profileRow.getCell(2); // Столбец с номером счетчика (C)
+                Cell valueCell = profileRow.getCell(16); // Столбец с показаниями (Q)
+
+                String counterNumber = getCellStringValue(counterCell); // Получаем номер счетчика
+                Double value = getCellNumericValue(valueCell); // Получаем значение
+
+                if (counterNumber != null && value != null && counters.get(date).contains(counterNumber)) {
+                    // Формируем ключ: номер счетчика_дата
+                    String key = counterNumber.trim() + "_" + date;
+                    profileData.put(key, value); // Сохраняем значение
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
+
