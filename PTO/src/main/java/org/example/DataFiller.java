@@ -13,7 +13,7 @@ public class DataFiller {
     public static void main(String[] args) {
         String folderPath = "d:\\Downloads\\профили2\\";
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
-        String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД — копия (2).xlsx";
+        String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД — копия.xlsx";
         String profileFilesPath = "d:\\Downloads\\профили2";
 
         SimpleDateFormat today = new SimpleDateFormat();
