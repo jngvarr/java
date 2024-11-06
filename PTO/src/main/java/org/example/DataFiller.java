@@ -11,6 +11,7 @@ import java.util.*;
 
 public class DataFiller {
     public static void main(String[] args) {
+        long startTime = System.currentTimeMillis();
         String folderPath = "d:\\Downloads\\профили2\\";
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
         String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД — копия.xlsx";
@@ -105,6 +106,9 @@ public class DataFiller {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
+        System.out.println("Время выполнения: " + duration + " миллисекунд");
     }
 
     // Extract month from filename (example: "Профили нагрузки c 07.10.2024 по 07.10.2024 (1).xlsx")
