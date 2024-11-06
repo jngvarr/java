@@ -53,6 +53,10 @@ public class EmailAttachmentSaver {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
                 Object content = message.getContent();
                 String saveDirectory = saveDirectoryPath + new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
+
+                File directory = new File(saveDirectory);
+                if (!directory.exists()) directory.mkdirs();
+
                 if (content instanceof Multipart) {
                     Multipart multipart = (Multipart) content;
                     processMultipartContent(multipart, saveDirectory);
