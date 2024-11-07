@@ -1,6 +1,7 @@
 package org.example;
 
 import com.sun.mail.util.BASE64DecoderStream;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeUtility;
@@ -23,7 +24,7 @@ public class EmailAttachmentSaver {
         String host = "imap.mail.ru";
         String user = "jngvarr@inbox.ru";
         String password = "pkfbmuMnfRwRF0dVetZn";
-        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\";
+        String saveDirectoryPath = "d:\\загрузки\\PTO\\reports\\";
 
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru");
 
@@ -32,7 +33,7 @@ public class EmailAttachmentSaver {
         properties.put("mail.imap.host", host);
         properties.put("mail.imap.port", "993");
         properties.put("mail.imap.ssl.enable", "true");
-        properties.put("mail.imap.connectiontimeout", "10000"); // увеличенный тайм-аут
+        properties.put("mail.imap.connectiontimeout", "10000");
         properties.put("mail.imap.timeout", "10000");
 
         try {
@@ -40,12 +41,13 @@ public class EmailAttachmentSaver {
             Store store = session.getStore("imap");
             store.connect(user, password);
 
-            Folder inbox = store.getFolder("Askye reports");
+            Folder inbox = store.getFolder("Ackye reports");
             inbox.open(Folder.READ_ONLY);
 
             Message[] messages = inbox.getMessages();
             for (Message message : messages) {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
+                if (!(new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals(today))) continue;
 
                 try {
                     Object content = message.getContent();
@@ -53,10 +55,6 @@ public class EmailAttachmentSaver {
                         System.out.println("Сообщение не содержит вложений.");
                         continue;
                     }
-
-                    String messageDate = new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
-//                    if (!messageDate.equals(today)) continue;
-                    if (!messageDate.equals("06.11.2024")) continue;
 
                     String saveDirectory = saveDirectoryPath + new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
                     Multipart multipart = (Multipart) content;
@@ -94,11 +92,14 @@ public class EmailAttachmentSaver {
 
         for (int i = 0; i < multipart.getCount(); i++) {
             BodyPart bodyPart = multipart.getBodyPart(i);
-            // Проверяем, что у части есть имя файла
+
+            // Попытка получить имя файла
             String fileName = bodyPart.getFileName();
             if (fileName != null) {
                 String decodedFileName = MimeUtility.decodeText(fileName);
-                if (decodedFileName.endsWith(".xlsx") || decodedFileName.endsWith(".xls")) {
+
+                // Проверяем только расширение файла
+                if (decodedFileName.toLowerCase().endsWith(".xlsx") || decodedFileName.toLowerCase().endsWith(".xls")) {
                     hasExcelAttachments = true;
                     decodedFileName = decodedFileName.replaceAll("[\\\\/:*?\"<>|]", "_");
 
