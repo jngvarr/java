@@ -1,8 +1,14 @@
 package org.example;
 
-import com.sun.mail.util.BASE64DecoderStream;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,46 +26,74 @@ public class EmailAttachmentSaver2 {
         LocalDate localDateToday = LocalDate.now();
         String today = localDateToday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-        String host = "imap.mail.ru";
-        String user = "jngvarr@inbox.ru";
-        String password = "pkfbmuMnfRwRF0dVetZn";
-        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\";
+        String host = "imap.yandex.ru";
+//        String host = "imap.mail.ru";
+        String user = "jngvarr.jd@yandex.ru";
+//        String password = "pkfbmuMnfRwRF0dVetZn";
+        String password = "cfbfhdlzejiaiuil";
+//        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\" + today;
+        String saveDirectoryPath = "d:\\загрузки\\PTO\\reports\\" + today;
 
-        List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru");
+//        List<String> allowedSenders = List.of("jngvarr.jd@yandex.ru", "jngvarr@jngvarr.ru");
+        List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru", "jngvarr.jd@yandex.ru", "jngvarr@jngvarr.ru");
 
         Properties properties = new Properties();
         properties.put("mail.store.protocol", "imap");
         properties.put("mail.imap.host", host);
         properties.put("mail.imap.port", "993");
         properties.put("mail.imap.ssl.enable", "true");
+        properties.put("mail.imap.partialfetch", "false"); // Отключаем частичную загрузку
         properties.put("mail.imap.connectiontimeout", "5000");
         properties.put("mail.imap.timeout", "5000");
+        properties.put("mail.imap.writetimeout", "5000");
+        properties.put("mail.debug", "false"); // Отключаем отладку, чтобы избежать лишнего вывода
+        properties.put("mail.imap.ignorebodystructuresize", "true");
+        properties.put("mail.imap.cachestructure", "false");
+
 
         try {
             Session session = Session.getDefaultInstance(properties, null);
             Store store = session.getStore("imap");
             store.connect(user, password);
 
-            Folder inbox = store.getFolder("Askye reports");
+            Folder inbox = store.getFolder("Ackye reports");
             inbox.open(Folder.READ_ONLY);
 
+            // Устанавливаем дату для фильтрации
+//            Date targetDate = Date.from(localDateToday.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//
+//            // Создаём SearchTerm для сообщений, отправленных в указанную дату
+//            SearchTerm dateTerm = new SentDateTerm(javax.mail.search.ComparisonTerm.EQ, targetDate);
+//
+//            // Ищем сообщения по дате
+//            Message[] messages = inbox.search(dateTerm);
+
+            int messagesQuantity = inbox.getMessageCount();
+//            Message[] messages = inbox.getMessages(messagesQuantity - 10, messagesQuantity);
             Message[] messages = inbox.getMessages();
+            int attachmentCount = 1;
+
             for (Message message : messages) {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
+                if (!(new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals("11.11.2024"))) continue;
+//                if (!(new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals(today))) continue;
 
                 try {
-                    // Пропускаем сообщение, если его содержимое не является Multipart
-                    Object content = message.getContent();
-                    if (!(content instanceof Multipart)) {
-                        System.out.println("Сообщение не содержит вложений.");
-                        continue; // Переход к следующему сообщению
+                    // Создаём новое MimeMessage для загрузки локально
+                    MimeMessage mimeMessage = new MimeMessage((MimeMessage) message);
+
+                    Object content = mimeMessage.getContent();
+
+                    if (content instanceof Multipart multipart) {
+                        // Обработка содержимого Multipart
+                        processMultipartContent(multipart, saveDirectoryPath, attachmentCount);
+                    } else {
+                        // Обработка одиночного вложения
+                        processSinglePartContent(message, saveDirectoryPath, attachmentCount);
                     }
 
-                    String saveDirectory = saveDirectoryPath + new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
-                    Multipart multipart = (Multipart) content;
-                    processMultipartContent(multipart, saveDirectory);
 
-                } catch (MessagingException e) {
+                } catch (IOException | MessagingException e) {
                     System.err.println("Ошибка при загрузке сообщения: " + e.getMessage());
                 }
             }
@@ -83,29 +117,25 @@ public class EmailAttachmentSaver2 {
         return false;
     }
 
-    private static void processMultipartContent(Multipart multipart, String saveDirectory) throws MessagingException, IOException {
-        boolean hasAttachments = false; // Флаг для отслеживания наличия вложений
-
-        for (int i = 0; i < multipart.getCount(); i++) {
-            BodyPart bodyPart = multipart.getBodyPart(i);
-
-            if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                hasAttachments = true;
-                String decodedFileName = MimeUtility.decodeText(bodyPart.getFileName());
-                decodedFileName = decodedFileName.replaceAll("[\\\\/:*?\"<>|]", "_");
-
-                if (bodyPart.getContent() instanceof BASE64DecoderStream) {
-                    saveStreamAttachment((InputStream) bodyPart.getContent(), saveDirectory, decodedFileName);
-                } else {
-                    saveAttachment(bodyPart, saveDirectory, decodedFileName);
-                }
+    private static String setFileName(InputStream inputStream) {
+        String cellValue = null;
+        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+            // Получаем первый лист
+            Sheet sheet = workbook.getSheetAt(0);
+            // Получаем первую строку и первую ячейку
+            Row row = sheet.getRow(2);
+            Cell cell = row.getCell(0);
+            // Читаем значение ячейки
+            if (cell != null) {
+                cellValue = cell.getStringCellValue();
+                System.out.println("Значение ячейки A3: " + cellValue);
+            } else {
+                System.out.println("Ячейка пуста.");
             }
+        } catch (IOException e) {
+            System.err.println("Ошибка при чтении Excel файла: " + e.getMessage());
         }
-
-        // Выводим сообщение, если вложений нет
-        if (!hasAttachments) {
-            System.out.println("В сообщении отсутствуют вложения.");
-        }
+        return cellValue;
     }
 
     private static void saveStreamAttachment(InputStream inputStream, String saveDirectory, String fileName) throws IOException {
@@ -123,18 +153,41 @@ public class EmailAttachmentSaver2 {
         System.out.println("Вложение сохранено: " + file.getAbsolutePath());
     }
 
-    private static void saveAttachment(BodyPart bodyPart, String saveDirectory, String fileName) throws IOException, MessagingException {
-        File directory = new File(saveDirectory);
-        if (!directory.exists()) directory.mkdirs();
+    private static void processMultipartContent(Multipart multipart, String saveDirectory, int attachmentCount) throws MessagingException, IOException {
+        for (int i = 0; i < multipart.getCount(); i++) {
+            BodyPart bodyPart = multipart.getBodyPart(i);
+            String contentType = bodyPart.getContentType().toLowerCase();
 
-        File file = new File(directory + File.separator + fileName);
-        try (InputStream is = bodyPart.getInputStream(); FileOutputStream fos = new FileOutputStream(file)) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                fos.write(buffer, 0, bytesRead);
+            // Проверяем, является ли часть вложением и Excel-файлом
+            if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition()) &&
+                    (contentType.contains("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+                            contentType.contains("application/vnd.ms-excel"))) {
+
+                String fileName = MimeUtility.decodeText(bodyPart.getFileName());
+
+                try (InputStream inputStream = bodyPart.getInputStream()) {
+                    if (fileName.contains("report")) fileName = setFileName(inputStream);
+
+                    saveStreamAttachment(inputStream, saveDirectory, fileName);
+                    System.out.println("Вложение сохранено (PMPC): " + fileName);
+                }
+                attachmentCount++;
             }
         }
-        System.out.println("Вложение сохранено: " + file.getAbsolutePath());
+    }
+
+    private static void processSinglePartContent(Message message, String saveDirectory, int attachmentCount) throws MessagingException, IOException {
+        String contentType = message.getContentType().toLowerCase();
+
+        // Проверяем, является ли содержимое одиночным вложением Excel
+        if (contentType.contains("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+                contentType.contains("application/vnd.ms-excel")) {
+
+            String uniqueFileName = setFileName("report.xlsx", attachmentCount);
+            try (InputStream inputStream = message.getInputStream()) {
+                saveStreamAttachment(inputStream, saveDirectory, uniqueFileName);
+                System.out.println("Вложение сохранено (PSPC): " + uniqueFileName);
+            }
+        }
     }
 }
