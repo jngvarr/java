@@ -1,10 +1,8 @@
 package org.example;
 
 import com.sun.mail.util.BASE64DecoderStream;
-
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeUtility;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,75 +14,57 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Properties;
 
-public class EmailAttachmentDownloader {
+public class EmailAttachmentDownloader { //здесь грузится .bin
 
     public static void main(String[] args) {
-        // Настройка параметров подключения к почтовому серверу
-        String host = "imap.mail.ru";
-        String username = "jngvarr@inbox.ru";
-        String password = "pkfbmuMnfRwRF0dVetZn";
-        String saveDirectoryPath = "d:\\загрузки\\PTO\\reports\\";
+        LocalDate localDateToday = LocalDate.now();
+        String today = localDateToday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-        Properties properties = new Properties();
-        properties.put("mail.store.protocol", "imaps");
+        String host = "imap.mail.ru"; // Укажите сервер IMAP
+        String user = "jngvarr@inbox.ru"; // Укажите email
+        String password = "pkfbmuMnfRwRF0dVetZn"; // Укажите пароль
+        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\"; // Путь для сохранения вложений
 
+        // Список допустимых адресов отправителей
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru");
 
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        Properties properties = new Properties();
+        properties.put("mail.store.protocol", "imap");
+        properties.put("mail.imap.host", host);
+        properties.put("mail.imap.port", "993");
+        properties.put("mail.imap.ssl.enable", "true");
+
 
         try {
-            // Подключение к почтовому ящику
+            // Подключаемся к почтовому ящику
             Session session = Session.getDefaultInstance(properties, null);
-            Store store = session.getStore();
-            store.connect(host, username, password);
+            Store store = session.getStore("imap");
+            store.connect(user, password);
 
-            // Открытие папки "Входящие"
-//            Folder inbox = store.getFolder("Ackye reports");
+            // Открываем папку "Входящие"
             Folder inbox = store.getFolder("Ackye reports");
             inbox.open(Folder.READ_ONLY);
 
-            // Извлечение сообщений из папки
+            // Получаем сообщения
             Message[] messages = inbox.getMessages();
+            int attachmentCount = 1;
+
             for (Message message : messages) {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
+                Object content = message.getContent();
+                String saveDirectory = saveDirectoryPath + new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
 
-                String messageDate = new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate());
-                if (!messageDate.equals(today)) {
-                    continue;
-                }
-                try {
-                    Object content = message.getContent();
-                    if (!(content instanceof Multipart)) {
-                        System.out.println("Сообщение не содержит вложений.");
-                        continue;
-                    }
-
+                if (content instanceof Multipart) {
                     Multipart multipart = (Multipart) content;
-                    // Обработка каждого вложения
-                    for (int i = 0; i < multipart.getCount(); i++) {
-                        BodyPart bodyPart = multipart.getBodyPart(i);
-
-                        String disposition = bodyPart.getDisposition();
-                        String fileName = bodyPart.getFileName();
-
-                        // Проверка, является ли часть вложением
-                        if (Part.ATTACHMENT.equalsIgnoreCase(disposition) || fileName != null) {
-                            // Обработка вложения, например, сохранение файла
-                            System.out.println("Найдено вложение: " + fileName);
-                        }
-//                        if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition()) &&
-//                                bodyPart.getFileName().endsWith(".xlsx")) {
-//
-//                            // Скачивание вложенного файла
-                            saveAttachment(bodyPart, saveDirectoryPath);
-//                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (MessagingException e) {
-                    throw new RuntimeException(e);
+                    processMultipartContent(multipart, saveDirectory);
+                } else if (content instanceof BASE64DecoderStream) {
+                    saveStreamAttachment((InputStream) content, saveDirectory, "attachment.bin");
+                } else {
+                    System.out.println("Тип содержимого не поддерживается: " + content.getClass().getName());
                 }
             }
+
+            // Закрываем соединение
             inbox.close(false);
             store.close();
 
@@ -93,20 +73,49 @@ public class EmailAttachmentDownloader {
         }
     }
 
-    // Метод для сохранения вложения на диск
-    private static void saveAttachment(BodyPart bodyPart, String saveDirectoryPath) throws Exception {
-        InputStream inputStream = bodyPart.getInputStream();
-        File file = new File( saveDirectoryPath+ bodyPart.getFileName());
-        FileOutputStream outputStream = new FileOutputStream(file);
+    private static void processMultipartContent(Multipart multipart, String saveDirectory) throws MessagingException, IOException {
+        for (int i = 0; i < multipart.getCount(); i++) {
+            BodyPart bodyPart = multipart.getBodyPart(i);
 
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
+            if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
+                String decodedFileName = MimeUtility.decodeText(bodyPart.getFileName());
+                decodedFileName = decodedFileName.replaceAll("[\\\\/:*?\"<>|]", "_"); // Замена запрещённых символов
+                if (bodyPart.getContent() instanceof BASE64DecoderStream) {
+                    saveStreamAttachment((InputStream) bodyPart.getContent(), saveDirectory, decodedFileName);
+                } else {
+                    saveAttachment(bodyPart, saveDirectory, decodedFileName);
+                }
+            }
         }
-        outputStream.close();
-        inputStream.close();
+    }
 
+    private static void saveStreamAttachment(InputStream inputStream, String saveDirectory, String fileName) throws IOException {
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) directory.mkdirs(); // Создание директории только при наличии вложения
+
+        File file = new File(directory + File.separator + fileName);
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+        }
+        System.out.println("Вложение сохранено: " + file.getAbsolutePath());
+    }
+
+    private static void saveAttachment(BodyPart bodyPart, String saveDirectory, String fileName) throws IOException, MessagingException {
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) directory.mkdirs(); // Создание директории только при наличии вложения
+
+        File file = new File(directory + File.separator + fileName);
+        try (InputStream is = bodyPart.getInputStream(); FileOutputStream fos = new FileOutputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+        }
         System.out.println("Вложение сохранено: " + file.getAbsolutePath());
     }
 
@@ -120,34 +129,4 @@ public class EmailAttachmentDownloader {
         }
         return false;
     }
-//    private static void processMultipartContent(Multipart multipart, String saveDirectory) throws MessagingException, IOException {
-//        boolean hasExcelAttachments = false;
-//
-//        for (int i = 0; i < multipart.getCount(); i++) {
-//            BodyPart bodyPart = multipart.getBodyPart(i);
-//            // Проверяем, что у части есть имя файла
-//            String fileName = bodyPart.getFileName();
-//            if (fileName != null) {
-//                String decodedFileName = MimeUtility.decodeText(fileName);
-//                if (!decodedFileName.isEmpty()) {
-//                    hasExcelAttachments = true;
-////                    decodedFileName = decodedFileName.replaceAll("[\\\\/:*?\"<>|]", "_");
-//
-//                    if (bodyPart.getContent() instanceof BASE64DecoderStream) {
-//                        saveStreamAttachment((InputStream) bodyPart.getContent(), saveDirectory, decodedFileName);
-//                    } else {
-//                        saveAttachment(bodyPart, saveDirectory, decodedFileName);
-//                    }
-//                } else {
-//                    System.out.println("Пропущено вложение: " + decodedFileName + " (не является файлом Excel)");
-//                }
-//            } else {
-//                System.out.println("Часть сообщения не имеет имени файла и была пропущена.");
-//            }
-//        }
-//
-//        if (!hasExcelAttachments) {
-//            System.out.println("В сообщении отсутствуют файлы Excel.");
-//        }
-//    }
 }

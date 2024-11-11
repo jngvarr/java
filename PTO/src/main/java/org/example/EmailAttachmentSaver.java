@@ -1,7 +1,5 @@
 package org.example;
 
-import com.sun.mail.util.BASE64DecoderStream;
-
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeUtility;
@@ -24,7 +22,7 @@ public class EmailAttachmentSaver {
         String host = "imap.mail.ru";
         String user = "jngvarr@inbox.ru";
         String password = "pkfbmuMnfRwRF0dVetZn";
-        String saveDirectoryPath = "d:\\загрузки\\PTO\\reports\\";
+        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\";
 
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru");
 
@@ -33,8 +31,7 @@ public class EmailAttachmentSaver {
         properties.put("mail.imap.host", host);
         properties.put("mail.imap.port", "993");
         properties.put("mail.imap.ssl.enable", "true");
-        properties.put("mail.imap.connectiontimeout", "10000");
-        properties.put("mail.imap.timeout", "10000");
+        properties.put("mail.imap.partialfetch", "false"); // Полный fetch
 
         try {
             Session session = Session.getDefaultInstance(properties, null);
@@ -69,8 +66,6 @@ public class EmailAttachmentSaver {
             inbox.close(false);
             store.close();
 
-        } catch (FolderClosedException e) {
-            System.err.println("Папка была закрыта из-за тайм-аута. Попробуйте снова или увеличьте таймаут.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,26 +88,30 @@ public class EmailAttachmentSaver {
         for (int i = 0; i < multipart.getCount(); i++) {
             BodyPart bodyPart = multipart.getBodyPart(i);
 
-            // Попытка получить имя файла
             String fileName = bodyPart.getFileName();
+            String contentType = bodyPart.getContentType().toLowerCase();
+
             if (fileName != null) {
-                String decodedFileName = MimeUtility.decodeText(fileName);
+                fileName = MimeUtility.decodeText(fileName);
+            } else if (contentType.contains("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+                    contentType.contains("application/vnd.ms-excel")) {
+                fileName = "excel_attachment.xlsx"; // Имя по умолчанию для Excel-файлов
+            } else {
+                System.out.println("Часть сообщения не имеет имени файла и не является Excel-файлом.");
+                continue;
+            }
 
-                // Проверяем только расширение файла
-                if (decodedFileName.toLowerCase().endsWith(".xlsx") || decodedFileName.toLowerCase().endsWith(".xls")) {
-                    hasExcelAttachments = true;
-                    decodedFileName = decodedFileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+            if (fileName.toLowerCase().endsWith(".xlsx") || fileName.toLowerCase().endsWith(".xls")) {
+                hasExcelAttachments = true;
+                fileName = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
 
-                    if (bodyPart.getContent() instanceof BASE64DecoderStream) {
-                        saveStreamAttachment((InputStream) bodyPart.getContent(), saveDirectory, decodedFileName);
-                    } else {
-                        saveAttachment(bodyPart, saveDirectory, decodedFileName);
-                    }
+                if (bodyPart.getContent() instanceof InputStream) {
+                    saveStreamAttachment((InputStream) bodyPart.getContent(), saveDirectory, fileName);
                 } else {
-                    System.out.println("Пропущено вложение: " + decodedFileName + " (не является файлом Excel)");
+                    saveAttachment(bodyPart, saveDirectory, fileName);
                 }
             } else {
-                System.out.println("Часть сообщения не имеет имени файла и была пропущена.");
+                System.out.println("Пропущено вложение: " + fileName + " (не является файлом Excel)");
             }
         }
 

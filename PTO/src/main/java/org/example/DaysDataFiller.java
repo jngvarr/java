@@ -21,12 +21,12 @@ public class DaysDataFiller {
         LocalDate localDateToday = LocalDate.now();
         String today = localDateToday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-//        String planOTOPath = "d:\\Downloads\\профили2\\06.11.2024\\план\\Контроль ПУ РРЭ (Задания на ОТО РРЭ) — копия.xlsx"; //дома
-        String planOTOPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+        String planOTOPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)" + ".xlsx"; //дома
+//        String planOTOPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
         String planOTOFile = new File(planOTOPath).getName();
 
-//        String folderPath = "d:\\Downloads\\профили2\\" + today;                              //дома
-        String folderPath = "d:\\загрузки\\PTO\\reports\\" + today;
+        String folderPath = "d:\\Downloads\\профили2\\reports\\" + today;                              //дома
+//        String folderPath = "d:\\загрузки\\PTO\\reports\\" + today;
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
 
         Map<String, String> normallyTurnedOff = new HashMap<>();
@@ -113,7 +113,7 @@ public class DaysDataFiller {
         }
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
-        System.out.println("Время выполнения: " + duration/1000 + " секунд(ы)");
+        System.out.println("Время выполнения: " + duration / 1000 + " секунд(ы)");
     }
 
 
