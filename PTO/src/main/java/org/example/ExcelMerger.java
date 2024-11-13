@@ -13,9 +13,10 @@ import java.util.regex.Pattern;
 
 public class ExcelMerger {
     public static void main(String[] args) {
-        String folderPath = "d:\\загрузки\\йй\\";
+        long startTime = System.currentTimeMillis();
+        String folderPath = "d:\\Downloads\\пто\\";
 
-        String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
+        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
         if (fileNames == null) return;
 
         String month = extractMonthFromFileName(fileNames[0]);
@@ -25,8 +26,8 @@ public class ExcelMerger {
         XSSFWorkbook workbookIIK = new XSSFWorkbook();
         XSSFWorkbook workbookIVKE = new XSSFWorkbook();
 
-        String outputFileIIK = "d:\\загрузки\\йй\\СВОД_ИИК_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
-        String outputFileIVKE = "d:\\загрузки\\йй\\СВОД_ИВКЭ_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
+        String outputFileIIK = "d:\\Downloads\\пто\\свод\\СВОД_ИИК_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
+        String outputFileIVKE = "d:\\Downloads\\пто\\свод\\СВОД_ИВКЭ_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
 
         try {
             boolean headersAddedIIK = false;
@@ -87,6 +88,9 @@ public class ExcelMerger {
                 e.printStackTrace();
             }
         }
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
+        System.out.println("Время выполнения: " + duration / 1000 + " секунд(ы)");
     }
 
     private static Sheet getOrCreateSheet(XSSFWorkbook workbook, String sheetName) {
@@ -147,8 +151,18 @@ public class ExcelMerger {
 
     // Метод для извлечения года из имени файла
     private static String extractYearFromFileName(String fileName) {
-        Pattern pattern = Pattern.compile("\\b(\\d{4})\\b"); // Находит 4-значные числа
+        Pattern pattern = Pattern.compile("(?<=\\b|_|\\s)\\d{4}(?=\\b|_|\\s)"); // Находит 4-значные числа
+//        Pattern pattern = Pattern.compile("\\b(\\d{4})\\b"); // Находит 4-значные числа
         Matcher matcher = pattern.matcher(fileName);
         return matcher.find() ? matcher.group(1) : "";
     }
 }
+
+
+//напиши код на java для объединения нескольких файлов excel:
+//        1. Все файлы лежат в одной папки,
+//2. файлы содержащие в названии "ИИК" должны быть собраны в файле СВОД_ИИК ПТО РРЭ <ГОД>_<МЕСЯЦ>, год и месяц нужно заменить, взяв из имени любого из исходных файлов
+//3. файлы содержащие в названии "ИВКЭ" должны быть собраны в файле СВОД_ИВКЭ ПТО РРЭ <ГОД>_<МЕСЯЦ>, год и месяц нужно заменить, взяв из имени любого из исходных файлов
+//4. Ширина столбцов итоговых файлов должна остаться, как у объединяемых файлов
+//5. Ячейки заголовка в итоговом файле должен сохранить стиль исходных файлов
+//6. В итоговых данных не должно быть пустых строк

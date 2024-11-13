@@ -190,7 +190,7 @@ public class UpgradedDaysDataFiller {
                     cell = row.createCell(cellIndex); // Создаем ячейку, если она не существует
                 }
                 if (cell.getCellType() == CellType.BLANK || (cell.getCellType() == CellType.STRING
-                        && cell.getStringCellValue().isEmpty())) {
+                        && cell.getStringCellValue().trim().isEmpty())) {
                     cell.setCellValue("#Н/Д");
                 }
                 cell.setCellStyle(sc);
