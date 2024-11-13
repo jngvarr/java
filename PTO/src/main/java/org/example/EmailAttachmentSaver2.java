@@ -10,15 +10,13 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Properties;
+import java.io.ByteArrayOutputStream;
 
 public class EmailAttachmentSaver2 {
 
@@ -29,7 +27,7 @@ public class EmailAttachmentSaver2 {
         String host = "imap.yandex.ru";
         String user = "jngvarr.jd@yandex.ru";
         String password = "cfbfhdlzejiaiuil";
-        String saveDirectoryPath = "d:\\Downloads\\профили2\\reports\\" + today;
+        String saveDirectoryPath = "d:\\загрузки\\PTO\\reports\\" + today;
 
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru", "jngvarr.jd@yandex.ru", "jngvarr@jngvarr.ru");
 
@@ -90,14 +88,52 @@ public class EmailAttachmentSaver2 {
         return false;
     }
 
-    private static String setFileName(InputStream inputStream) {
+    private static void saveStreamAttachment(InputStream inputStream, String saveDirectory, String fileName) throws IOException {
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Сохраняем данные потока во временный буфер в памяти
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int bytesRead;
+        int totalBytes = 0;
+
+        while ((bytesRead = inputStream.read(data)) != -1) {
+            buffer.write(data, 0, bytesRead);
+            totalBytes += bytesRead;
+        }
+
+        if (totalBytes == 0) {
+            System.out.println("Предупреждение: Вложение пустое или не удалось прочитать данные.");
+            return; // Прекращаем, если данные пусты
+        }
+
+        // Проверяем, содержит ли исходное имя файла "report"
+        String finalFileName = fileName.contains("report")
+                ? setFileNameFromBuffer(buffer.toByteArray(), fileName)
+                : fileName;
+
+        // Сохраняем файл в нужное место
+        try (FileOutputStream fos = new FileOutputStream(new File(directory, finalFileName))) {
+            buffer.writeTo(fos);
+        }
+
+        System.out.println("Вложение сохранено: " + directory + File.separator + finalFileName);
+    }
+
+    // Метод для извлечения имени из ячейки A3, используя данные в памяти
+    private static String setFileNameFromBuffer(byte[] fileData, String originalFileName) {
         String cellValue = null;
-        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+        try (InputStream inputStream = new ByteArrayInputStream(fileData);
+             Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
             Row row = sheet.getRow(2);
             Cell cell = row.getCell(0);
+
             if (cell != null) {
-                cellValue = cell.getStringCellValue().trim().replaceAll("[\\\\/:*?\"<>|]", "_");
+                cellValue = cell.getStringCellValue().trim().replace("\\", "-").replace("/", "-");
                 System.out.println("Значение ячейки A3: " + cellValue);
             } else {
                 System.out.println("Ячейка пуста.");
@@ -105,38 +141,9 @@ public class EmailAttachmentSaver2 {
         } catch (IOException e) {
             System.err.println("Ошибка при чтении Excel файла: " + e.getMessage());
         }
-        return (cellValue != null ? cellValue : "default") + "_" + LocalDate.now() + ".xlsx";
+
+        return (cellValue != null ? cellValue : originalFileName) + "_" + LocalDate.now() + ".xlsx";
     }
-
-    private static void saveStreamAttachment(InputStream inputStream, String saveDirectory, String fileName) throws IOException {
-        File directory = new File(saveDirectory);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File file = new File(directory, fileName);
-
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            int totalBytes = 0; // Для отслеживания общего количества байтов
-
-            // Читаем данные и записываем в файл
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                fos.write(buffer, 0, bytesRead);
-                totalBytes += bytesRead; // Считаем, сколько байтов было прочитано
-            }
-
-            if (totalBytes == 0) {
-                System.out.println("Предупреждение: Вложение пустое или не удалось прочитать данные.");
-            } else {
-                System.out.println("Вложение сохранено: " + file.getAbsolutePath() + " (Размер: " + totalBytes + " байт)");
-            }
-        } catch (IOException e) {
-            System.err.println("Ошибка при сохранении вложения: " + e.getMessage());
-        }
-    }
-
 
     private static void processMultipartContent(Multipart multipart, String saveDirectory) throws MessagingException, IOException {
         for (int i = 0; i < multipart.getCount(); i++) {
@@ -149,13 +156,10 @@ public class EmailAttachmentSaver2 {
 
                 String fileName = MimeUtility.decodeText(bodyPart.getFileName());
 
-                try (InputStream inputStream = bodyPart.getInputStream()) {
-                    if (fileName.contains("report")) {
-                        fileName = setFileName(inputStream);
-                    }
-                    saveStreamAttachment(inputStream, saveDirectory, fileName);
-                    System.out.println("Вложение сохранено (PMPC): " + fileName);
-                }
+                // Считываем поток в массив байтов
+                byte[] fileData = inputStreamToByteArray(bodyPart.getInputStream());
+                saveStreamAttachment(new ByteArrayInputStream(fileData), saveDirectory, fileName);
+                System.out.println("Вложение сохранено (PMPC) ");
             }
         }
     }
@@ -165,13 +169,23 @@ public class EmailAttachmentSaver2 {
 
         if (contentType.contains("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
                 contentType.contains("application/vnd.ms-excel")) {
-            String fileName = "report.xlsx";  // Установка имени по умолчанию для одиночного вложения
+            String fileName = "report.xlsx";
 
-            try (InputStream inputStream = message.getInputStream()) {
-                fileName = setFileName(inputStream);
-                saveStreamAttachment(inputStream, saveDirectory, fileName);
-                System.out.println("Вложение сохранено (PSPC): " + fileName);
-            }
+            // Считываем поток в массив байтов
+            byte[] fileData = inputStreamToByteArray(message.getInputStream());
+            saveStreamAttachment(new ByteArrayInputStream(fileData), saveDirectory, fileName);
+            System.out.println("Вложение сохранено (PSPC)");
         }
+    }
+
+    // Универсальный метод для конвертации InputStream в массив байтов
+    private static byte[] inputStreamToByteArray(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(data)) != -1) {
+            buffer.write(data, 0, bytesRead);
+        }
+        return buffer.toByteArray();
     }
 }

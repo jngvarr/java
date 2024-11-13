@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -21,12 +22,12 @@ public class DaysDataFiller {
         LocalDate localDateToday = LocalDate.now();
         String today = localDateToday.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
-        String planOTOPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)" + ".xlsx"; //дома
-//        String planOTOPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+//        String planOTOPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)" + ".xlsx"; //дома
+        String planOTOPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
         String planOTOFile = new File(planOTOPath).getName();
 
-        String folderPath = "d:\\Downloads\\профили2\\reports\\" + today;                              //дома
-//        String folderPath = "d:\\загрузки\\PTO\\reports\\" + today;
+//        String folderPath = "d:\\Downloads\\профили2\\reports\\" + today;                              //дома
+        String folderPath = "d:\\загрузки\\PTO\\reports\\" + today;
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
 
         Map<String, String> normallyTurnedOff = new HashMap<>();
@@ -36,8 +37,8 @@ public class DaysDataFiller {
         int enabled = 0;
 
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(planOTOPath))) {
-            Sheet iikSheet = planOTOWorkbook.getSheetAt(0);
-            Sheet ivkeSheet = planOTOWorkbook.getSheetAt(1);
+            Sheet iikSheet = planOTOWorkbook.getSheet("ИИК");
+            Sheet ivkeSheet = planOTOWorkbook.getSheet("ИВКЭ");
 
             Row firstRow = iikSheet.getRow(0);
             int lastColumnNum = firstRow.getLastCellNum();
@@ -84,6 +85,10 @@ public class DaysDataFiller {
                     }
                 }
             }
+
+            DataFormat poiDataFormat = ivkeSheet.getWorkbook().createDataFormat();
+            CellStyle dateCellStyle = ivkeSheet.getWorkbook().createCellStyle();
+            dateCellStyle.setDataFormat(poiDataFormat.getFormat("dd.MM.yyyy"));
             for (Row ivkeRow : ivkeSheet) {
                 Cell ivkeCell = ivkeRow.getCell(9);
                 String ivkeNumber = getCellStringValue(ivkeCell);
@@ -92,6 +97,17 @@ public class DaysDataFiller {
                     if (connectionDiag.containsKey(key)) {
                         Cell connectionDiagCol = ivkeRow.createCell(11);
                         connectionDiagCol.setCellValue(connectionDiag.get(key));
+                        String dateString = connectionDiag.get(key);
+
+                        // Попытка преобразовать строку в дату
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                            connectionDiagCol.setCellValue(sdf.parse(dateString));
+                            connectionDiagCol.setCellStyle(dateCellStyle); // Устанавливаем стиль даты
+                        } catch (ParseException e) {
+                            // Если дата не распознана, сохраняем как текст
+                            connectionDiagCol.setCellValue(dateString);
+                        }
                     }
                 }
             }
@@ -118,12 +134,12 @@ public class DaysDataFiller {
 
 
     // Extract date from filename in the format DD.MM.YYYY
-    private static Map<String, String> fillingMapWithData(int meterColumn, int neededDataColumn, String fileName) {
+    private static Map<String, String> fillingMapWithData(int column, int neededDataColumn, String fileName) {
         Map<String, String> workMap = new HashMap<>();
         try (Workbook currentWorkbook = new XSSFWorkbook(new FileInputStream(fileName))) {
             Sheet workbookSheet = currentWorkbook.getSheetAt(0);
             for (Row row : workbookSheet) {
-                Cell cellKey = row.getCell(meterColumn);
+                Cell cellKey = row.getCell(column);
                 Cell cellValue = row.getCell(neededDataColumn);
                 if (cellKey != null && cellValue != null) {
                     String key = getCellStringValue(cellKey);
