@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Properties;
 import java.io.ByteArrayOutputStream;
 
-public class EmailAttachmentSaver2 {
+public class EmailAttachmentSaver { // загрузка почты SMTP
 
     public static void main(String[] args) {
         LocalDate localDateToday = LocalDate.now();

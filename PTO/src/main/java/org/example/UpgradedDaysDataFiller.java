@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class UpgradedDaysDataFiller {
 
-    private static final Logger logger = LoggerFactory.getLogger(DaysDataFiller.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpgradedDaysDataFiller.class);
 
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -170,11 +170,11 @@ public class UpgradedDaysDataFiller {
 
         CellRangeAddress cellRangeAddress = new CellRangeAddress(firstRowNum, lastRowNum, firstColNum, lastColumnNum);
         workSheet.setAutoFilter(cellRangeAddress);
-        cellBordering(firstRowNum, lastRowNum, firstColNum, lastColumnNum, workSheet);
+        setCellAlignment(firstRowNum, lastRowNum, firstColNum, lastColumnNum, workSheet);
 
     }
 
-    private static void cellBordering(int firstRowNum, int lastRowNum, int firstColNum, int lastColumnNum, Sheet worksheet) {
+    private static void setCellAlignment(int firstRowNum, int lastRowNum, int firstColNum, int lastColumnNum, Sheet worksheet) {
         Cell sourceC = worksheet.getRow(1).getCell(lastColumnNum - 1);
         CellStyle sc = (sourceC != null) ? sourceC.getCellStyle() : worksheet.getWorkbook().createCellStyle();
         sc.setAlignment(HorizontalAlignment.CENTER);

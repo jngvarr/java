@@ -1,168 +1,215 @@
 package org.example;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
+import java.nio.file.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ExcelMerger {
-    public static void main(String[] args) {
-        long startTime = System.currentTimeMillis();
-        String folderPath = "d:\\Downloads\\пто\\";
+import static org.apache.poi.ss.format.CellFormatType.DATE;
 
-        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
-        if (fileNames == null) return;
+public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
+    private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
 
-        String month = extractMonthFromFileName(fileNames[0]);
-        String year = extractYearFromFileName(fileNames[0]);
+    public static void main(String[] args) throws IOException {
 
-        // Создаем книги для ИИК и ИВКЭ
-        XSSFWorkbook workbookIIK = new XSSFWorkbook();
-        XSSFWorkbook workbookIVKE = new XSSFWorkbook();
+//        String folderPath = "d:\\Downloads\\пто\\";
+        String folderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\";
+        File folder = new File(folderPath);
 
-        String outputFileIIK = "d:\\Downloads\\пто\\свод\\СВОД_ИИК_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
-        String outputFileIVKE = "d:\\Downloads\\пто\\свод\\СВОД_ИВКЭ_ПТО_РРЭ_" + month + "_" + year + ".xlsx";
+//        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
 
-        try {
-            boolean headersAddedIIK = false;
-            boolean headersAddedIVKE = false;
-            for (String fileName : fileNames) {
-                File file = new File(folderPath + fileName);
-                try (FileInputStream fis = new FileInputStream(file);
-                     XSSFWorkbook inputWorkbook = new XSSFWorkbook(fis)) {
+        Map<String, List<File>> fileGroups = new HashMap<>();
+        fileGroups.put("ИИК", new ArrayList<>());
+        fileGroups.put("ИВКЭ", new ArrayList<>());
 
-                    Sheet inputSheet = inputWorkbook.getSheetAt(0);
-                    Iterator<Row> rowIterator = inputSheet.iterator();
+        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> name.endsWith(".xlsx")))) {
+            if (file.getName().contains("ИИК")) {
+                fileGroups.get("ИИК").add(file);
+            } else if (file.getName().contains("ИВКЭ")) {
+                fileGroups.get("ИВКЭ").add(file);
+            }
+        }
 
-                    XSSFWorkbook targetWorkbook;
-                    Sheet targetSheet;
-                    boolean headersAdded;
+        for (String group : fileGroups.keySet()) {
+            if (!fileGroups.get(group).isEmpty()) {
+                String month = extractMonthFromFileName(fileGroups.get(group).getFirst().getName());
+                String year = extractYearFromFileName(fileGroups.get(group).getFirst().getName());
+                String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, year, month.toUpperCase());
+                mergeExcelFiles(fileGroups.get(group), folderPath + File.separator + "свод" + File.separator + outputFileName);
+            }
+        }
+    }
 
-                    if (fileName.contains("ИИК")) {
-                        targetWorkbook = workbookIIK;
-                        targetSheet = getOrCreateSheet(targetWorkbook, "Свод ИИК");
-                        headersAdded = headersAddedIIK;
-                        headersAddedIIK = true;
-                    } else if (fileName.contains("ИВКЭ")) {
-                        targetWorkbook = workbookIVKE;
-                        targetSheet = getOrCreateSheet(targetWorkbook, "Свод ИВКЭ");
-                        headersAdded = headersAddedIVKE;
-                        headersAddedIVKE = true;
-                    } else {
-                        continue;
-                    }
+    private static String extractMonthFromFileName(String fileName) {
+        Pattern pattern = Pattern.compile("(январ[ья]|феврал[ья]|март[а]?|апрел[ья]|ма[йя]|июн[ья]?|июл[ья]?|август[а]?|сентябр[ья]|октябр[ья]|ноябр[ья]|декабр[ья])", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(fileName.toLowerCase());
+        return matcher.find() ? matcher.group(1) : ""; // Возвращаем найденный месяц
+    }
 
-                    int lastRowNum = targetSheet.getLastRowNum() + 1;
 
-                    // Копируем строки, включая заголовок только для первого файла соответствующего типа
-                    while (rowIterator.hasNext()) {
-                        Row row = rowIterator.next();
-                        if (!headersAdded && row.getRowNum() == 0) {
-                            copyRowWithStyles(row, targetSheet.createRow(lastRowNum++), targetWorkbook);
-                        } else if (row.getRowNum() > 0) {
-                            copyRowWithStyles(row, targetSheet.createRow(lastRowNum++), targetWorkbook);
-                        }
-                    }
+    private static String extractYearFromFileName(String fileName) {
+        Pattern pattern = Pattern.compile("(?<=\\b|_|\\s)\\d{4}(?=\\b|_|\\s)"); // Ищем 4-значное число с гибкими границами
+        Matcher matcher = pattern.matcher(fileName);
+        // Находим первое совпадение
+        return matcher.find() ? matcher.group() : ""; // Возвращаем найденный месяц
+    }
+
+
+    private static void mergeExcelFiles(List<File> inputFiles, String outputFilePath) throws IOException {
+        XSSFWorkbook resultWorkbook = new XSSFWorkbook();
+        XSSFSheet resultSheet = resultWorkbook.createSheet("Свод");
+
+        int rowCount = 0;
+        boolean headerCopied = false;
+
+        for (File file : inputFiles) {
+            try (FileInputStream fis = new FileInputStream(file);
+                 XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+                XSSFSheet sheet = workbook.getSheetAt(0);
+
+                int columnCount = sheet.getRow(0).getLastCellNum();
+
+                // Копируем заголовок только один раз
+                if (!headerCopied) {
+                    copyHeader(resultSheet, sheet.getRow(0), rowCount, columnCount);
+                    rowCount++;
+                    headerCopied = true;
                 }
-            }
 
-            // Сохранение итоговых книг
-            try (FileOutputStream fosIIK = new FileOutputStream(outputFileIIK);
-                 FileOutputStream fosIVKE = new FileOutputStream(outputFileIVKE)) {
-                workbookIIK.write(fosIIK);
-                workbookIVKE.write(fosIVKE);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                workbookIIK.close();
-                workbookIVKE.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-        System.out.println("Время выполнения: " + duration / 1000 + " секунд(ы)");
-    }
+                CellStyle newCellStyle = resultWorkbook.createCellStyle();
+                newCellStyle.cloneStyleFrom(sheet.getRow(1).getCell(0).getCellStyle());
+                CellStyle dateCellStyle = resultWorkbook.createCellStyle();
+                short dateFormat = resultWorkbook.createDataFormat().getFormat("dd/MM/yyyy"); // Формат даты
+                dateCellStyle.setDataFormat(dateFormat);
 
-    private static Sheet getOrCreateSheet(XSSFWorkbook workbook, String sheetName) {
-        Sheet sheet = workbook.getSheet(sheetName);
-        return sheet == null ? workbook.createSheet(sheetName) : sheet;
-    }
 
-    private static CellStyle getOrCreateCellStyle(Cell sourceCell, XSSFWorkbook targetWorkbook) {
-        // Находим существующий стиль
-        for (int i = 0; i < targetWorkbook.getNumCellStyles(); i++) {
-            CellStyle style = targetWorkbook.getCellStyleAt((short) i); // Приведение к short
-            if (style.equals(sourceCell.getCellStyle())) {
-                return style;
+                // Копируем данные, пропуская пустые строки
+                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                    Row sourceRow = sheet.getRow(i);
+//                    if (sourceRow == null || isRowEmpty(sourceRow)) continue; // Пропуск пустых строк
+                    if (sourceRow == null || isCellEmpty(sourceRow.getCell(0)))
+                        continue; // Пропуск строки если пуста первая ячейка
+
+                    Row targetRow = resultSheet.createRow(rowCount++);
+                    copyRow(sourceRow, targetRow, columnCount, newCellStyle, dateCellStyle);
+                }
+
+                adjustColumnWidths(resultSheet, sheet, columnCount);
+                applyAutoFilterAndFreezeHeader(resultSheet);
             }
         }
-        // Если стиль не найден, создаем новый
-        CellStyle newCellStyle = targetWorkbook.createCellStyle();
-        newCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
-        return newCellStyle;
+
+        try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
+            resultWorkbook.write(fos);
+        }
+
+
+        try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
+            resultWorkbook.write(fos);
+        }
     }
 
-    private static void copyRowWithStyles(Row sourceRow, Row targetRow, XSSFWorkbook targetWorkbook) {
-        for (int i = 0; i < sourceRow.getLastCellNum(); i++) {
+    private static boolean isCellEmpty(Cell cell) {
+        return (cell == null || cell.getCellType() == CellType.BLANK || (cell.getCellType() == CellType.STRING
+                && cell.getStringCellValue().trim().isEmpty()));
+    }
+
+    private static void copyHeader(Sheet resultSheet, Row headerRow, int rowIndex, int columnCount) {
+        Row targetHeaderRow = resultSheet.createRow(rowIndex);
+        Workbook resultWorkbook = resultSheet.getWorkbook();
+
+        for (int i = 0; i < columnCount; i++) {
+            Cell sourceCell = headerRow.getCell(i);
+            Cell targetCell = targetHeaderRow.createCell(i);
+
+            if (sourceCell != null) {
+                targetCell.setCellValue(sourceCell.toString());
+
+                // Копируем стиль заголовка
+                CellStyle newCellStyle = resultWorkbook.createCellStyle();
+                newCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
+                targetCell.setCellStyle(newCellStyle);
+            }
+        }
+    }
+
+
+    // Метод для копирования данных строки
+    private static void copyRow(Row sourceRow, Row targetRow, int columnCount, CellStyle defaultCellStyle, CellStyle dateCellStyle) {
+        for (int i = 0; i < columnCount; i++) {
             Cell sourceCell = sourceRow.getCell(i);
             Cell targetCell = targetRow.createCell(i);
-            if (sourceCell != null) {
-                // Получаем или создаем стиль
-                CellStyle style = getOrCreateCellStyle(sourceCell, targetWorkbook);
-                targetCell.setCellStyle(style);
 
-                // Копируем данные
+            if (sourceCell != null) {
                 switch (sourceCell.getCellType()) {
                     case STRING:
                         targetCell.setCellValue(sourceCell.getStringCellValue());
+                        targetCell.setCellStyle(defaultCellStyle);
                         break;
                     case NUMERIC:
-                        targetCell.setCellValue(sourceCell.getNumericCellValue());
+                        if (DateUtil.isCellDateFormatted(sourceCell)) {
+                            targetCell.setCellValue(sourceCell.getDateCellValue()); // Копируем дату
+                            targetCell.setCellStyle(dateCellStyle); // Применяем стиль для даты
+                        } else {
+                            targetCell.setCellValue(sourceCell.getNumericCellValue()); // Копируем число
+                            targetCell.setCellStyle(defaultCellStyle);
+                        }
                         break;
                     case BOOLEAN:
                         targetCell.setCellValue(sourceCell.getBooleanCellValue());
+                        targetCell.setCellStyle(defaultCellStyle);
                         break;
                     case FORMULA:
                         targetCell.setCellFormula(sourceCell.getCellFormula());
+                        targetCell.setCellStyle(defaultCellStyle);
                         break;
                     default:
+                        targetCell.setCellStyle(defaultCellStyle);
                         break;
                 }
+            } else {
+                targetCell.setCellStyle(defaultCellStyle);
             }
         }
     }
 
-    // Метод для извлечения месяца из имени файла
-    private static String extractMonthFromFileName(String fileName) {
-        Pattern pattern = Pattern.compile("\\b(январ[ья]|феврал[ья]|март[а]?|апрел[я]?|ма[я]?|июн[ья]?|июл[ья]?|август[а]?|сентябр[я]?|октябр[я]?|ноябр[я]?|декабр[я]?)\\b", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(fileName);
-        return matcher.find() ? matcher.group(1) : "";
+
+    // Метод для проверки, пуста ли строка
+    private static boolean isRowEmpty(Row row) {
+        for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    // Метод для извлечения года из имени файла
-    private static String extractYearFromFileName(String fileName) {
-        Pattern pattern = Pattern.compile("(?<=\\b|_|\\s)\\d{4}(?=\\b|_|\\s)"); // Находит 4-значные числа
-//        Pattern pattern = Pattern.compile("\\b(\\d{4})\\b"); // Находит 4-значные числа
-        Matcher matcher = pattern.matcher(fileName);
-        return matcher.find() ? matcher.group(1) : "";
+    // Метод для настройки ширины столбцов
+    private static void adjustColumnWidths(Sheet resultSheet, Sheet sourceSheet, int columnCount) {
+        for (int i = 0; i < columnCount; i++) {
+            resultSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
+        }
+    }
+
+    private static void applyAutoFilterAndFreezeHeader(Sheet workSheet) {
+        int lastRowNum = workSheet.getLastRowNum();
+        int lastColNum = workSheet.getRow(0).getLastCellNum();
+        int firstColNum = 0;
+        int firstRowNum = 0;
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(firstRowNum, lastRowNum, firstColNum, lastColNum);
+        workSheet.setAutoFilter(cellRangeAddress);
+        workSheet.createFreezePane(firstRowNum, firstRowNum + 1);
     }
 }
-
-
-//напиши код на java для объединения нескольких файлов excel:
-//        1. Все файлы лежат в одной папки,
-//2. файлы содержащие в названии "ИИК" должны быть собраны в файле СВОД_ИИК ПТО РРЭ <ГОД>_<МЕСЯЦ>, год и месяц нужно заменить, взяв из имени любого из исходных файлов
-//3. файлы содержащие в названии "ИВКЭ" должны быть собраны в файле СВОД_ИВКЭ ПТО РРЭ <ГОД>_<МЕСЯЦ>, год и месяц нужно заменить, взяв из имени любого из исходных файлов
-//4. Ширина столбцов итоговых файлов должна остаться, как у объединяемых файлов
-//5. Ячейки заголовка в итоговом файле должен сохранить стиль исходных файлов
-//6. В итоговых данных не должно быть пустых строк
