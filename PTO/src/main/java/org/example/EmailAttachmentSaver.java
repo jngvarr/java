@@ -10,10 +10,15 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
+import javax.mail.search.ComparisonTerm;
+import javax.mail.search.SearchTerm;
+import javax.mail.search.SentDateTerm;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.io.ByteArrayOutputStream;
@@ -31,16 +36,14 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
 
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru", "jngvarr.jd@yandex.ru", "jngvarr@jngvarr.ru");
 
-        Properties properties = new Properties();
-        properties.put("mail.store.protocol", "imap");
-        properties.put("mail.imap.host", host);
-        properties.put("mail.imap.port", "993");
-        properties.put("mail.imap.ssl.enable", "true");
-        properties.put("mail.imap.partialfetch", "false");
-        properties.put("mail.imap.connectiontimeout", "5000");
-        properties.put("mail.imap.timeout", "5000");
-        properties.put("mail.imap.writetimeout", "5000");
-        properties.put("mail.debug", "false");
+        Properties properties = getProperties(host);
+
+        // Устанавливаем дату для фильтрации
+        Date targetDate = Date.from(localDateToday.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        // Создаём фильтр по дате
+        SearchTerm dateFilter = new SentDateTerm(ComparisonTerm.EQ, targetDate);
+
 
         try {
             Session session = Session.getDefaultInstance(properties, null);
@@ -50,10 +53,11 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
             Folder inbox = store.getFolder("Ackye reports");
             inbox.open(Folder.READ_ONLY);
 
-            Message[] messages = inbox.getMessages();
+
+            Message[] messages = inbox.search(dateFilter); // Получаем только сообщения, соответствующие дате
             for (Message message : messages) {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
-                if (!new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals("11.11.2024")) continue;
+                if (!new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals(today)) continue;
 
                 try {
                     MimeMessage mimeMessage = new MimeMessage((MimeMessage) message);
@@ -75,6 +79,20 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static Properties getProperties(String host) {
+        Properties properties = new Properties();
+        properties.put("mail.store.protocol", "imap");
+        properties.put("mail.imap.host", host);
+        properties.put("mail.imap.port", "993");
+        properties.put("mail.imap.ssl.enable", "true");
+        properties.put("mail.imap.partialfetch", "false");
+        properties.put("mail.imap.connectiontimeout", "5000");
+        properties.put("mail.imap.timeout", "5000");
+        properties.put("mail.imap.writetimeout", "5000");
+        properties.put("mail.debug", "false");
+        return properties;
     }
 
     private static boolean isFromAllowedSender(Message message, List<String> allowedSenders) throws MessagingException {

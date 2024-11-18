@@ -88,7 +88,7 @@ public class UpgradedDaysDataFiller {
             if (fileName.startsWith("Контроль поступления данных")) {
                 dataMaps.get(DataType.DATA_CONTROL).putAll(fillingMapWithData(1, 5, file));
             } else if (fileName.startsWith("Состав ИИК")) {
-                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(11, 9, file));
+                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(11, 8, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
                 dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
             } else if (fileName.startsWith("Диагностика связи")) {
@@ -147,11 +147,11 @@ public class UpgradedDaysDataFiller {
                 }
             }
         }
-        setTopCellProperties(firstRow, lastColumnNum, enabledCount);
+        setTopRowProperties(firstRow, lastColumnNum, enabledCount);
     }
 
 
-    private static void setTopCellProperties(Row firstRow, int lastColumnNum, int enabledCount) {
+    private static void setTopRowProperties(Row firstRow, int lastColumnNum, int enabledCount) {
         String formattedDate = LocalDate.now().format(DATE_FORMATTER_DDMMMM);
         Cell meterStatus = firstRow.getCell(19);
         meterStatus.setCellValue("Статус счетчика в Горизонте на " + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY));
@@ -177,7 +177,7 @@ public class UpgradedDaysDataFiller {
     private static void setCellAlignment(int firstRowNum, int lastRowNum, int firstColNum, int lastColumnNum, Sheet worksheet) {
         Cell sourceC = worksheet.getRow(1).getCell(lastColumnNum - 1);
         CellStyle sc = (sourceC != null) ? sourceC.getCellStyle() : worksheet.getWorkbook().createCellStyle();
-        sc.setAlignment(HorizontalAlignment.CENTER);
+        sc.setAlignment(HorizontalAlignment.LEFT);
         sc.setVerticalAlignment(VerticalAlignment.CENTER);
         for (int rowIndex = firstRowNum + 1; rowIndex <= lastRowNum; rowIndex++) {
             Row row = worksheet.getRow(rowIndex);
