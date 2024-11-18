@@ -11,6 +11,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ExcelSplitter {
 
@@ -18,68 +20,44 @@ public class ExcelSplitter {
 
     public static void main(String[] args) throws IOException {
 
-//        String inputFilePath = "d:\\загрузки\\PTO\\План ПТО 2024\\свод";
-//        File[] inputFolder = new File(inputFilePath).listFiles((dir, name) -> name.contains("ПТО"));
-//        String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\";
-//
-//        if (!inputFolder.exists() || !inputFolder.isDirectory()) {
-//            System.err.println("Указанная папка не существует или не является директорией: " + inputFilePath);
-//            return;
-//        }
-//
-//        // Получаем только файлы, содержащие "ПТО" в названии, из папки "свод"
-//        File[] fileNames = inputFolder.listFiles(file -> file.isFile() && file.getName().contains("ПТО"));
-//
-//        if (fileNames == null || fileNames.length == 0) {
-//            System.err.println("Нет файлов для обработки в папке: " + inputFilePath);
-//            return;
-//        }
-//
-//        String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\разделенные";
-//        File outputFolder = new File(outputFolderPath);
-//        if (!outputFolder.exists()) {
-//            outputFolder.mkdirs();
-//        }
-//
-//        // Обработка каждого файла
-//        for (File file : fileNames) {
-//            System.out.println("Обработка файла: " + file.getAbsolutePath());
-//            splitExcelFile(file, outputFolderPath);
-//        }
+        // Путь к папке "свод"
+        String inputFilePath = "d:\\Downloads\\пто\\свод\\"; // дома
+//            String inputFilePath = "d:\\загрузки\\PTO\\План ПТО 2024\\свод";
+        File inputFolder = new File(inputFilePath);
 
-
-            // Путь к папке "свод"
-            String inputFilePath = "d:\\загрузки\\PTO\\План ПТО 2024\\свод";
-            File inputFolder = new File(inputFilePath);
-
-            if (!inputFolder.exists() || !inputFolder.isDirectory()) {
-                System.err.println("Указанная папка не существует или не является директорией: " + inputFilePath);
-                return;
-            }
-
-            // Получаем только файлы, содержащие "ПТО" в названии, из папки "свод"
-            File[] fileNames = inputFolder.listFiles(file -> file.isFile() && file.getName().contains("ПТО"));
-
-            if (fileNames == null || fileNames.length == 0) {
-                System.err.println("Нет файлов для обработки в папке: " + inputFilePath);
-                return;
-            }
-
-            String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\разделенные";
-            File outputFolder = new File(outputFolderPath);
-            if (!outputFolder.exists()) {
-                outputFolder.mkdirs();
-            }
-
-            // Обработка каждого файла
-            for (File file : fileNames) {
-                System.out.println("Обработка файла: " + file.getAbsolutePath());
-                splitExcelFile(file, outputFolderPath);
-            }
+        if (!inputFolder.exists() || !inputFolder.isDirectory()) {
+            System.err.println("Указанная папка не существует или не является директорией: " + inputFilePath);
+            return;
         }
+
+        // Получаем только файлы, содержащие "ПТО" в названии, из папки "свод"
+        File[] fileNames = inputFolder.listFiles(file -> file.isFile() && file.getName().contains("ПТО"));
+
+        if (fileNames == null || fileNames.length == 0) {
+            System.err.println("Нет файлов для обработки в папке: " + inputFilePath);
+            return;
+        }
+
+        String outputFolderPath = "d:\\Downloads\\пто\\";                        //дома
+//            String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\разделенные";
+        File outputFolder = new File(outputFolderPath);
+        if (!outputFolder.exists()) {
+            outputFolder.mkdirs();
+        }
+
+        // Обработка каждого файла
+        for (File file : fileNames) {
+            System.out.println("Обработка файла: " + file.getAbsolutePath());
+            splitExcelFile(file, outputFolderPath);
+        }
+    }
 
 
     private static void splitExcelFile(File inputFilePath, String outputFolderPath) throws IOException {
+
+        String month = extractMonthFromFileName(inputFilePath.toString());
+        String year = extractYearFromFileName(inputFilePath.getName());
+
         try (FileInputStream fis = new FileInputStream(inputFilePath);
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
 
@@ -96,7 +74,7 @@ public class ExcelSplitter {
             // Группируем строки по значениям в столбце "НТЭЛ"
             for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Пропускаем заголовок
                 Row row = sheet.getRow(i);
-                if (row == null || isRowEmpty(row)) continue;
+                if (row == null || isCellEmpty(row.getCell(0))) continue;
 
                 Cell cell = row.getCell(ntelColumnIndex);
                 String ntelValue = cell != null ? cell.toString() : "Без НТЭЛ";
@@ -109,7 +87,9 @@ public class ExcelSplitter {
                 String ntelValue = entry.getKey();
                 List<Row> rows = entry.getValue();
 
-                String outputFileName = ntelValue.replaceAll("[^a-zA-Zа-яА-Я0-9]", "_") + ".xlsx";
+                String outputFileName = ntelValue.replaceAll("[^a-zA-Zа-яА-Я0-9]", "_")
+                        + (inputFilePath.toString().contains("ИИК") ? "_ИИК" : "_ИВКЭ") + "_ПТО РРЭ " + year + "_"
+                        + month.toUpperCase() + ".xlsx";
                 String outputFilePath = outputFolderPath + File.separator + outputFileName;
 
                 createExcelFile(outputFilePath, sheet.getRow(0), rows);
@@ -141,7 +121,13 @@ public class ExcelSplitter {
         return true;
     }
 
+    private static boolean isCellEmpty(Cell cell) {  //проверяем строку на пустоту по первой ячейке, которая всегда заполнена
+        return (cell == null || cell.getCellType() == CellType.BLANK || (cell.getCellType() == CellType.STRING
+                && cell.getStringCellValue().trim().isEmpty()));
+    }
+
     private static void createExcelFile(String outputFilePath, Row headerRow, List<Row> rows) throws IOException {
+        boolean isHeader = true;
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              FileOutputStream fos = new FileOutputStream(outputFilePath)) {
 
@@ -150,12 +136,22 @@ public class ExcelSplitter {
 
             // Копируем заголовок
             Row targetHeaderRow = sheet.createRow(rowCount++);
-            copyRow(headerRow, targetHeaderRow);
+            copyRow(headerRow, targetHeaderRow, isHeader, null);
+            isHeader = false;
+
+
+            CellStyle simpleCellStyle = workbook.createCellStyle();
+            Row sampleRow = rows.get(1);
+            if (sampleRow != null && sampleRow.getCell(0) != null) {
+                simpleCellStyle.cloneStyleFrom(sampleRow.getCell(0).getCellStyle());
+            }
+//            CellStyle dateCellStyle = createDateCellStyle(resultWorkbook);
+
 
             // Копируем строки
             for (Row row : rows) {
                 Row targetRow = sheet.createRow(rowCount++);
-                copyRow(row, targetRow);
+                copyRow(row, targetRow, isHeader, simpleCellStyle);
             }
 
             // Настройка ширины столбцов
@@ -167,7 +163,10 @@ public class ExcelSplitter {
         }
     }
 
-    private static void copyRow(Row sourceRow, Row targetRow) {
+    private static void copyRow(Row sourceRow, Row targetRow, boolean isHeader, CellStyle simpleCellStyle) {
+        Sheet resultSheet = targetRow.getSheet();
+        Sheet sourceSheet = sourceRow.getSheet();
+
         for (int i = 0; i < sourceRow.getLastCellNum(); i++) {
             Cell sourceCell = sourceRow.getCell(i);
             Cell targetCell = targetRow.createCell(i);
@@ -193,8 +192,42 @@ public class ExcelSplitter {
                     default:
                         break;
                 }
-                targetCell.setCellStyle(sourceCell.getCellStyle());
+                if (isHeader) {
+                    CellStyle targetCellStyle = targetCell.getSheet().getWorkbook().createCellStyle();
+                    targetCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
+                    targetCell.setCellStyle(targetCellStyle);
+                    resultSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
+
+                } else {
+                    targetCell.setCellStyle(simpleCellStyle);
+
+                }
             }
         }
+    }
+
+    private static CellStyle createDateCellStyle(Workbook resultWorkbook) {
+        CellStyle dateCellStyle = resultWorkbook.createCellStyle();
+        DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
+        dateCellStyle.setDataFormat(dateFormat.getFormat("dd.MM.yyyy"));
+        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
+        dateCellStyle.setBorderBottom(BorderStyle.THIN);
+        return dateCellStyle;
+    }
+
+    private static String extractMonthFromFileName(String fileName) {
+        logger.debug("Извлечение месяца из имени файла '{}'", fileName);
+        Pattern pattern = Pattern.compile("(январ[ья]|феврал[ья]|март[а]?|апрел[ья]|ма[йя]|июн[ья]?|июл[ья]?|август[а]?|сентябр[ья]|октябр[ья]|ноябр[ья]|декабр[ья])", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(fileName.toLowerCase());
+        return matcher.find() ? matcher.group(1) : ""; // Возвращаем найденный месяц
+    }
+
+
+    private static String extractYearFromFileName(String fileName) {
+        logger.debug("Извлечение года из имени файла '{}'", fileName);
+        Pattern pattern = Pattern.compile("(?<=\\b|_|\\s)\\d{4}(?=\\b|_|\\s)"); // Ищем 4-значное число с гибкими границами
+        Matcher matcher = pattern.matcher(fileName);
+        // Находим первое совпадение
+        return matcher.find() ? matcher.group() : ""; // Возвращаем найденный месяц
     }
 }
