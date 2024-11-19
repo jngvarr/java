@@ -1,6 +1,7 @@
 package org.example;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +24,8 @@ public class ExcelSplitter {
     public static void main(String[] args) throws IOException {
 
         // Путь к папке "свод"
-        String inputFilePath = "d:\\Downloads\\пто\\свод\\"; // дома
-//            String inputFilePath = "d:\\загрузки\\PTO\\План ПТО 2024\\свод";
+//        String inputFilePath = "d:\\Downloads\\пто"; // дома
+        String inputFilePath = "d:\\загрузки\\PTO\\План ПТО 2024";
         File inputFolder = new File(inputFilePath);
 
         if (!inputFolder.exists() || !inputFolder.isDirectory()) {
@@ -38,18 +41,28 @@ public class ExcelSplitter {
             return;
         }
 
-        String outputFolderPath = "d:\\Downloads\\пто\\";                        //дома
-//            String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\разделенные";
+//        String outputFolderPath = "d:\\Downloads\\пто\\";                        //дома
+        String outputFolderPath = "d:\\загрузки\\PTO\\План ПТО 2024";
         File outputFolder = new File(outputFolderPath);
         if (!outputFolder.exists()) {
             outputFolder.mkdirs();
         }
 
-        // Обработка каждого файла
+
+        // Параллельная обработка файлов
+        ExecutorService executorService = Executors.newFixedThreadPool(4); // 4 потока
         for (File file : fileNames) {
-            System.out.println("Обработка файла: " + file.getAbsolutePath());
-            splitExcelFile(file, outputFolderPath);
+            executorService.submit(() -> {
+                try {
+                    logger.info("Обработка файла: {}", file.getAbsolutePath());
+                    splitExcelFile(file, outputFolderPath);
+                } catch (IOException e) {
+                    logger.error("Ошибка при обработке файла: {}", file.getName(), e);
+                }
+            });
         }
+
+        executorService.shutdown();
     }
 
 
@@ -65,9 +78,11 @@ public class ExcelSplitter {
             Map<String, List<Row>> groupedRows = new HashMap<>();
 
             // Найти индекс столбца "НТЭЛ"
-            int ntelColumnIndex = findColumnIndex(sheet, "НТЭЛ");
-            if (ntelColumnIndex == -1) {
-                logger.error("Столбец 'НТЭЛ' не найден");
+            int eelColumnIndex = findColumnIndex(sheet, "ЭЭЛ");
+            int regionColumnIndex = findColumnIndex(sheet, "Регион");
+
+            if (eelColumnIndex == -1) {
+                logger.error("Столбец 'ЭЭЛ' не найден в файле: {}", inputFilePath.getName());
                 return;
             }
 
@@ -76,27 +91,64 @@ public class ExcelSplitter {
                 Row row = sheet.getRow(i);
                 if (row == null || isCellEmpty(row.getCell(0))) continue;
 
-                Cell cell = row.getCell(ntelColumnIndex);
-                String ntelValue = cell != null ? cell.toString() : "Без НТЭЛ";
+                Cell cell = row.getCell(eelColumnIndex);
+                String eelValue = cell != null ? cell.toString() : "Без ЭЭЛ";
 
-                groupedRows.computeIfAbsent(ntelValue, k -> new ArrayList<>()).add(row);
+                // Логика объединения и разделения
+                if (eelValue.equals("ЭЭЛ-2") || eelValue.equals("ЭЭЛ-2.1")) {
+                    // Объединяем строки с ЭЭЛ-2 и ЭЭЛ-2.1 в одну группу
+                    groupedRows.computeIfAbsent("ЭЭЛ-2_ЭЭЛ-2.1", k -> new ArrayList<>()).add(row);
+                } else if (eelValue.equals("ЭЭЛ-3.1") && regionColumnIndex != -1) {
+                    // Разделяем строки с ЭЭЛ-3.1 по столбцу "Регион"
+                    Cell regionCell = row.getCell(regionColumnIndex);
+                    String region = regionCell.toString(); // Учитываем, что регион есть всегда
+                    groupedRows.computeIfAbsent("ЭЭЛ-3.1_" + region, k -> new ArrayList<>()).add(row);
+                } else {
+                    // Группируем остальные строки по значению ЭЭЛ
+                    groupedRows.computeIfAbsent(eelValue, k -> new ArrayList<>()).add(row);
+                }
             }
 
             // Создаем файлы для каждой группы
             for (Map.Entry<String, List<Row>> entry : groupedRows.entrySet()) {
-                String ntelValue = entry.getKey();
+                String groupName = entry.getKey();
                 List<Row> rows = entry.getValue();
 
-                String outputFileName = ntelValue.replaceAll("[^a-zA-Zа-яА-Я0-9]", "_")
-                        + (inputFilePath.toString().contains("ИИК") ? "_ИИК" : "_ИВКЭ") + "_ПТО РРЭ " + year + "_"
-                        + month.toUpperCase() + ".xlsx";
+                // Генерируем имя файла с использованием StringBuilder
+                String outputFileName = generateOutputFileName(inputFilePath, groupName, month, year);
                 String outputFilePath = outputFolderPath + File.separator + outputFileName;
 
                 createExcelFile(outputFilePath, sheet.getRow(0), rows);
-                logger.info("Создан файл: {}", outputFilePath);
+                logger.info("Создан файл для группы '{}': {}", groupName, outputFilePath);
             }
+
         }
     }
+
+
+    private static String generateOutputFileName(File inputFile, String groupValue, String month, String year) {
+        StringBuilder fileNameBuilder = new StringBuilder();
+
+        // Добавляем название группы, заменяя недопустимые символы
+        fileNameBuilder.append(groupValue.replaceAll("[^a-zA-Zа-яА-Я0-9]", "_"));
+
+        // Добавляем суффикс в зависимости от файла
+        if (inputFile.getName().contains("ИИК")) {
+            fileNameBuilder.append("_ИИК");
+        } else if (inputFile.getName().contains("ИВКЭ")) {
+            fileNameBuilder.append("_ИВКЭ");
+        }
+
+        // Добавляем год и месяц
+        fileNameBuilder.append("_ПТО РРЭ ")
+                .append(year)
+                .append("_")
+                .append(month.toUpperCase())
+                .append(".xlsx");
+
+        return fileNameBuilder.toString();
+    }
+
 
     private static int findColumnIndex(Sheet sheet, String columnName) {
         Row headerRow = sheet.getRow(0); // Заголовок на первой строке
@@ -136,7 +188,7 @@ public class ExcelSplitter {
 
             // Копируем заголовок
             Row targetHeaderRow = sheet.createRow(rowCount++);
-            copyRow(headerRow, targetHeaderRow, isHeader, null);
+            copyRow(headerRow, targetHeaderRow, isHeader, null, null);
             isHeader = false;
 
 
@@ -145,13 +197,13 @@ public class ExcelSplitter {
             if (sampleRow != null && sampleRow.getCell(0) != null) {
                 simpleCellStyle.cloneStyleFrom(sampleRow.getCell(0).getCellStyle());
             }
-//            CellStyle dateCellStyle = createDateCellStyle(resultWorkbook);
+            CellStyle dateCellStyle = createDateCellStyle(workbook);
 
 
             // Копируем строки
             for (Row row : rows) {
                 Row targetRow = sheet.createRow(rowCount++);
-                copyRow(row, targetRow, isHeader, simpleCellStyle);
+                copyRow(row, targetRow, isHeader, simpleCellStyle, dateCellStyle);
             }
 
             // Настройка ширины столбцов
@@ -159,11 +211,29 @@ public class ExcelSplitter {
                 sheet.setColumnWidth(i, sheet.getColumnWidth(i));
             }
 
+            adjustColumnWidths(sheet, sampleRow.getSheet());
+            applyAutoFilterAndFreezeHeader(sheet);
             workbook.write(fos);
         }
     }
 
-    private static void copyRow(Row sourceRow, Row targetRow, boolean isHeader, CellStyle simpleCellStyle) {
+    private static void adjustColumnWidths(Sheet resultSheet, Sheet sourceSheet) {
+        for (int i = 0; i < resultSheet.getRow(0).getLastCellNum(); i++) {
+            resultSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
+        }
+    }
+
+    private static void applyAutoFilterAndFreezeHeader(Sheet workSheet) {
+        int lastRowNum = workSheet.getLastRowNum();
+        int lastColNum = workSheet.getRow(0).getLastCellNum();
+        int firstColNum = 0;
+        int firstRowNum = 0;
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(firstRowNum, lastRowNum - 1, firstColNum, lastColNum - 1);
+        workSheet.setAutoFilter(cellRangeAddress);
+        workSheet.createFreezePane(firstRowNum, firstRowNum + 1);
+    }
+
+    private static void copyRow(Row sourceRow, Row targetRow, boolean isHeader, CellStyle simpleCellStyle, CellStyle dateCellStyle) {
         Sheet resultSheet = targetRow.getSheet();
         Sheet sourceSheet = sourceRow.getSheet();
 
@@ -175,19 +245,24 @@ public class ExcelSplitter {
                 switch (sourceCell.getCellType()) {
                     case STRING:
                         targetCell.setCellValue(sourceCell.getStringCellValue());
+                        targetCell.setCellStyle(simpleCellStyle);
                         break;
                     case NUMERIC:
                         if (DateUtil.isCellDateFormatted(sourceCell)) {
-                            targetCell.setCellValue(sourceCell.getDateCellValue());
+                            targetCell.setCellValue(sourceCell.getDateCellValue()); // Копируем дату
+                            targetCell.setCellStyle(dateCellStyle); // Применяем стиль для даты
                         } else {
-                            targetCell.setCellValue(sourceCell.getNumericCellValue());
+                            targetCell.setCellValue(sourceCell.getNumericCellValue()); // Копируем число
+                            targetCell.setCellStyle(simpleCellStyle);
                         }
                         break;
                     case BOOLEAN:
                         targetCell.setCellValue(sourceCell.getBooleanCellValue());
+                        targetCell.setCellStyle(simpleCellStyle);
                         break;
                     case FORMULA:
                         targetCell.setCellFormula(sourceCell.getCellFormula());
+                        targetCell.setCellStyle(simpleCellStyle);
                         break;
                     default:
                         break;
@@ -197,10 +272,6 @@ public class ExcelSplitter {
                     targetCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
                     targetCell.setCellStyle(targetCellStyle);
                     resultSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
-
-                } else {
-                    targetCell.setCellStyle(simpleCellStyle);
-
                 }
             }
         }
@@ -209,7 +280,7 @@ public class ExcelSplitter {
     private static CellStyle createDateCellStyle(Workbook resultWorkbook) {
         CellStyle dateCellStyle = resultWorkbook.createCellStyle();
         DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
-        dateCellStyle.setDataFormat(dateFormat.getFormat("dd.MM.yyyy"));
+        dateCellStyle.setDataFormat(dateFormat.getFormat("dd.MM.YYYY"));
         dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
         dateCellStyle.setBorderBottom(BorderStyle.THIN);
         return dateCellStyle;
