@@ -1,7 +1,6 @@
 package org.example;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -17,30 +16,33 @@ public class OFOGTemplateFiller {
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
-        String dataPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
+//        String dataPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
+        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
         // Путь для сохранения нового файла
-        String outputFilePathOFlog = "d:\\загрузки\\filled_operational_failure_log.xlsx";
-        String outputFilePathOfogIr = "d:\\загрузки\\filled_inspection_report.xlsx";
+        String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
+        String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
         int dateColumnIndex = 16;
         int targetMonth = LocalDate.now().getMonthValue();
-        int причинаНеисправности = 18;
-        int targetRowNum = 0;
+        int faultReasonColNum = 18;
+        int targetLogSheetRowNum = 0;
+        int targetIReportRowNum = 0;
 
 
         // Открываем файл-шаблон
         try (FileInputStream templateFis = new FileInputStream(templatePath);
              XSSFWorkbook templateWorkbook = new XSSFWorkbook(templateFis)) {
-            try (FileInputStream dataFis = new FileInputStream(templatePath);
+            try (FileInputStream dataFis = new FileInputStream(dataPath);
                  XSSFWorkbook dataWorkbook = new XSSFWorkbook(dataFis)) {
 
                 // Получаем первый лист
                 XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
-                XSSFSheet iReport = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
-                XSSFSheet dataSheet = templateWorkbook.getSheet("ОЖ");
+                XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
+                XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
 
 
                 for (Row row : dataSheet) {
                     Cell dateCell = row.getCell(dateColumnIndex);
+                    Cell faultReasonCell = row.getCell(faultReasonColNum);
 
                     // Проверяем, является ли ячейка датой
                     if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
@@ -51,10 +53,17 @@ public class OFOGTemplateFiller {
                                 .toLocalDate();
 
                         // Проверяем, совпадает ли месяц
-                        if (localDate.getMonthValue() == cellDate.getMonth()) {
+                        if (localDate.getMonthValue() - 1 == cellDate.getMonth()) {
+
+                            Row targetRow;
                             // Копируем строку в целевой лист
-                            Row targetRow = dataSheet.createRow(targetRowNum++);
-                            copyRow(row, targetRow);
+                            if (faultReasonCell != null && faultReasonCell.getCellType() == CellType.STRING &&
+                                    !faultReasonCell.getStringCellValue().equals("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ")) {
+                                targetRow = ofLogSheet.createRow(targetLogSheetRowNum++ + 8);
+                            } else {
+                                targetRow = iReportSheet.createRow(targetIReportRowNum++ + 9);
+                            }
+                            copyRowsData(row, targetRow);
                         }
                     }
 
@@ -62,55 +71,94 @@ public class OFOGTemplateFiller {
                 }
 
                 // Сохраняем новый файл
-                try (FileOutputStream fos = new FileOutputStream(outputFilePathOfog)) {
+                try (FileOutputStream fos = new FileOutputStream(outputFilePathOFlog)) {
                     templateWorkbook.write(fos);
                 }
 
-                System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOfog);
+                System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
             }
         }
     }
 
-    private static void copyRow(Row sourceRow, Row targetRow, boolean isHeader, CellStyle simpleCellStyle, CellStyle dateCellStyle) {
-        Sheet resultSheet = targetRow.getSheet();
-        Sheet sourceSheet = sourceRow.getSheet();
+    private static void copyRowsData(Row sourceRow, Row targetRow) {
+        // Определяем соответствие: из какой исходной колонки данные копировать и в какую целевую
+        int[] sourceColumns = {15, 10, 5}; // Индексы колонок в исходной строке
+        int[] targetColumns = {8, 4, 2};   // Индексы колонок в целевой строке
 
-        for (int i = 0; i < sourceRow.getLastCellNum(); i++) {
-            Cell sourceCell = sourceRow.getCell(i);
-            Cell targetCell = targetRow.createCell(i);
+        for (int i = 0; i < sourceColumns.length; i++) {
+            int sourceIndex = sourceColumns[i];
+            int targetIndex = targetColumns[i];
+
+            // Получаем ячейки из исходной строки и создаём соответствующую в целевой строке
+            Cell sourceCell = sourceRow.getCell(sourceIndex);
+            Cell targetCell = targetRow.createCell(targetIndex);
 
             if (sourceCell != null) {
                 switch (sourceCell.getCellType()) {
                     case STRING:
                         targetCell.setCellValue(sourceCell.getStringCellValue());
-                        targetCell.setCellStyle(simpleCellStyle);
                         break;
                     case NUMERIC:
                         if (DateUtil.isCellDateFormatted(sourceCell)) {
                             targetCell.setCellValue(sourceCell.getDateCellValue()); // Копируем дату
-                            targetCell.setCellStyle(dateCellStyle); // Применяем стиль для даты
                         } else {
                             targetCell.setCellValue(sourceCell.getNumericCellValue()); // Копируем число
-                            targetCell.setCellStyle(simpleCellStyle);
                         }
                         break;
                     case BOOLEAN:
                         targetCell.setCellValue(sourceCell.getBooleanCellValue());
-                        targetCell.setCellStyle(simpleCellStyle);
                         break;
                     case FORMULA:
                         targetCell.setCellFormula(sourceCell.getCellFormula());
-                        targetCell.setCellStyle(simpleCellStyle);
+                        break;
+                    default:
+                        targetCell.setBlank(); // Оставляем ячейку пустой
+                        break;
+                }
+            }
+        }
+    }
+
+    private static void concatAndCopyRowsData(Row sourceRow, Row targetRow) {
+        // Индексы колонок для объединения данных
+        int[] columnsToConcat = {6, 7, 9, 13}; // Колонки, из которых нужно получить данные
+
+        // Индекс колонки в целевой строке, куда будет записан результат
+        int targetColumnIndex = 8;
+
+        // Создаём результирующую строку
+        StringBuilder concatenatedData = new StringBuilder();
+
+        // Проходим по указанным колонкам и собираем их данные
+        for (int columnIndex : columnsToConcat) {
+            Cell cell = sourceRow.getCell(columnIndex);
+            if (cell != null) {
+                switch (cell.getCellType()) {
+                    case STRING:
+                        concatenatedData.append(cell.getStringCellValue()).append("/");
+                        break;
+                    case NUMERIC:
+                        if (DateUtil.isCellDateFormatted(cell)) {
+                            concatenatedData.append(cell.getDateCellValue().toString()).append("/");
+                        } else {
+                            concatenatedData.append(cell.getNumericCellValue()).append("/");
+                        }
+                        break;
+                    case BOOLEAN:
+                        concatenatedData.append(cell.getBooleanCellValue()).append("/");
+                        break;
+                    case FORMULA:
+                        concatenatedData.append(cell.getCellFormula()).append("/");
                         break;
                     default:
                         break;
                 }
-                if (isHeader) {
-                    CellStyle targetCellStyle = targetCell.getSheet().getWorkbook().createCellStyle();
-                    targetCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
-                    targetCell.setCellStyle(targetCellStyle);
-                    resultSheet.setColumnWidth(i, sourceSheet.getColumnWidth(i));
-                }
             }
         }
+
+        // Записываем объединённые данные в целевую строку
+        Cell targetCell = targetRow.createCell(targetColumnIndex);
+        targetCell.setCellValue(concatenatedData.toString().trim()); // Убираем лишние пробелы в конце
+    }
+
 }
