@@ -85,7 +85,7 @@ public class OFOGTemplateFiller {
                             } else {
                                 targetRow = iReportSheet.createRow(targetIReportColNum++ + 9);
                             }
-                            copyRowsData(row, targetRow, commonCellStyle, dateCellStyle);
+                            copyRowsData(row, targetRow, commonCellStyle);
                         }
                     }
 
@@ -118,31 +118,10 @@ public class OFOGTemplateFiller {
         logger.info("Совпавших строк в отчете {}:", reportRows);
     }
 
-    private static void copyRowsData(Row sourceRow, Row targetRow, CellStyle commonCellStyle, CellStyle dateCellStyle) {
-        concatAndCopyRowsData(sourceRow, targetRow);
-        copySpecificCells(sourceRow, targetRow, commonCellStyle, dateCellStyle);
-    }
+    private static void copyRowsData(Row sourceRow, Row targetRow, CellStyle style) {
+        String[] dates = new String[12];
+        Cell cell = (sourceRow.getCell(16));
 
-    private static void copySpecificCells(Row sourceRow, Row targetRow, CellStyle commonCellStyle, CellStyle dateCellStyle) {
-        String[] dates = getReportDates(sourceRow.getCell(16));
-        targetRow.createCell(8).setCellValue(dates[3]);
-        targetRow.createCell(9).setCellValue(dates[4]);
-
-        for (int i = 0; i < dates.length - 1; i++) {
-            targetRow.createCell(i).setCellValue(dates[i]);
-        }
-        targetRow.createCell(3).setCellValue("ЗСЖД");
-        copyCellData(sourceRow.getCell(10), targetRow.createCell(4), commonCellStyle);
-        copyCellData(sourceRow.getCell(17), targetRow.createCell(6), commonCellStyle);
-        copyCellData(sourceRow.getCell(18), targetRow.createCell(10), commonCellStyle);
-        targetRow.createCell(7).setCellValue("Демянчук В.М., диспетчер");
-        copyCellData(sourceRow.getCell(20), targetRow.createCell(11), commonCellStyle);
-        Cell employee = sourceRow.getCell(20);
-        targetRow.createCell(11).setCellValue(employee.getStringCellValue() + ", инженер ООО УК СТС");
-    }
-
-    private static String[] getReportDates(Cell cell) {
-        String[] dates = new String[5];
         LocalDate restorationDate = cell.getLocalDateTimeCellValue().toLocalDate();
         LocalDate failureDetectionDate = subtractRandomDays(restorationDate);
 
@@ -150,42 +129,25 @@ public class OFOGTemplateFiller {
         dates[1] = generateRandomTime(9, 17);
         dates[2] = failureDetectionDate.minusDays(1).format(DATE_FORMATTER_DDMMYYYY) + " "
                 + generateRandomTime(0, 23);
-        dates[3] = restorationDate.format(DATE_FORMATTER_DDMMYYYY);
-        dates[4] = generateRandomTime(9, 17);
-        return dates;
-    }
+        dates[3] = "ЗСЖД";
+        dates[4] = cell.getRow().getCell(7).getStringCellValue();
+        dates[5] = concatAndCopyRowsData(cell.getRow());
+        dates[6] = cell.getRow().getCell(17).getStringCellValue();
+        dates[7] = "Демянчук В.М., диспетчер";
+        dates[8] = restorationDate.format(DATE_FORMATTER_DDMMYYYY);
+        dates[9] = generateRandomTime(9, 17);
+        dates[10] = cell.getRow().getCell(18).getStringCellValue();
+        dates[11] = cell.getRow().getCell(20).getStringCellValue() + ", инженер ООО УК СТС";
 
-    private static void copyCellData(Cell sourceCell, Cell targetCell, CellStyle style) {
-        if (sourceCell != null) {
-            switch (sourceCell.getCellType()) {
-                case STRING:
-                    targetCell.setCellValue(sourceCell.getStringCellValue());
-                    break;
-                case NUMERIC:
-                    if (DateUtil.isCellDateFormatted(sourceCell)) {
-                        targetCell.setCellValue(sourceCell.getDateCellValue()); // Копируем дату
-                    } else {
-                        targetCell.setCellValue(sourceCell.getNumericCellValue()); // Копируем число
-                    }
-                    break;
-                case BOOLEAN:
-                    targetCell.setCellValue(sourceCell.getBooleanCellValue());
-                    break;
-                case FORMULA:
-                    targetCell.setCellFormula(sourceCell.getCellFormula());
-                    break;
-                default:
-                    targetCell.setBlank(); // Оставляем ячейку пустой
-                    break;
-            }
-//            }
+        for (int i = 0; i < dates.length; i++) {
+            Cell targetCell = targetRow.createCell(i);
+            targetCell.setCellValue(dates[i]);
             targetCell.setCellStyle(style);
         }
     }
 
-    private static void concatAndCopyRowsData(Row sourceRow, Row targetRow) {
+    private static String concatAndCopyRowsData(Row sourceRow) {
         int[] columnsToConcat = {6, 7, 9, 13}; // Колонки для объединения
-        int targetColumnIndex = 5;
         StringBuilder concatenatedData = new StringBuilder();
 
         for (int columnIndex : columnsToConcat) {
@@ -216,9 +178,8 @@ public class OFOGTemplateFiller {
             }
         }
 
-        concatenatedData.append(" (").append(getCellStringValue(sourceRow.getCell(15))).append(")");
-        Cell targetCell = targetRow.createCell(targetColumnIndex);
-        targetCell.setCellValue(concatenatedData.toString().trim());
+        concatenatedData.append(" (").append(getCellStringValue(sourceRow.getCell(13))).append(")");
+        return concatenatedData.toString().trim();
     }
 
 
@@ -293,10 +254,10 @@ public class OFOGTemplateFiller {
 
     private static CellStyle createCommonCellStyle(Sheet resultSheet) {
         CellStyle simpleCellStyle = resultSheet.getWorkbook().createCellStyle();
-        Row sampleRow = resultSheet.getRow(1);
-        if (sampleRow != null && sampleRow.getCell(0) != null) {
-            simpleCellStyle.cloneStyleFrom(sampleRow.getCell(0).getCellStyle());
-        }
+        simpleCellStyle.setBorderBottom(BorderStyle.THIN);
+        simpleCellStyle.setBorderLeft(BorderStyle.THIN);
+        simpleCellStyle.setBorderRight(BorderStyle.THIN);
+        simpleCellStyle.setBorderTop(BorderStyle.THIN);
         return simpleCellStyle;
     }
 
