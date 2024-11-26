@@ -33,7 +33,7 @@ public class UpgradedDaysDataFiller {
 //    private static final String PLAN_OTO_PATH = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
     private static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
 //    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
-    private static final String FOLDER_PATH = "d:\\загрузки\\PTO\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
+    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
 
     private enum DataType {
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
