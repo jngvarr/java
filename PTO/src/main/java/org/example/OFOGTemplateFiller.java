@@ -1,7 +1,10 @@
 package org.example;
 
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +19,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class OFOGTemplateFiller {
+    private static final LocalDate today = LocalDate.now();
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER_DDMMMYYYY = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final Logger logger = LoggerFactory.getLogger(OFOGTemplateFiller.class);
@@ -30,19 +36,18 @@ public class OFOGTemplateFiller {
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
-        String dataPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
-//        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
+//        String dataPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
+        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
         // Путь для сохранения нового файла
         String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
         String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
+        String pdfFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\templates\\ОФОЖ.pdf";       // Результирующий файл PDF
+        String pdfFilePathIReport = "d:\\Downloads\\пто\\month_reports\\templates\\Акт осмотра.pdf";       // Результирующий файл PDF
         int dateColumnIndex = 16;
-        int targetMonth = LocalDate.now().getMonthValue();
         int faultReasonColNum = 18;
-        int targetLogSheetRowNum = 0;
-        int targetIReportRowNum = 0;
         int reportRows = 0;
         int ofLogSheetInsertPosition = 8;
-        int iReportSheetInsertPosition = 9;
+        int iReportSheetInsertPosition = 10;
 
         // Открываем файл-шаблон
         try (FileInputStream templateFis = new FileInputStream(templatePath);
@@ -54,8 +59,9 @@ public class OFOGTemplateFiller {
                 XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
                 XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
                 XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
-                CellStyle dateCellStyle = createDateCellStyle(ofLogSheet.getWorkbook());
                 CellStyle commonCellStyle = createCommonCellStyle(ofLogSheet);
+
+                setIReportDate(iReportSheet);
 
                 for (Row row : dataSheet) {
                     Cell dateCell = row.getCell(dateColumnIndex);
@@ -94,12 +100,8 @@ public class OFOGTemplateFiller {
                                     copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
                                 }
                             }
-
-
                         }
                     }
-
-
                 }
 
                 // Сохраняем новый файл
@@ -109,8 +111,34 @@ public class OFOGTemplateFiller {
                 try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
                     templateWorkbook.write(fos2);
                 }
-                templateWorkbook.close(); // Закрываем Workbook
                 System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
+
+
+
+
+                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
+                PdfWriter pdfWriter2 = new PdfWriter(pdfFilePathIReport);
+
+                Document document = new Document(new com.itextpdf.kernel.pdf.PdfDocument(pdfWriter1));
+
+// Берем первый лист из Excel
+
+                // Создаем таблицу PDF
+                int numberOfColumns = ofLogSheet.getRow(0).getLastCellNum();
+
+                Table table = new Table(numberOfColumns);
+                XSSFTable table = new XSSFTable (numberOfColumns);
+
+                // Добавляем таблицу в PDF документ
+                document.add(table);
+
+                System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
+
+
+
+
+
+                templateWorkbook.close(); // Закрываем Workbook
 
             } catch (IOException e) {
                 logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
@@ -126,6 +154,13 @@ public class OFOGTemplateFiller {
 
         }
         logger.info("Совпавших строк в отчете {}:", reportRows);
+    }
+
+    private static void setIReportDate(Sheet sheet) {
+        String iReportNumber = "№ " + today.getMonthValue() + " от " + today.with(TemporalAdjusters.lastDayOfMonth())
+                .format(DATE_FORMATTER_DDMMMYYYY);
+        System.out.println(iReportNumber);
+        sheet.getRow(6).getCell(0).setCellValue(iReportNumber);
     }
 
     private static void copyRowsData(Row sourceRow, XSSFSheet sheet, int insertPosition, CellStyle style, boolean ofog) {
@@ -148,17 +183,18 @@ public class OFOGTemplateFiller {
         String equipmentNum;
         String equipmentType;
         String row = getCellStringValue(sourceRow.getCell(13));
+
         if (row.isEmpty()) {
             equipment = "ИВЭК";
             equipmentNum = getCellStringValue(sourceRow.getCell(14));
-            equipmentType = "DC-1000";
+            equipmentType = "DC1000";
         } else {
             equipmentNum = getCellStringValue(sourceRow.getCell(13));
             equipmentType = getCellStringValue(sourceRow.getCell(12));
             equipment = "ИИК";
         }
         return new String[]{
-                String.valueOf(iReportRows++),
+                String.valueOf(++iReportRows),
                 equipment,
                 equipmentType,
                 equipmentNum,
@@ -196,6 +232,7 @@ public class OFOGTemplateFiller {
             Cell targetCell = targetRow.createCell(i);
             targetCell.setCellValue(data[i]);
             targetCell.setCellStyle(style);
+            targetCell.getCellStyle().setWrapText(true);
         }
     }
 

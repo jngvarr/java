@@ -32,7 +32,7 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
         String host = "imap.yandex.ru";
         String user = "jngvarr.jd@yandex.ru";
         String password = "cfbfhdlzejiaiuil";
-        String saveDirectoryPath = "d:\\Downloads\\PTO\\reports\\" + today;
+        String saveDirectoryPath = "d:\\Downloads\\пто\\reports\\" + today;
 
         List<String> allowedSenders = List.of("askue-rzd@gvc.rzd.ru", "jngvarr.jd@yandex.ru", "jngvarr@jngvarr.ru");
 
