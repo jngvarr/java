@@ -8,14 +8,14 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
+// Добавление данных профилей
 public class DataFiller {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String folderPath = "d:\\Downloads\\профили2\\";
+        String folderPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
-        String summaryFilePath = "d:\\Downloads\\профили2\\свод\\ИИК ПТО РРЭ 2024_ОКТЯБРЬ_СВОД — копия.xlsx";
-        String profileFilesPath = "d:\\Downloads\\профили2";
+        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_НОЯБРЬ.xlsx";
+        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
 
         SimpleDateFormat today = new SimpleDateFormat();
         // Extract month from the profile filename
@@ -130,7 +130,7 @@ public class DataFiller {
     }
 
     private static int findMonthColumnIndex(Sheet sheet, String month) {
-        Row headerRow = sheet.getRow(1); // Assuming the first row is the header
+        Row headerRow = sheet.getRow(0); // Assuming the first row is the header
         if (headerRow != null) {
             for (int colIndex = 0; colIndex < headerRow.getLastCellNum(); colIndex++) {
                 Cell cell = headerRow.getCell(colIndex);

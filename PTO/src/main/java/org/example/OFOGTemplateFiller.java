@@ -126,11 +126,11 @@ public class OFOGTemplateFiller {
                 // Создаем таблицу PDF
                 int numberOfColumns = ofLogSheet.getRow(0).getLastCellNum();
 
-                Table table = new Table(numberOfColumns);
-                XSSFTable table = new XSSFTable (numberOfColumns);
-
-                // Добавляем таблицу в PDF документ
-                document.add(table);
+//                Table table = new Table(numberOfColumns);
+//                XSSFTable table = new XSSFTable (numberOfColumns);
+//
+//                // Добавляем таблицу в PDF документ
+//                document.add(table);
 
                 System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
 

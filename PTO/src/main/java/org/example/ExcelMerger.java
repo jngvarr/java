@@ -28,7 +28,8 @@ public class ExcelMerger { // Объединение нескольких ана
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-        String folderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\";
+//        String folderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\";
+        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
         File folder = new File(folderPath);
 
 //        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
@@ -98,7 +99,7 @@ public class ExcelMerger { // Объединение нескольких ана
             String month = extractMonthFromFileName(files.get(0).getName());
             String year = extractYearFromFileName(files.get(0).getName());
             String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, year, month.toUpperCase());
-            mergeExcelFiles(files, folderPath + File.separator + "свод" + File.separator + outputFileName);
+            mergeExcelFiles(files, folderPath + File.separator + File.separator + outputFileName);
         } catch (IOException e) {
             logger.error("Ошибка при обработке группы '{}'", group, e);
         }

@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 public class ExcelFormatter {
 
     public static void main(String[] args) {
-        String folderPath = "d:\\загрузки\\профили2\\";
+        String folderPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
+//        String folderPath = "d:\\загрузки\\профили2\\";
 
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
         if (fileNames == null) return;
