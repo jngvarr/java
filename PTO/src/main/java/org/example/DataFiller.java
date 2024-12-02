@@ -12,10 +12,10 @@ import java.util.*;
 public class DataFiller {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String folderPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
+        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
         String[] fileNames = new File(folderPath).list((dir, name) -> name.endsWith(".xlsx"));
-        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_НОЯБРЬ.xlsx";
-        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
+        String summaryFilePath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_НОЯБРЬ.xlsx";
+        String profileFilesPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\2024 НОЯБРЬ\\Профили за ноябрь\\";
 
         SimpleDateFormat today = new SimpleDateFormat();
         // Extract month from the profile filename

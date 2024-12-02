@@ -28,8 +28,8 @@ public class ExcelMerger { // Объединение нескольких ана
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-//        String folderPath = "d:\\загрузки\\PTO\\План ПТО 2024\\";
-        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+//        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
         File folder = new File(folderPath);
 
 //        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
