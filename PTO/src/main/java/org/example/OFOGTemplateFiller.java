@@ -121,9 +121,9 @@ public class OFOGTemplateFiller {
 
                 Document document = new Document(new com.itextpdf.kernel.pdf.PdfDocument(pdfWriter1));
 
-// Берем первый лист из Excel
-
+//TODO: доделать преобразование в pdf
                 // Создаем таблицу PDF
+// Берем первый лист из Excel
                 int numberOfColumns = ofLogSheet.getRow(0).getLastCellNum();
 
 //                Table table = new Table(numberOfColumns);

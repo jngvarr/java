@@ -1,0 +1,8 @@
+spring:
+    application:
+        name:
+            TGBot
+telegram:
+    bot:
+      name: pto_ackye_bot
+      token: 7646786291:AAHNu83gn4yDvxPupN_yB5GQ_sc44o-oKUw
