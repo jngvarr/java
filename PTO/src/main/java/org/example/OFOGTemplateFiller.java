@@ -1,10 +1,7 @@
 package org.example;
 
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,10 +113,10 @@ public class OFOGTemplateFiller {
 
 
 
-                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
-                PdfWriter pdfWriter2 = new PdfWriter(pdfFilePathIReport);
-
-                Document document = new Document(new com.itextpdf.kernel.pdf.PdfDocument(pdfWriter1));
+//                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
+//                PdfWriter pdfWriter2 = new PdfWriter(pdfFilePathIReport);
+//
+//                Document document = new Document(new com.itextpdf.kernel.pdf.PdfDocument(pdfWriter1));
 
 //TODO: доделать преобразование в pdf
                 // Создаем таблицу PDF

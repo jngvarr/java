@@ -1,2 +1,7 @@
-package jngvarr.ru;public enum WorkTypes {
+package jngvarr.ru;
+
+public enum WorkTypes {
+    PTO,
+    OTO,
+    NEW_TU;
 }
