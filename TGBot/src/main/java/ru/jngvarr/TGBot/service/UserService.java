@@ -1,7 +1,5 @@
 package ru.jngvarr.TGBot.service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +10,7 @@ import ru.jngvarr.TGBot.model.User;
 import ru.jngvarr.TGBot.model.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -19,17 +18,16 @@ public class UserService {
 
     @Autowired
     private UserRepository repository;
-    @Autowired
-    private EntityManager entityManager;
 
     @Transactional
     public void registerUser(Update update) {
         Long userId = update.getMessage().getChatId();
+        Optional<User> optionalUser = repository.getByChatId(userId);
+        if (optionalUser.isEmpty()) {
+            User user = new User();
+//        User user = repository.findById(userId)
+//                .orElseGet(User::new);
 
-        User user = entityManager.find(User.class, userId, LockModeType.PESSIMISTIC_WRITE);
-
-        if (user == null) {
-            user = new User();
             long chatId = update.getMessage().getChatId();
             Chat chat = update.getMessage().getChat();
             user.setChatId(chatId);
@@ -37,10 +35,9 @@ public class UserService {
             user.setLastName(chat.getLastName());
             user.setUsername(chat.getUserName());
             user.setRegisteredAt(LocalDateTime.now());
-        }
-
         repository.save(user);
-        log.info("User saved: " + user);
+            log.info("User saved: " + user);
+        }
     }
 }
 
