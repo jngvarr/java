@@ -1,68 +1,68 @@
-<!--&lt;!&ndash;<configuration>&ndash;&gt;-->
+<!--<configuration>-->
 
-<!--&lt;!&ndash;    <property name="HOME_LOG" value="/var/log/ru.jngvarr/tg-bot/app.log"/>&ndash;&gt;-->
-<!--&lt;!&ndash;    <property name="ARCHIVE_LOG" value="/var/log/ru.jngvarr/tg-bot"/>&ndash;&gt;-->
+<!--    <property name="HOME_LOG" value="/var/log/ru.jngvarr/tg-bot/app.log"/>-->
+<!--    <property name="ARCHIVE_LOG" value="/var/log/ru.jngvarr/tg-bot"/>-->
 
-<!--&lt;!&ndash;    <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">&ndash;&gt;-->
-<!--&lt;!&ndash;        <file>${HOME_LOG}</file>&ndash;&gt;-->
+<!--    <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <file>${HOME_LOG}</file>-->
 
-<!--&lt;!&ndash;        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">&ndash;&gt;-->
-<!--&lt;!&ndash;            <fileNamePattern>${ARCHIVE_LOG}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>&ndash;&gt;-->
-<!--&lt;!&ndash;            &lt;!&ndash; Размер каждого архива - максимум 10MB &ndash;&gt;&ndash;&gt;-->
-<!--&lt;!&ndash;            <maxFileSize>10MB</maxFileSize>&ndash;&gt;-->
-<!--&lt;!&ndash;            &lt;!&ndash; Суммарный объем всех архивов - максимум 1GB &ndash;&gt;&ndash;&gt;-->
-<!--&lt;!&ndash;            <totalSizeCap>1GB</totalSizeCap>&ndash;&gt;-->
-<!--&lt;!&ndash;            &lt;!&ndash; Хранение архивов в течение 60 дней &ndash;&gt;&ndash;&gt;-->
-<!--&lt;!&ndash;            <maxHistory>60</maxHistory>&ndash;&gt;-->
-<!--&lt;!&ndash;        </rollingPolicy>&ndash;&gt;-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>${ARCHIVE_LOG}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>-->
+<!--            &lt;!&ndash; Размер каждого архива - максимум 10MB &ndash;&gt;-->
+<!--            <maxFileSize>10MB</maxFileSize>-->
+<!--            &lt;!&ndash; Суммарный объем всех архивов - максимум 1GB &ndash;&gt;-->
+<!--            <totalSizeCap>1GB</totalSizeCap>-->
+<!--            &lt;!&ndash; Хранение архивов в течение 60 дней &ndash;&gt;-->
+<!--            <maxHistory>60</maxHistory>-->
+<!--        </rollingPolicy>-->
 
-<!--&lt;!&ndash;        <encoder>&ndash;&gt;-->
-<!--&lt;!&ndash;            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} [%thread] %msg%n</pattern>&ndash;&gt;-->
-<!--&lt;!&ndash;        </encoder>&ndash;&gt;-->
-<!--&lt;!&ndash;    </appender>&ndash;&gt;-->
+<!--        <encoder>-->
+<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} [%thread] %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
 
-<!--&lt;!&ndash;    <logger name="io.proj3ct.SpringDemoBot" level="debug" additivity="false">&ndash;&gt;-->
-<!--&lt;!&ndash;        <appender-ref ref="FILE-ROLLING"/>&ndash;&gt;-->
-<!--&lt;!&ndash;    </logger>&ndash;&gt;-->
+<!--    <logger name="io.proj3ct.SpringDemoBot" level="debug" additivity="false">-->
+<!--        <appender-ref ref="FILE-ROLLING"/>-->
+<!--    </logger>-->
 
-<!--&lt;!&ndash;    <root level="info">&ndash;&gt;-->
-<!--&lt;!&ndash;        <appender-ref ref="FILE-ROLLING"/>&ndash;&gt;-->
-<!--&lt;!&ndash;    </root>&ndash;&gt;-->
+<!--    <root level="info">-->
+<!--        <appender-ref ref="FILE-ROLLING"/>-->
+<!--    </root>-->
 
-<!--&lt;!&ndash;</configuration>&ndash;&gt;-->
+<!--</configuration>-->
 
-<!--        <configuration>-->
+        <configuration>
 
-<!--            <property name="HOME_LOG" value="/var/log/ru.jngvarr/tg-bot/app.log"/>-->
+            <property name="HOME_LOG" value="/var/log/ru.jngvarr/tg-bot/app.log"/>
 
-<!--            <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
-<!--                <file>${HOME_LOG}</file>-->
+            <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${HOME_LOG}</file>
 
-<!--                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">-->
-<!--                    <fileNamePattern>/var/log/ru.jngvarr/tg-bot/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>-->
-<!--                    &lt;!&ndash; each archived file, size max 10MB &ndash;&gt;-->
-<!--                    <maxFileSize>10MB</maxFileSize>-->
-<!--                    &lt;!&ndash; total size of all archive files, if total size > 20GB, it will delete old archived file &ndash;&gt;-->
-<!--                    <totalSizeCap>1GB</totalSizeCap>-->
-<!--                    &lt;!&ndash; 60 days to keep &ndash;&gt;-->
-<!--                    <maxHistory>60</maxHistory>-->
-<!--                </rollingPolicy>-->
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>/var/log/ru.jngvarr/tg-bot/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                    <!-- each archived file, size max 10MB -->
+                    <maxFileSize>10MB</maxFileSize>
+                    <!-- total size of all archive files, if total size > 20GB, it will delete old archived file -->
+                    <totalSizeCap>1GB</totalSizeCap>
+                    <!-- 60 days to keep -->
+                    <maxHistory>60</maxHistory>
+                </rollingPolicy>
 
-<!--                <encoder>-->
-<!--                    <pattern>%d %p %c{1} [%t] %m%n</pattern>-->
-<!--                </encoder>-->
-<!--            </appender>-->
+                <encoder>
+                    <pattern>%d %p %c{1} [%t] %m%n</pattern>
+                </encoder>
+            </appender>
 
-<!--            <logger name="io.proj3ct.SpringDemoBot" level="debug" additivity="false">-->
-<!--                <appender-ref ref="FILE-ROLLING"/>-->
-<!--            </logger>-->
+            <logger name="io.proj3ct.SpringDemoBot" level="debug" additivity="false">
+                <appender-ref ref="FILE-ROLLING"/>
+            </logger>
 
-<!--            <root level="error">-->
-<!--                <appender-ref ref="FILE-ROLLING"/>-->
-<!--            </root>-->
+            <root level="error">
+                <appender-ref ref="FILE-ROLLING"/>
+            </root>
 
-<!--            <root level="info">-->
-<!--                <appender-ref ref="FILE-ROLLING"/>-->
-<!--            </root>-->
+            <root level="info">
+                <appender-ref ref="FILE-ROLLING"/>
+            </root>
 
-<!--        </configuration>-->
+        </configuration>

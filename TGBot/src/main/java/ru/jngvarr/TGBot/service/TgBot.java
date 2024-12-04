@@ -1,21 +1,17 @@
 package ru.jngvarr.TGBot.service;
 
-import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.jngvarr.TGBot.config.BotConfig;
 import ru.jngvarr.TGBot.model.User;
-import ru.jngvarr.TGBot.model.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,7 +23,7 @@ public class TgBot extends TelegramLongPollingBot {
     @Autowired
     private final BotConfig config;
     @Autowired
-    private UserService service;
+    private UserServiceImpl service;
 
     static final String HELP = "This bot is created to demonstrate Spring capabilities. \n\n" +
             "You can execute commands from the main menu or by typing a command\n\n" +
@@ -72,8 +68,28 @@ public class TgBot extends TelegramLongPollingBot {
     }
 
     public void handleUpdate(Update update) {
-        service.registerUser(update);
+        if (service.getRepository().findById(update.getMessage().getChatId()).isEmpty()) {
+
+            User user = createUser(update);
+            service.registerUser(user);
+            log.info("user saved: " + user);
+
+        }
     }
+
+    private User createUser(Update update) {
+        var chatId = update.getMessage().getChatId();
+        var chat = update.getMessage().getChat();
+
+        User user = new User();
+        user.setChatId(chatId);
+        user.setFirstName(chat.getFirstName());
+        user.setLastName(chat.getLastName());
+        user.setUsername(chat.getUserName());
+        user.setRegisteredAt(LocalDateTime.now());
+        return user;
+    }
+
 
     private void startCommandReceived(long chatId, String name) {
         String answer = "Hi, " + name + ", nice to meet you!";

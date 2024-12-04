@@ -12,9 +12,7 @@ spring:
     url: jdbc:postgresql://62.76.142.52:5432/tgbotdb
     username: tgbot
     password: tgbotpass
-#    driver-class-name:
-#      com:
-#        postgresql.cj.jdbc.driver
+    driver-class-name: org.postgresql.Driver
 logging:
   level:
     ru.jngvarr: DEBUG
