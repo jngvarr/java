@@ -1,31 +1,31 @@
 package ru.jngvarr.TGBot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.glassfish.grizzly.http.util.TimeStamp;
+
+import java.time.LocalDateTime;
 
 @Entity(name = "users")
 @Data
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "chat_id")
     private long chatId;
-    private String firstName;
-    private String lastName;
-    private String username;
-    private TimeStamp registeredAt;
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "chatId=" + chatId +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", username='" + username + '\'' +
-                ", registeredAt=" + registeredAt +
-                '}';
-    }
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "username", unique = true, nullable = false)
+    private String username;
+
+    @Column(name = "registered_at")
+    private LocalDateTime registeredAt;
+
+//    @Version
+//    private int version; // Добавлено для управления конфликтами
 }

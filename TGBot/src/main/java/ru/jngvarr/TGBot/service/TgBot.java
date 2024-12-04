@@ -1,14 +1,14 @@
 package ru.jngvarr.TGBot.service;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.http.util.TimeStamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -17,17 +17,17 @@ import ru.jngvarr.TGBot.config.BotConfig;
 import ru.jngvarr.TGBot.model.User;
 import ru.jngvarr.TGBot.model.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Component
-
 public class TgBot extends TelegramLongPollingBot {
     @Autowired
     private final BotConfig config;
     @Autowired
-    private UserRepository repository;
+    private UserService service;
 
     static final String HELP = "This bot is created to demonstrate Spring capabilities. \n\n" +
             "You can execute commands from the main menu or by typing a command\n\n" +
@@ -59,7 +59,7 @@ public class TgBot extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
             switch (msgText) {
                 case ("/start"):
-                    registerUser(update.getMessage());
+                    handleUpdate(update);
                     startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                     break;
                 case ("/help"):
@@ -71,20 +71,8 @@ public class TgBot extends TelegramLongPollingBot {
         }
     }
 
-    private void registerUser(Message message) {
-        if (repository.findById(message.getChatId()).isEmpty()) {
-            var chatId = message.getChatId();
-            var chat = message.getChat();
-            User user = new User();
-            user.setChatId(chatId);
-            user.setFirstName(chat.getFirstName());
-            user.setLastName(chat.getLastName());
-            user.setUsername(chat.getUserName());
-            user.setRegisteredAt(new TimeStamp());
-
-            repository.save(user);
-            log.info("User saved: " + user);
-        }
+    public void handleUpdate(Update update) {
+        service.registerUser(update);
     }
 
     private void startCommandReceived(long chatId, String name) {
@@ -113,6 +101,4 @@ public class TgBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return config.getBotToken();
     }
-
-
 }
