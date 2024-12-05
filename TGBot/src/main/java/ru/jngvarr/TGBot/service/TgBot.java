@@ -1,5 +1,6 @@
 package ru.jngvarr.TGBot.service;
 
+import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.jngvarr.TGBot.config.BotConfig;
 import ru.jngvarr.TGBot.model.User;
@@ -61,6 +66,9 @@ public class TgBot extends TelegramLongPollingBot {
                 case ("/help"):
                     sendMessage(chatId, HELP);
                     break;
+                case ("/register"):
+                    register(chatId);
+                    break;
                 default:
                     sendMessage(chatId, "Sorry, the commands was not recognized!");
             }
@@ -75,6 +83,16 @@ public class TgBot extends TelegramLongPollingBot {
             log.info("user saved: " + user);
 
         }
+    }
+
+    private void register(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Do you really want to register?");
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardMarkup>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+
     }
 
     private User createUser(Update update) {
@@ -92,7 +110,8 @@ public class TgBot extends TelegramLongPollingBot {
 
 
     private void startCommandReceived(long chatId, String name) {
-        String answer = "Hi, " + name + ", nice to meet you!";
+//        String answer = "Hi, " + name + ", nice to meet you!";
+        String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + ":blush:");
         log.info("Replied to user " + name);
         sendMessage(chatId, answer);
     }
@@ -101,6 +120,26 @@ public class TgBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(textToSend);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+        row.add("weather");
+        row.add("get random joke");
+
+        keyboardRows.add(row);
+
+        row = new KeyboardRow();
+
+        row.add("register");
+        row.add("check my data");
+        row.add("delete my data");
+
+        keyboardRows.add(row);
+
+        replyKeyboardMarkup.setKeyboard(keyboardRows);
+
         try {
             execute(message);
         } catch (TelegramApiException e) {
