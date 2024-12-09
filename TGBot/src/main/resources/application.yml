@@ -1,8 +1,13 @@
+server:
+  port: 8081
 spring:
   application:
     name:
-      TGBot
+      tgbot
   jpa:
+  config:
+    import:
+      config-server:http://localhost:8888
     hibernate:
       ddl-auto: update
     properties:
@@ -10,14 +15,17 @@ spring:
     show-sql: true
   datasource:
     url: jdbc:postgresql://62.76.142.52:5432/tgbotdb
-    username: tgbot
-    password: tgbotpass
+#    username: tgbot
+#    password: tgbotpass
     driver-class-name: org.postgresql.Driver
 logging:
   level:
     ru.jngvarr: DEBUG
-telegram:
-  bot:
-    name: PTO_ACKYE_bot
-    token: 7887488572:AAHU1Vb-8NLc3ug-hV6Ju8YNnpFXE24iV2Q
-    owner: 199867696
+#telegram:
+#  bot:
+#    name: PTO_ACKYE_bot
+#    token: ${TELEGRAM_BOT_TOKEN}
+#    owner: ${TELEGRAM_BOT_OWNER}
+#    token: 7887488572:AAHU1Vb-8NLc3ug-hV6Ju8YNnpFXE24iV2Q
+#    owner: 199867696
+
