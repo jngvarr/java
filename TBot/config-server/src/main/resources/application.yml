@@ -6,7 +6,7 @@ spring:
           uri: https://github.com/jngvarr/RemoteConfig
           default-label: main
 #          password: ${GITHUB_TOKEN}
-          password:
+          password: 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
           username: jngvarr
   application:
     name: config-server

@@ -17,13 +17,10 @@ public class Iik {
     Long id;
     @Enumerated(EnumType.STRING)
     @Column(name = "regions", nullable = false)
-    private Region region;
-    //    @Enumerated
-    String eel;
-    //    @Enumerated
-    String ech;
-    //    @Enumerated
-    String echeOrEchk;
+    private String region;
+    private String eel;
+    private String ech;
+    private String echeOrEchk;
     private String station;
     @Column(name = "substations")
     private String substation;
