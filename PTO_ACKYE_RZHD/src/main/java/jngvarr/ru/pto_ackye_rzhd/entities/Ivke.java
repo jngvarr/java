@@ -9,20 +9,18 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "iiks")
+@Table(name = "ivke")
 @RequiredArgsConstructor
 public class Ivke {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Enumerated(EnumType.STRING)
     @Column(name = "regions", nullable = false)
     private Region region;
-    //    @Enumerated
     String eel;
-    //    @Enumerated
     String ech;
-    //    @Enumerated
     String echeOrEchk;
     private String station;
     @Column(name = "substations")

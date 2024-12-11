@@ -1,6 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.exceptions;
 
-import org.springframework.security.access.AccessDeniedException;
+
+import java.nio.file.AccessDeniedException;
 
 public class InvalidRefreshTokenException extends AccessDeniedException {
     public InvalidRefreshTokenException(String message) {

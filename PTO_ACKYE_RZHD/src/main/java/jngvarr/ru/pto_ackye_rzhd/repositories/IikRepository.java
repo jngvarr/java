@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface IikRepository extends JpaRepository<Iik, Long> {
-    public Iik findByMeterNumber(Integer meterNumber);
+//    public Iik findByMeterNumber(Integer meterNumber);
 
-    public List<Iik> findByDcNumber(Integer dcNumber);
+//    public List<Iik> findByDcNumber(Integer dcNumber);
 }

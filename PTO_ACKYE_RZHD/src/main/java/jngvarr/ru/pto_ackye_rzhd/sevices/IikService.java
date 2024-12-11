@@ -29,17 +29,17 @@ public class IikService {
         return neededIik.orElseThrow(() -> new NeededObjectNotFound("Iik not found: " + id));
     }
 
-    public Iik getIikByMeterNum(Integer meterNumber) {
-        Iik iik = iikRepository.findByMeterNumber(meterNumber);
-        if (iik != null) return iik;
-        else throw new NeededObjectNotFound("Iik with such meter number not found: " + meterNumber);
-    }
+//    public Iik getIikByMeterNum(Integer meterNumber) {
+//        Iik iik = iikRepository.findByMeterNumber(meterNumber);
+//        if (iik != null) return iik;
+//        else throw new NeededObjectNotFound("Iik with such meter number not found: " + meterNumber);
+//    }
 
-    public List<Iik> iiksByDcNumber(Integer dcNumber) {
-        List<Iik> iiks = iikRepository.findByDcNumber(dcNumber);
-        if (iiks != null) return iiks;
-        else throw new NeededObjectNotFound("Iiks with such DC number not found: " + dcNumber);
-    }
+//    public List<Iik> iiksByDcNumber(Integer dcNumber) {
+//        List<Iik> iiks = iikRepository.findByDcNumber(dcNumber);
+//        if (iiks != null) return iiks;
+//        else throw new NeededObjectNotFound("Iiks with such DC number not found: " + dcNumber);
+//    }
 
     public Iik createIik(Iik iikToCreate) {
         if ((iikToCreate.getId() != null &&
@@ -47,14 +47,15 @@ public class IikService {
                 iikToCreate.getEel() != null &&
                 iikToCreate.getEch() != null &&
                 iikToCreate.getEcheOrEchk() != null &&
-                iikToCreate.getStation() != null &&
-                iikToCreate.getSubstation() != null &&
-                iikToCreate.getMeteringPoint() != null &&
-                iikToCreate.getMeteringPointAddress() != null &&
-                iikToCreate.getMeterModel() != null &&
-                iikToCreate.getMeterNumber() != null &&
-                iikToCreate.getDcNumber() != null &&
-                iikToCreate.getInstallationDate() != null
+                iikToCreate.getStation() != null
+//                &&
+//                iikToCreate.getSubstation() != null &&
+//                iikToCreate.getMeteringPoint() != null &&
+//                iikToCreate.getMeteringPointAddress() != null &&
+//                iikToCreate.getMeterModel() != null &&
+//                iikToCreate.getMeterNumber() != null &&
+//                iikToCreate.getDcNumber() != null &&
+//                iikToCreate.getInstallationDate() != null
         )) {
             return iikRepository.save(iikToCreate);
         } else throw new NotEnoughData("Not enough IIK data");
@@ -69,14 +70,14 @@ public class IikService {
             if (newData.getEch() != null) newIik.setEch(newData.getEch());
             if (newData.getEcheOrEchk() != null) newIik.setEcheOrEchk(newData.getEcheOrEchk());
             if (newData.getStation() != null) newIik.setStation(newData.getStation());
-            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
-            if (newData.getMeteringPoint() != null) newIik.setMeteringPoint(newData.getMeteringPoint());
-            if (newData.getMeteringPointAddress() != null)
-                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
-            if (newData.getMeterModel() != null) newIik.setMeterModel(newData.getMeterModel());
-            if (newData.getMeterNumber() != null) newIik.setMeterNumber(newData.getMeterNumber());
-            if (newData.getDcNumber() != null) newIik.setDcNumber(newData.getDcNumber());
-            if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
+//            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
+//            if (newData.getMeteringPoint() != null) newIik.setMeteringPoint(newData.getMeteringPoint());
+//            if (newData.getMeteringPointAddress() != null)
+//                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
+//            if (newData.getMeterModel() != null) newIik.setMeterModel(newData.getMeterModel());
+//            if (newData.getMeterNumber() != null) newIik.setMeterNumber(newData.getMeterNumber());
+//            if (newData.getDcNumber() != null) newIik.setDcNumber(newData.getDcNumber());
+//            if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
 
             return iikRepository.save(newIik);
         } else throw new IllegalArgumentException("Iik not found");

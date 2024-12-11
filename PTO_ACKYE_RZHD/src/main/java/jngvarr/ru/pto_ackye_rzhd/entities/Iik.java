@@ -15,28 +15,26 @@ import java.time.LocalDate;
 public class Iik {
     @Id
     Long id;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "regions", nullable = false)
+//    @Enumerated(EnumType.STRING)
+    @Column(name = "region", nullable = false)
     private String region;
     private String eel;
     private String ech;
     private String echeOrEchk;
     private String station;
-    @Column(name = "substations")
-    private String substation;
-    private String connection;
-    private String meteringPoint;
-    private String meterPlacement;
-    private String meteringPointAddress;
-    private String meterModel;
-    private Integer meterNumber;
-    private Integer dcNumber;
-    private LocalDate installationDate;
-    @OneToOne
-    @JoinTable(name = "iit_to_iik_status",
-            joinColumns = @JoinColumn(name = "iik_id"),
-            inverseJoinColumns = @JoinColumn(name = "iik_status_id"))
-    private IikStatusData iikStatusData;
-
-
+//    @Column(name = "substation")
+//    private String substation;
+//    private String connection;
+//    private String meteringPoint;
+//    private String meterPlacement;
+//    private String meteringPointAddress;
+//    private String meterModel;
+//    private Integer meterNumber;
+//    private Integer dcNumber;
+//    private LocalDate installationDate;
+//    @OneToOne
+//    @JoinTable(name = "iit_to_iik_status",
+//            joinColumns = @JoinColumn(name = "iik_id"),
+//            inverseJoinColumns = @JoinColumn(name = "iik_status_id"))
+//    private IikStatusData iikStatusData;
 }
