@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 @SpringBootApplication
 public class BotApplication {
-    @PostConstruct
-    public void logEnvironmentVariables() {
-        System.out.println("TELEGRAM_BOT_TOKEN: " + System.getenv("TELEGRAM_BOT_TOKEN"));
-        System.out.println("TELEGRAM_BOT_OWNER: " + System.getenv("TELEGRAM_BOT_OWNER"));
-    }
+//    @PostConstruct
+//    public void logEnvironmentVariables() {
+//        System.out.println("TELEGRAM_BOT_TOKEN: " + System.getenv("TELEGRAM_BOT_TOKEN"));
+//        System.out.println("TELEGRAM_BOT_OWNER: " + System.getenv("TELEGRAM_BOT_OWNER"));
+//    }
 
     public static void main(String[] args) {
         SpringApplication.run(BotApplication.class, args);

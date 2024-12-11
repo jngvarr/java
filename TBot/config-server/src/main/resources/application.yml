@@ -3,10 +3,11 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/jngvarr/SalonConfig
-#          default-label: main
-#          password: ihu37818
-#          username: jngvarr
+          uri: https://github.com/jngvarr/RemoteConfig
+          default-label: main
+#          password: ${GITHUB_TOKEN}
+          password: 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
+          username: jngvarr
   application:
     name: config-server
 server:
