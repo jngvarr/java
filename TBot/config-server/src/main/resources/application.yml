@@ -1,0 +1,17 @@
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/jngvarr/SalonConfig
+#          default-label: main
+#          password: ihu37818
+#          username: jngvarr
+  application:
+    name: config-server
+server:
+  port: 8888
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
