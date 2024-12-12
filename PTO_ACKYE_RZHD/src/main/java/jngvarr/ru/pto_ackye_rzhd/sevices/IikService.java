@@ -41,24 +41,28 @@ public class IikService {
 //        else throw new NeededObjectNotFound("Iiks with such DC number not found: " + dcNumber);
 //    }
 
+
     public Iik createIik(Iik iikToCreate) {
         if ((iikToCreate.getId() != null &&
                 iikToCreate.getRegion() != null &&
                 iikToCreate.getEel() != null &&
                 iikToCreate.getEch() != null &&
                 iikToCreate.getEcheOrEchk() != null &&
-                iikToCreate.getStation() != null
-//                &&
-//                iikToCreate.getSubstation() != null &&
-//                iikToCreate.getMeteringPoint() != null &&
-//                iikToCreate.getMeteringPointAddress() != null &&
-//                iikToCreate.getMeterModel() != null &&
-//                iikToCreate.getMeterNumber() != null &&
-//                iikToCreate.getDcNumber() != null &&
-//                iikToCreate.getInstallationDate() != null
+                iikToCreate.getStation() != null &&
+                iikToCreate.getSubstation() != null &&
+                iikToCreate.getMeteringPoint() != null &&
+                iikToCreate.getMeteringPointAddress() != null &&
+                iikToCreate.getMeterModel() != null &&
+                iikToCreate.getMeterNumber() != null &&
+                iikToCreate.getDcNumber() != null &&
+                iikToCreate.getInstallationDate() != null
         )) {
             return iikRepository.save(iikToCreate);
         } else throw new NotEnoughData("Not enough IIK data");
+    }
+
+    public List<Iik> createAll(List<Iik> iiks) {
+        return getIikRepository().saveAll(iiks);
     }
 
     public Iik updateIik(Iik newData, Long iikId) {
@@ -70,14 +74,14 @@ public class IikService {
             if (newData.getEch() != null) newIik.setEch(newData.getEch());
             if (newData.getEcheOrEchk() != null) newIik.setEcheOrEchk(newData.getEcheOrEchk());
             if (newData.getStation() != null) newIik.setStation(newData.getStation());
-//            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
-//            if (newData.getMeteringPoint() != null) newIik.setMeteringPoint(newData.getMeteringPoint());
-//            if (newData.getMeteringPointAddress() != null)
-//                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
-//            if (newData.getMeterModel() != null) newIik.setMeterModel(newData.getMeterModel());
-//            if (newData.getMeterNumber() != null) newIik.setMeterNumber(newData.getMeterNumber());
-//            if (newData.getDcNumber() != null) newIik.setDcNumber(newData.getDcNumber());
-//            if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
+            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
+            if (newData.getMeteringPoint() != null) newIik.setMeteringPoint(newData.getMeteringPoint());
+            if (newData.getMeteringPointAddress() != null)
+                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
+            if (newData.getMeterModel() != null) newIik.setMeterModel(newData.getMeterModel());
+            if (newData.getMeterNumber() != null) newIik.setMeterNumber(newData.getMeterNumber());
+            if (newData.getDcNumber() != null) newIik.setDcNumber(newData.getDcNumber());
+            if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
 
             return iikRepository.save(newIik);
         } else throw new IllegalArgumentException("Iik not found");

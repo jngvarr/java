@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-@Entity
+//@Entity
 @RequiredArgsConstructor
 public class DC {
     @Id

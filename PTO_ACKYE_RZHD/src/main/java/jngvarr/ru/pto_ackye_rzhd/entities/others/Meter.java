@@ -6,7 +6,7 @@ import jakarta.persistence.Id;
 import lombok.Data;
 
 @Data
-@Entity
+//@Entity
 public class Meter {
     @Id
     private Long id;

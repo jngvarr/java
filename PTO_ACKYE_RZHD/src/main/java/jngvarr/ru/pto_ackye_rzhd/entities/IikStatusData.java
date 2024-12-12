@@ -1,17 +1,18 @@
 package jngvarr.ru.pto_ackye_rzhd.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
+@Entity()
+@Table(name = "iik_statuses")
 @RequiredArgsConstructor
-@Entity(name = "iik_statuses")
 public class IikStatusData {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String currentStatus;
     private String notOrNotNot;

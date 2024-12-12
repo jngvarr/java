@@ -16,25 +16,26 @@ public class Iik {
     @Id
     Long id;
 //    @Enumerated(EnumType.STRING)
-    @Column(name = "region", nullable = false)
+//    @Column(name = "region", nullable = false)
     private String region;
     private String eel;
     private String ech;
     private String echeOrEchk;
     private String station;
 //    @Column(name = "substation")
-//    private String substation;
-//    private String connection;
-//    private String meteringPoint;
-//    private String meterPlacement;
-//    private String meteringPointAddress;
-//    private String meterModel;
-//    private Integer meterNumber;
-//    private Integer dcNumber;
-//    private LocalDate installationDate;
-//    @OneToOne
-//    @JoinTable(name = "iit_to_iik_status",
+    private String substation;
+    private String connection;
+    private String meteringPoint;
+    private String meterPlacement;
+    private String meteringPointAddress;
+    private String meterModel;
+    private String meterNumber;
+    private String dcNumber;
+    private LocalDate installationDate;
+    @OneToOne
+    @PrimaryKeyJoinColumn
+//    @JoinColumn(name = "iik_status_id")
 //            joinColumns = @JoinColumn(name = "iik_id"),
 //            inverseJoinColumns = @JoinColumn(name = "iik_status_id"))
-//    private IikStatusData iikStatusData;
+    private IikStatusData iikStatusData;
 }

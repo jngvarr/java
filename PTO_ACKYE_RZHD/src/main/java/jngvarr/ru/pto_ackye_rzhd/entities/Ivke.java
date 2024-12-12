@@ -16,14 +16,14 @@ public class Ivke {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "regions", nullable = false)
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "regions", nullable = false)
     private Region region;
     String eel;
     String ech;
     String echeOrEchk;
     private String station;
-    @Column(name = "substations")
+//    @Column(name = "substations")
     private String substation;
     private String busSection;
     private String dcPlacement;

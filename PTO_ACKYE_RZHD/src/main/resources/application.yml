@@ -12,9 +12,7 @@ spring:
     username: ackye
     password: ackyepass
     driver-class-name: org.postgresql.Driver
-logging:
-  level:
-    ru.jngvarr: DEBUG
+
 telegram:
   bot:
     name: PTO_ACKYE_bot
@@ -23,3 +21,7 @@ telegram:
 
 #cron:
 #  scheduler: 0 * * * * *
+logging:
+  level:
+    ru.jngvarr: DEBUG
+    org.springframework.cloud.config: DEBUG
