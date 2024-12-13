@@ -2,14 +2,17 @@
 //
 //import jakarta.persistence.*;
 //import lombok.Data;
+//import lombok.Generated;
 //
 //@Data
 //@Entity
-//@Table(name = "regions")
-//public class Region {
-//
+//@Table(name = "structural_subdivisions")
+//public class StructuralSubdivision {
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
 //    private Long id;
 //    private String name;
+//    @ManyToOne
+//    @JoinColumn(name = "region_id", nullable = false)
+//    private Region region;
 //}
