@@ -1,17 +1,17 @@
-//package jngvarr.ru.pto_ackye_rzhd.entities.others;
-//
-//import jakarta.persistence.*;
-//import lombok.Data;
-//
-//@Data
-//@Entity
-//@Table(name = "power_supply_enterprises")
-//public class PowerSupplyEnterprise {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
-//    private String name;
-//    @ManyToOne
-//    @JoinColumn(name = "structural_subdivision_id", nullable = false)
-//    private StructuralSubdivision structuralSubdivision;
-//}
+package jngvarr.ru.pto_ackye_rzhd.entities.others;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name = "power_supply_enterprises")
+public class PowerSupplyEnterprise {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    @ManyToOne
+    @JoinColumn(name = "structural_subdivision_id", nullable = false)
+    private StructuralSubdivision structuralSubdivision;
+}
