@@ -16,7 +16,8 @@ public class PtoAckyeRzhdApplication {
     @PostConstruct
     public void init() {
         ptoService.processFile();
-        System.out.println("Iiks list: " + iikService.getIIKs());
+//        System.out.println("Iiks list: " + iikService.getIIKs());
+//        System.out.println("Iiks list: " + iikService.getIIKs());
     }
 
     public static void main(String[] args) {

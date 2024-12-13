@@ -33,8 +33,9 @@ public class Iik {
     private String dcNumber;
     private LocalDate installationDate;
     @OneToOne
-    @PrimaryKeyJoinColumn
-//    @JoinColumn(name = "iik_status_id")
+//            (cascade = CascadeType.ALL)
+//    @PrimaryKeyJoinColumn
+    @JoinColumn(name = "iik_status_id")
 //            joinColumns = @JoinColumn(name = "iik_id"),
 //            inverseJoinColumns = @JoinColumn(name = "iik_status_id"))
     private IikStatusData iikStatusData;

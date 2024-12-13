@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class IikStatusData {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String currentStatus;
     private String notOrNotNot;

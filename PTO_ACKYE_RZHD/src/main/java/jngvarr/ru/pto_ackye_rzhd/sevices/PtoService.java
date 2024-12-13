@@ -38,7 +38,7 @@ public class PtoService {
         ) {
 
             fillIIKWithListData(planOTOWorkbook.getSheet("ИИК"));
-            fillIikStatusData(planOTOWorkbook.getSheet("ИИК"));
+//            fillIikStatusData(planOTOWorkbook.getSheet("ИИК"));
 //            fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"));
             planOTOWorkbook.close();
 
@@ -91,6 +91,7 @@ public class PtoService {
 
             IikStatusData newStatusData = new IikStatusData();
 
+            newStatusData.setId(Long.parseLong(getCellStringValue(row.getCell(1))));
             newStatusData.setCurrentStatus(getCellStringValue(row.getCell(16)));
             newStatusData.setNotOrNotNot(getCellStringValue(row.getCell(17)));
             newStatusData.setStatus(getCellStringValue(row.getCell(19)));

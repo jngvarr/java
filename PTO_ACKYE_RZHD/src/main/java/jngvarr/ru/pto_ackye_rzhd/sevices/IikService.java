@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.sevices;
 
+import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.Iik;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
@@ -60,11 +61,11 @@ public class IikService {
             return iikRepository.save(iikToCreate);
         } else throw new NotEnoughData("Not enough IIK data");
     }
-
+    @Transactional
     public List<Iik> createAll(List<Iik> iiks) {
         return getIikRepository().saveAll(iiks);
     }
-
+    @Transactional
     public Iik updateIik(Iik newData, Long iikId) {
         Optional<Iik> oldIik = iikRepository.findById(iikId);
         if (oldIik.isPresent()) {
