@@ -5,14 +5,14 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sustations")
-public class Substation {
+@Table(name = "power_supply_enterprises")
+public class PowerSupplyEnterprise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String name;
     @ManyToOne
-    @JoinColumn(name = "station_id", nullable = false)
-    private Station station;
-    private String connection;
+    @JoinColumn(name = "structural_subdivision_id", nullable = false)
+    private StructuralSubdivision structuralSubdivision;
 }

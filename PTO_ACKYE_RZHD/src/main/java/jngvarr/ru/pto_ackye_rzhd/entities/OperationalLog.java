@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Entity
+//@Entity
 @RequiredArgsConstructor
 public class OperationalLog {
 

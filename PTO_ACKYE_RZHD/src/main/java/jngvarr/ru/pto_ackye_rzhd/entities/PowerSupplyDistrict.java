@@ -5,13 +5,14 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "stations")
-public class Station {
+@Table(name = "power_supply_districts")
+public class PowerSupplyDistrict {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String name;
     @ManyToOne
-    @JoinColumn(name = "power_supply_district_id", nullable = false)
-    private PowerSupplyDistrict powerSupplyDistrict;
+    @JoinColumn(name = "power_supply_enterprise_id", nullable = false)
+    private PowerSupplyEnterprise powerSupplyEnterprise;
 }
