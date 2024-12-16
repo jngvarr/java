@@ -12,7 +12,7 @@ public class PowerSupplyDistrict {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "power_supply_enterprise_id", nullable = false)
     private PowerSupplyEnterprise powerSupplyEnterprise;
 }

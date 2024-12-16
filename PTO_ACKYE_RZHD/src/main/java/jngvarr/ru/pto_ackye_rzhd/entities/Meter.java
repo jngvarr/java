@@ -17,7 +17,7 @@ public class Meter {
     @OneToOne
     @JoinColumn(name = "metering_point_id")
     private MeteringPoint meteringPoint;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "dc_id")
-    private DC dc;
+    private Dc dc;
 }

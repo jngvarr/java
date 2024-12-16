@@ -27,14 +27,15 @@ public class PtoService {
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия.xlsx";
     private final long startTime = System.currentTimeMillis();
+    private static final Map<String, Dc> DC_MAP = new HashMap<>();
+    private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
 
     public void processFile() {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))
         ) {
-            Map<String, Substation> substationMap;
-            substationMap = fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
-            fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"), substationMap);
-//            fillIikStatusData(planOTOWorkbook.getSheet("ИИК"));
+//            Map<String, Substation> substationMap;
+            fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
+            fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
             planOTOWorkbook.close();
 
             log.info("Data filled successfully!");
@@ -47,34 +48,45 @@ public class PtoService {
         log.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    private void fillDbWithIvkeData(Sheet sheet, Map<String, Substation> substationMap) {
-        List<DcComplex> ivkes = new ArrayList<>();
+    private void fillDbWithIvkeData(Sheet sheet) {
         for (Row row : sheet) {
-            if (row.getRowNum() == 0) {
+            if (row.getRowNum() == 0 || row.getRowNum() == sheet.getLastRowNum()) {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
-            DcComplex newIvke = new DcComplex();
-            DC newDc = new DC();
-            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(10)), DATE_FORMATTER_DDMMYYYY));
+            Region newRegion = new Region();
+            StructuralSubdivision newIvkeSubdivision = new StructuralSubdivision();
+            PowerSupplyEnterprise newIvkePowerSupplyEnterprise = new PowerSupplyEnterprise();
+            PowerSupplyDistrict newIvkePowerSupplyDistrict = new PowerSupplyDistrict();
+            Station newIvkeStation = new Station();
+            Substation newIvkeSubstation = new Substation();
+            newRegion.setName(getCellStringValue(row.getCell(1)));
+            newIvkeSubdivision.setName(getCellStringValue(row.getCell(5)));
+            newIvkeSubdivision.setRegion(newRegion);
+            newIvkePowerSupplyEnterprise.setName(getCellStringValue(row.getCell(3)));
+            newIvkePowerSupplyEnterprise.setStructuralSubdivision(newIvkeSubdivision);
+            newIvkePowerSupplyDistrict.setName(getCellStringValue(row.getCell(4)));
+            newIvkePowerSupplyDistrict.setPowerSupplyEnterprise(newIvkePowerSupplyEnterprise);
+            newIvkeStation.setName(getCellStringValue(row.getCell(2)));
+            newIvkeStation.setPowerSupplyDistrict(newIvkePowerSupplyDistrict);
+            newIvkeSubstation.setName(getCellStringValue(row.getCell(6)));
+            newIvkeSubstation.setStation(newIvkeStation);
+            Dc newIvke = new Dc();
+            newIvke.setSubstation(newIvkeSubstation);
             newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(7))));
-            try {
-                newIvke.setSubstation(substationMap.get(getStringMapKey(row)));
-            } catch (NullPointerException e) {
-                log.error("There is no such substation in DB {}: ", e.getMessage());
-            }
-            newDc.setDcComplex(newIvke);
-            newDc.setDcModel("DC-1000/SL");
-            newDc.setDcNumber(getCellStringValue(row.getCell(9)));
-            ivkes.add(newIvke);
+            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(10)), DATE_FORMATTER_DDMMYYYY));
+            newIvke.setDcModel("DC-1000/SL");
+            String dcNumber = getCellStringValue(row.getCell(9));
+            newIvke.setDcNumber(dcNumber);
+
+            SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newIvkeSubstation), newIvkeSubstation);
+            DC_MAP.putIfAbsent(dcNumber, newIvke);
         }
-        ivkeService.createAll(ivkes);
+        ivkeService.createAll(DC_MAP.values().stream().toList());
     }
 
     private String getStringMapKey(Row row) {
         return new StringBuilder()
-                .append(getCellStringValue(row.getCell(1)))
-                .append("_")
                 .append(getCellStringValue(row.getCell(2)))
                 .append("_")
                 .append(getCellStringValue(row.getCell(3)))
@@ -84,36 +96,26 @@ public class PtoService {
                 .append(getCellStringValue(row.getCell(5)))
                 .append("_")
                 .append(getCellStringValue(row.getCell(6)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(7)))
                 .toString();
     }
 
-    private Map<String, Substation> fillDbWithIikData(Sheet sheet) {
+    private void fillDbWithIikData(Sheet sheet) {
         List<MeteringPoint> iiks = new ArrayList<>();
-        Map<String, Substation> substationMap = new HashMap<>();
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 continue;
             }
-            Region newRegion = new Region();
-            StructuralSubdivision newIikSubdivision = new StructuralSubdivision();
-            PowerSupplyEnterprise newIikPowerSupplyEnterprise = new PowerSupplyEnterprise();
-            PowerSupplyDistrict newIikPowerSupplyDistrict = new PowerSupplyDistrict();
-            Station newIikStation = new Station();
-            Substation newIikSubstation = new Substation();
             MeteringPoint newIik = new MeteringPoint();
             Meter newIikMeter = new Meter();
 
-            newRegion.setName(getCellStringValue(row.getCell(2)));
-            newIikSubdivision.setName(getCellStringValue(row.getCell(3)));
-            newIikSubdivision.setRegion(newRegion);
-            newIikPowerSupplyEnterprise.setName(getCellStringValue(row.getCell(4)));
-            newIikPowerSupplyEnterprise.setStructuralSubdivision(newIikSubdivision);
-            newIikPowerSupplyDistrict.setName(getCellStringValue(row.getCell(5)));
-            newIikPowerSupplyDistrict.setPowerSupplyEnterprise(newIikPowerSupplyEnterprise);
-            newIikStation.setName(getCellStringValue(row.getCell(6)));
-            newIikStation.setPowerSupplyDistrict(newIikPowerSupplyDistrict);
-            newIikSubstation.setName(getCellStringValue(row.getCell(7)));
-            newIikSubstation.setStation(newIikStation);
+            try {
+                newIik.setSubstation(SUBSTATION_MAP.get(getStringMapKey(row)));
+            } catch (NullPointerException e) {
+                log.error("There is no such substation in DB {}: ", e.getMessage());
+            }
+            newIik.setId(Long.parseLong(getCellStringValue(row.getCell(1))));
             newIik.setConnection(getCellStringValue(row.getCell(8)));
             newIik.setName(getCellStringValue(row.getCell(9)));
             newIik.setMeterPlacement(getCellStringValue(row.getCell(10)));
@@ -121,11 +123,11 @@ public class PtoService {
             newIikMeter.setMeterModel(getCellStringValue(row.getCell(12)));
             newIikMeter.setMeterNumber(getCellStringValue(row.getCell(13)));
             newIik.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(15)), DATE_FORMATTER_DDMMYYYY));
+            newIikMeter.setDc(DC_MAP.get(getCellStringValue(row.getCell(14))));
             iiks.add(newIik);
-            substationMap.putIfAbsent(buildSubstationMapKey(newIikSubstation), newIikSubstation);
+
         }
         iikService.createAll(iiks);
-        return substationMap;
     }
 
 //    private IikState getiikStatusData(Row row) {

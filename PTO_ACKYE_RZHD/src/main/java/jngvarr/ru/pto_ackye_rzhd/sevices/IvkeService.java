@@ -1,9 +1,9 @@
 package jngvarr.ru.pto_ackye_rzhd.sevices;
 
-import jngvarr.ru.pto_ackye_rzhd.entities.DcComplex;
+import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
-import jngvarr.ru.pto_ackye_rzhd.repositories.DcComplexRepository;
+import jngvarr.ru.pto_ackye_rzhd.repositories.DcRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,55 +17,45 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class IvkeService {
-    private final DcComplexRepository ivkeRepository;
+    private final DcRepository ivkeRepository;
 
-    public List<DcComplex> getDCs() {
+    public List<Dc> getDCs() {
         return ivkeRepository.findAll();
     }
 
-    public DcComplex getDc(Long id) {
-        Optional<DcComplex> neededDc = ivkeRepository.findById(id);
+    public Dc getDc(Long id) {
+        Optional<Dc> neededDc = ivkeRepository.findById(id);
         return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id));
     }
 
-    public DcComplex getDcByDcNum(Integer dcNumber) {
-        DcComplex iik = ivkeRepository.findByDcNumber(dcNumber);
-        if (iik != null) return iik;
-        else throw new NeededObjectNotFound("Dc with such meter number not found: " + dcNumber);
-    }
+//    public Dc getDcByDcNum(Integer dcNumber) {
+//        Dc iik = ivkeRepository.findByDcNumber(dcNumber);
+//        if (iik != null) return iik;
+//        else throw new NeededObjectNotFound("Dc with such meter number not found: " + dcNumber);
+//    }
 
-    public DcComplex createDc(DcComplex ivkeToCreate) {
-        if ((ivkeToCreate.getId() != null &&
-                ivkeToCreate.getRegion() != null &&
-                ivkeToCreate.getEel() != null &&
-                ivkeToCreate.getEch() != null &&
-                ivkeToCreate.getEcheOrEchk() != null &&
-                ivkeToCreate.getStation() != null &&
-                ivkeToCreate.getSubstation() != null &&
-                ivkeToCreate.getDcNumber() != null &&
-                ivkeToCreate.getDcInstallationDate() != null &&
-                ivkeToCreate.getNumberOfMeters() != null
-        )) {
+    public Dc createDc(Dc ivkeToCreate) {
+        if (ivkeToCreate.getId() != null &&
+                ivkeToCreate.getSubstation() != null
+        ) {
             return ivkeRepository.save(ivkeToCreate);
         } else throw new NotEnoughData("Not enough IIK data");
     }
 
-    public void createAll(List<DcComplex> ivke) {
+    public void createAll(List<Dc> ivke) {
         ivkeRepository.saveAll(ivke);
     }
 
-    public DcComplex updateDc(DcComplex newData, Long ivkeId) {
-        Optional<DcComplex> oldDc = ivkeRepository.findById(ivkeId);
+    public Dc updateDc(Dc newData, Long ivkeId) {
+        Optional<Dc> oldDc = ivkeRepository.findById(ivkeId);
         if (oldDc.isPresent()) {
-            DcComplex newDc = oldDc.get();
-            if (newData.getRegion() != null) newDc.setRegion(newData.getRegion());
-            if (newData.getEel() != null) newDc.setEel(newData.getEel());
-            if (newData.getEch() != null) newDc.setEch(newData.getEch());
-            if (newData.getEcheOrEchk() != null) newDc.setEcheOrEchk(newData.getEcheOrEchk());
-            if (newData.getStation() != null) newDc.setStation(newData.getStation());
+            Dc newDc = oldDc.get();
             if (newData.getSubstation() != null) newDc.setSubstation(newData.getSubstation());
+            if (newData.getBusSection() != 0) newDc.setBusSection(newData.getBusSection());
             if (newData.getDcNumber() != null) newDc.setDcNumber(newData.getDcNumber());
-            if (newData.getDcInstallationDate() != null) newDc.setDcInstallationDate(newData.getDcInstallationDate());
+            if (newData.getDcModel() != null) newDc.setDcModel(newData.getDcModel());
+            if (newData.getInstallationDate() != null) newDc.setInstallationDate(newData.getInstallationDate());
+            if (newData.getManufactureDate() != null) newDc.setManufactureDate(newData.getManufactureDate());
 
             return ivkeRepository.save(newDc);
         } else throw new IllegalArgumentException("Dc not found");

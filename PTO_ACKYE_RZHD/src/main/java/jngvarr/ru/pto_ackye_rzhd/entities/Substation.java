@@ -2,6 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.engine.internal.Cascade;
 
 @Data
 @Entity
@@ -12,7 +13,7 @@ public class Substation {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
 }

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "iiks")
+@Table(name = "metering_points")
 public class MeteringPoint {
     @Id
     Long id;
@@ -19,7 +19,7 @@ public class MeteringPoint {
     private String meteringPointAddress;
     private LocalDate installationDate;
     private String connection;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "substation_id", nullable = false)
     private Substation substation;
 }

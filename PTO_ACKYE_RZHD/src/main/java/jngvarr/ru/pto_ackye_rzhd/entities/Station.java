@@ -12,7 +12,7 @@ public class Station {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "power_supply_district_id", nullable = false)
     private PowerSupplyDistrict powerSupplyDistrict;
 }

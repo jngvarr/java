@@ -12,7 +12,7 @@ public class PowerSupplyEnterprise {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "structural_subdivision_id", nullable = false)
     private StructuralSubdivision structuralSubdivision;
 }

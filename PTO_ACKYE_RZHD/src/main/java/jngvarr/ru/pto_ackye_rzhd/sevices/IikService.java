@@ -3,7 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.sevices;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
-import jngvarr.ru.pto_ackye_rzhd.repositories.IikRepository;
+import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class IikService {
     static final String ERROR_TEXT = "Error occurred: ";
-    private final IikRepository iikRepository;
+    private final MeteringPointRepository iikRepository;
 
     public List<MeteringPoint> getIIKs() {
         return iikRepository.findAll();
@@ -45,18 +45,9 @@ public class IikService {
 
     public MeteringPoint createIik(MeteringPoint iikToCreate) {
         if ((iikToCreate.getId() != null &&
-                iikToCreate.getRegion() != null &&
-                iikToCreate.getEel() != null &&
-                iikToCreate.getEch() != null &&
-                iikToCreate.getEcheOrEchk() != null &&
-                iikToCreate.getStation() != null &&
                 iikToCreate.getSubstation() != null &&
-                iikToCreate.getMeteringPoint() != null &&
                 iikToCreate.getMeteringPointAddress() != null &&
-                iikToCreate.getMeterModel() != null &&
-                iikToCreate.getMeterNumber() != null &&
-                iikToCreate.getDcNumber() != null &&
-                iikToCreate.getInstallationDate() != null
+                iikToCreate.getName() != null
         )) {
             return iikRepository.save(iikToCreate);
         } else throw new NotEnoughData("Not enough IIK data");
@@ -71,19 +62,12 @@ public class IikService {
         Optional<MeteringPoint> oldIik = iikRepository.findById(iikId);
         if (oldIik.isPresent()) {
             MeteringPoint newIik = oldIik.get();
-            if (newData.getRegion() != null) newIik.setRegion(newData.getRegion());
-            if (newData.getEel() != null) newIik.setEel(newData.getEel());
-            if (newData.getEch() != null) newIik.setEch(newData.getEch());
-            if (newData.getEcheOrEchk() != null) newIik.setEcheOrEchk(newData.getEcheOrEchk());
-            if (newData.getStation() != null) newIik.setStation(newData.getStation());
-            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
-            if (newData.getMeteringPoint() != null) newIik.setMeteringPoint(newData.getMeteringPoint());
-            if (newData.getMeteringPointAddress() != null)
-                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
-            if (newData.getMeterModel() != null) newIik.setMeterModel(newData.getMeterModel());
-            if (newData.getMeterNumber() != null) newIik.setMeterNumber(newData.getMeterNumber());
-            if (newData.getDcNumber() != null) newIik.setDcNumber(newData.getDcNumber());
+            if (newData.getName() != null) newIik.setName(newData.getName());
+            if (newData.getMeterPlacement() != null) newIik.setMeterPlacement(newData.getMeterPlacement());
+            if (newData.getMeteringPointAddress() != null) newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
             if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
+            if (newData.getConnection() != null) newIik.setConnection(newData.getConnection());
+            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
 
             return iikRepository.save(newIik);
         } else throw new IllegalArgumentException("MeteringPoint not found");

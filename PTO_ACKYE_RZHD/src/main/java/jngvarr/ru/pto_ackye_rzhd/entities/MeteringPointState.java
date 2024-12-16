@@ -7,19 +7,18 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-@Table(name = "ivke_states")
-public class dcStatusData {
+@Table(name = "metering_points_state")
+public class MeteringPointState {
     @Id
     private Long id;
     @Column(nullable = false)
+    private LocalDate lastCommunicationDate;
+    @Column(nullable = false)
     private String currentState;
     @Column(nullable = false)
-    private LocalDate lastConnectionDate;
+    private String notOrNotNot;
+    @Column(nullable = false)
+    private String gorizontStatus;
     private String DispatcherTask;
     private String teamReport;
-    @OneToOne
-    @PrimaryKeyJoinColumn
-    private DcComplex dcComplex;
 }
-
-
