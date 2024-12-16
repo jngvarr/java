@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "dcs")
+@Table(name = "ivkes")
 public class DC {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,12 +16,10 @@ public class DC {
     @Column(nullable = false)
     private String dcNumber;
     private String dcModel;
-    private int meterQuantity;
     private LocalDate manufactureDate;
-    @ManyToOne
-    @JoinColumn(name = "substation_id", nullable = false)
-    private Substation substation;
-    private String busSection;
-    @OneToMany(mappedBy = "dc", cascade = CascadeType.ALL)
-    private List<Meter> dcMeters;
+    @OneToOne
+    @JoinColumn(name = "ivke_id", nullable = false)
+    private DcComplex dcComplex;
 }
+//    @OneToMany(mappedBy = "dc", cascade = CascadeType.ALL)
+//    private List<Meter> dcMeters;

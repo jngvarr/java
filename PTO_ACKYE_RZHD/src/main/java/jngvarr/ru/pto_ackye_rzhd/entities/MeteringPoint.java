@@ -12,11 +12,17 @@ import java.time.LocalDate;
 public class MeteringPoint {
     @Id
     Long id;
+    @Column(nullable = false)
     private String name;
     private String meterPlacement;
+    @Column(nullable = false)
     private String meteringPointAddress;
     private LocalDate installationDate;
+    private String connection;
     @ManyToOne
-    @JoinColumn(name = "substation_id")
+    @JoinColumn(name = "substation_id", nullable = false)
     private Substation substation;
 }
+//    @OneToOne
+//    @JoinColumn(name = "iik_state_id")
+//    private IikState iikState;
