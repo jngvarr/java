@@ -1,7 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.entities;
 
 import jakarta.persistence.*;
-import jngvarr.ru.pto_ackye_rzhd.entities.others.Substation;
 import lombok.Data;
 
 import java.time.LocalDate;

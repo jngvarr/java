@@ -9,7 +9,7 @@ import java.util.Map;
 import static jngvarr.ru.PtoTelegramBotContent.*;
 
 
-public class PtoTelegramBot extends MultiSessionTelegramBot {
+public class    PtoTelegramBot extends MultiSessionTelegramBot {
     public static final String NAME = "pto_ackye_bot"; // TODO: добавьте имя бота в кавычках
     public static final String TOKEN = "7646786291:AAHNu83gn4yDvxPupN_yB5GQ_sc44o-oKUw"; //TODO: добавьте токен бота в кавычках
 

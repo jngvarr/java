@@ -1,8 +1,6 @@
-package jngvarr.ru.pto_ackye_rzhd.entities.others;
-
+package jngvarr.ru.pto_ackye_rzhd.entities;
 
 import jakarta.persistence.*;
-import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import lombok.Data;
 
 @Data

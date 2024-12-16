@@ -1,0 +1,35 @@
+server:
+  port: 8081
+spring:
+  application:
+    name:
+      tgbot
+#  cloud:
+#    config:
+#      uri: http://localhost:8888
+#      label: main
+#      name: tgbot
+  config:
+    import: configserver:http://localhost:8888
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  datasource:
+    url: jdbc:postgresql://62.76.142.52:5432/tgbotdb
+    driver-class-name: org.postgresql.Driver
+    #    username: tgbot
+    #    password: tgbotpass
+logging:
+  level:
+    ru.jngvarr: DEBUG
+    org.springframework.cloud.config: DEBUG
+telegram:
+  bot:
+    name: PTO_ACKYE_bot
+#    token: ${TELEGRAM_BOT_TOKEN}
+#    owner: ${TELEGRAM_BOT_OWNER}
+#    token: 7887488572:AAHU1Vb-8NLc3ug-hV6Ju8YNnpFXE24iV2Q
+#    owner: 199867696
