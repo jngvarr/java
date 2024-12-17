@@ -24,6 +24,8 @@ import java.util.Map;
 public class PtoService {
     private final IikService iikService;
     private final IvkeService ivkeService;
+    private final MeterService meterService;
+
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия.xlsx";
     private final long startTime = System.currentTimeMillis();
@@ -102,7 +104,7 @@ public class PtoService {
     }
 
     private void fillDbWithIikData(Sheet sheet) {
-        List<MeteringPoint> iiks = new ArrayList<>();
+        List<Meter> meters = new ArrayList<>();
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 continue;
@@ -111,7 +113,8 @@ public class PtoService {
             Meter newIikMeter = new Meter();
 
             try {
-                newIik.setSubstation(SUBSTATION_MAP.get(getStringMapKey(row)));
+                String mapKey = getStringMapKey(row);
+                newIik.setSubstation(SUBSTATION_MAP.get(mapKey));
             } catch (NullPointerException e) {
                 log.error("There is no such substation in DB {}: ", e.getMessage());
             }
@@ -124,10 +127,11 @@ public class PtoService {
             newIikMeter.setMeterNumber(getCellStringValue(row.getCell(13)));
             newIik.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(15)), DATE_FORMATTER_DDMMYYYY));
             newIikMeter.setDc(DC_MAP.get(getCellStringValue(row.getCell(14))));
-            iiks.add(newIik);
+            newIikMeter.setMeteringPoint(newIik);
+            meters.add(newIikMeter);
 
         }
-        iikService.createAll(iiks);
+        meterService.saveAll(meters);
     }
 
 //    private IikState getiikStatusData(Row row) {
@@ -184,13 +188,13 @@ public class PtoService {
 
     private String buildSubstationMapKey(Substation substation) {
         return new StringBuilder().
-                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion()).
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion().getName()).
                 append("_").
-                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision()).
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getName()).
                 append("_").
-                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise()).
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getName()).
                 append("_").
-                append(substation.getStation().getPowerSupplyDistrict()).
+                append(substation.getStation().getPowerSupplyDistrict().getName()).
                 append("_").
                 append(substation.getStation().getName()).
                 append("_").

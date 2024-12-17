@@ -1,6 +1,8 @@
 package jngvarr.ru.pto_ackye_rzhd.sevices;
 
+import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
+import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
 import jngvarr.ru.pto_ackye_rzhd.repositories.DcRepository;
@@ -18,6 +20,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class IvkeService {
     private final DcRepository ivkeRepository;
+
 
     public List<Dc> getDCs() {
         return ivkeRepository.findAll();
@@ -42,6 +45,7 @@ public class IvkeService {
         } else throw new NotEnoughData("Not enough IIK data");
     }
 
+    @Transactional
     public void createAll(List<Dc> ivke) {
         ivkeRepository.saveAll(ivke);
     }

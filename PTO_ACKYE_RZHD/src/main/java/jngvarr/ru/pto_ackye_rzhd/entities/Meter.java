@@ -14,10 +14,10 @@ public class Meter {
     private String meterNumber;
     @Column(nullable = false)
     private String meterModel;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "metering_point_id")
     private MeteringPoint meteringPoint;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "dc_id")
     private Dc dc;
 }
