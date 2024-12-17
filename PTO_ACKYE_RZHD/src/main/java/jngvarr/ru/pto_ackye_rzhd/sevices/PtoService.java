@@ -13,10 +13,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -31,11 +28,25 @@ public class PtoService {
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
+    private static final Map<EntityType, Map<String, Object>> entityMaps = new EnumMap<>(EntityType.class);
+    private static final int REGION_NAME = 1;
+    private static final int STATION_NAME = 2;
+    private static final int POWER_SUPPLY_ENTERPRISE_NAME = 3;
+    private static final int POWER_SUPPLY_DISTRICT_NAME = 4;
+    private static final int STRUCTURAL_SUBDIVISION_NAME = 5;
+    private static final int SUBSTATION_NAME = 6;
+    private static final int BUS_SECTION_NUM = 7;
+    private static final String DC_MODEL = "DC-1000/SL";
+    private static final int DC_NUMBER = 9;
+
+
+    private enum EntityType {
+        SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION
+    }
 
     public void processFile() {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))
         ) {
-//            Map<String, Substation> substationMap;
             fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
             fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
             planOTOWorkbook.close();
@@ -51,6 +62,9 @@ public class PtoService {
     }
 
     private void fillDbWithIvkeData(Sheet sheet) {
+        for (EntityType type : EntityType.values()) {
+            entityMaps.put(type, new HashMap<>());
+        }
         for (Row row : sheet) {
             if (row.getRowNum() == 0 || row.getRowNum() == sheet.getLastRowNum()) {
                 // Пропускаем первую строку, это заголовок
@@ -62,23 +76,27 @@ public class PtoService {
             PowerSupplyDistrict newIvkePowerSupplyDistrict = new PowerSupplyDistrict();
             Station newIvkeStation = new Station();
             Substation newIvkeSubstation = new Substation();
-            newRegion.setName(getCellStringValue(row.getCell(1)));
-            newIvkeSubdivision.setName(getCellStringValue(row.getCell(5)));
-            newIvkeSubdivision.setRegion(newRegion);
-            newIvkePowerSupplyEnterprise.setName(getCellStringValue(row.getCell(3)));
+
+            String regionName = getCellStringValue(row.getCell(REGION_NAME));
+            newRegion.setName(regionName);
+            entityMaps.get(EntityType.REGION).put(regionName, newRegion);
+            newIvkeSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
+            newIvkeSubdivision.setRegion((Region) entityMaps.get(EntityType.REGION).get(regionName));
+
+            newIvkePowerSupplyEnterprise.setName(getCellStringValue(row.getCell(POWER_SUPPLY_ENTERPRISE_NAME)));
             newIvkePowerSupplyEnterprise.setStructuralSubdivision(newIvkeSubdivision);
-            newIvkePowerSupplyDistrict.setName(getCellStringValue(row.getCell(4)));
+            newIvkePowerSupplyDistrict.setName(getCellStringValue(row.getCell(POWER_SUPPLY_DISTRICT_NAME)));
             newIvkePowerSupplyDistrict.setPowerSupplyEnterprise(newIvkePowerSupplyEnterprise);
-            newIvkeStation.setName(getCellStringValue(row.getCell(2)));
+            newIvkeStation.setName(getCellStringValue(row.getCell(STATION_NAME)));
             newIvkeStation.setPowerSupplyDistrict(newIvkePowerSupplyDistrict);
-            newIvkeSubstation.setName(getCellStringValue(row.getCell(6)));
+            newIvkeSubstation.setName(getCellStringValue(row.getCell(SUBSTATION_NAME)));
             newIvkeSubstation.setStation(newIvkeStation);
             Dc newIvke = new Dc();
             newIvke.setSubstation(newIvkeSubstation);
-            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(7))));
+            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(BUS_SECTION_NUM))));
             newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(10)), DATE_FORMATTER_DDMMYYYY));
-            newIvke.setDcModel("DC-1000/SL");
-            String dcNumber = getCellStringValue(row.getCell(9));
+            newIvke.setDcModel(DC_MODEL);
+            String dcNumber = getCellStringValue(row.getCell(DC_NUMBER));
             newIvke.setDcNumber(dcNumber);
 
             SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newIvkeSubstation), newIvkeSubstation);

@@ -84,7 +84,7 @@ public class UpgradedDaysDataFiller {
         logger.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    private static void processFile(File file, Map<DataType, Map<String, String>> dataMaps) {
+    private static void processFile(File file, Map<DataType, Map<String, String>>   dataMaps) {
         String fileName = file.getName();
         try {
             if (fileName.startsWith("Контроль поступления данных")) {

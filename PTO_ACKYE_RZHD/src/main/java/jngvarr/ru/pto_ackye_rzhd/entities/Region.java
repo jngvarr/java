@@ -5,15 +5,11 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "regions"
-//        ,uniqueConstraints =
-//        @UniqueConstraint(columnNames = {"name"})
-)
+@Table(name = "regions")
 public class Region {
-
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     private Long id;
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 }
