@@ -2,9 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.sevices;
 
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
-import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
-import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
 import jngvarr.ru.pto_ackye_rzhd.repositories.DcRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +16,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class IvkeService {
+public class DcService {
     private final DcRepository ivkeRepository;
 
 
@@ -38,11 +36,8 @@ public class IvkeService {
 //    }
 
     public Dc createDc(Dc ivkeToCreate) {
-        if (ivkeToCreate.getId() != null &&
-                ivkeToCreate.getSubstation() != null
-        ) {
+
             return ivkeRepository.save(ivkeToCreate);
-        } else throw new NotEnoughData("Not enough IIK data");
     }
 
     @Transactional

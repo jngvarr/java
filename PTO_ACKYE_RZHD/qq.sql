@@ -232,3 +232,50 @@ values ('Краска', 'Штука', 255.7),
 
 
 
+SELECT
+    mp.id AS metering_point_id,
+--     r.id AS region_id,
+    r.name AS region_name,
+    ss.name AS structural_subdivision_name,
+    pse.name AS power_supply_enterprise_name,
+    psd.name AS power_supply_district_name,
+    st.name AS station_name,
+    s.name AS substation_name,
+    mp.name AS metering_point_name,
+    mp.metering_point_address,
+--     s.id AS substation_id,
+--     st.id AS station_id,
+--     psd.id AS power_supply_district_id,
+--     pse.id AS power_supply_enterprise_id,
+--     ss.id AS structural_subdivision_id,
+--     mp.connection,
+--     mp.meter_placement,
+--     m.id AS meter_id,
+    m.meter_model,
+    m.meter_number,
+    dc.dc_model,
+    dc.dc_number,
+    dc.bus_section,
+--     m.dc_id,
+--     dc.id AS data_concentrator_id,
+    mp.installation_date AS mp_installation_date,
+    dc.installation_date AS dc_installation_date
+--     dc.manufacture_date
+FROM
+    metering_points mp
+        LEFT JOIN
+    meters m ON mp.id = m.metering_point_id
+        LEFT JOIN
+    data_concentrators dc ON dc.id = m.dc_id
+        LEFT JOIN
+    substations s ON mp.substation_id = s.id
+        LEFT JOIN
+    stations st ON s.station_id = st.id
+        LEFT JOIN
+    power_supply_districts psd ON st.power_supply_district_id = psd.id
+        LEFT JOIN
+    power_supply_enterprises pse ON psd.power_supply_enterprise_id = pse.id
+        LEFT JOIN
+    structural_subdivisions ss ON pse.structural_subdivision_id = ss.id
+        LEFT JOIN
+    regions r ON st.id = r.id;

@@ -1,5 +1,8 @@
 package jngvarr.ru.pto_ackye_rzhd.sevices;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +23,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PtoService {
     private final IikService iikService;
-    private final IvkeService ivkeService;
+    private final DcService dcService;
     private final MeterService meterService;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия.xlsx";
@@ -29,6 +34,7 @@ public class PtoService {
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
     private static final Map<EntityType, Map<String, Object>> entityMaps = new EnumMap<>(EntityType.class);
+    private static final Map<String, Region> REGION_MAP = new HashMap<>();
     private static final int REGION_NAME = 1;
     private static final int STATION_NAME = 2;
     private static final int POWER_SUPPLY_ENTERPRISE_NAME = 3;
@@ -38,6 +44,7 @@ public class PtoService {
     private static final int BUS_SECTION_NUM = 7;
     private static final String DC_MODEL = "DC-1000/SL";
     private static final int DC_NUMBER = 9;
+    private static final int INSTALLATION_DATE = 10;
 
 
     private enum EntityType {
@@ -61,7 +68,8 @@ public class PtoService {
         log.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    private void fillDbWithIvkeData(Sheet sheet) {
+    @Transactional
+    protected void fillDbWithIvkeData(Sheet sheet) {
         for (EntityType type : EntityType.values()) {
             entityMaps.put(type, new HashMap<>());
         }
@@ -71,38 +79,57 @@ public class PtoService {
                 continue;
             }
             Region newRegion = new Region();
-            StructuralSubdivision newIvkeSubdivision = new StructuralSubdivision();
-            PowerSupplyEnterprise newIvkePowerSupplyEnterprise = new PowerSupplyEnterprise();
-            PowerSupplyDistrict newIvkePowerSupplyDistrict = new PowerSupplyDistrict();
-            Station newIvkeStation = new Station();
-            Substation newIvkeSubstation = new Substation();
+            StructuralSubdivision newSubdivision = new StructuralSubdivision();
+            PowerSupplyEnterprise newPowerSupplyEnterprise = new PowerSupplyEnterprise();
+            PowerSupplyDistrict newPowerSupplyDistrict = new PowerSupplyDistrict();
+            Station newStation = new Station();
+            Substation newSubstation = new Substation();
+//            String regionName = getCellStringValue(row.getCell(REGION_NAME));
+//            if (!REGION_MAP.containsKey(regionName)) {
+//                newRegion.setName(regionName);
+//                entityManager.persist(newRegion); // Сохраняем Region в базе данных
+//                REGION_MAP.put(regionName, newRegion); // Добавляем в карту
+//            } else {
+//                newRegion = REGION_MAP.get(regionName);
+//                newRegion = entityManager.merge(newRegion); // Убеждаемся, что объект в контексте
+//            }
+//            newSubdivision.setRegion(newRegion);
+//            String newSubdivisionName = getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME));
+//            newSubdivision.setName(newSubdivisionName);
+//            entityManager.persist(newSubdivision);
+//            if (newSubdivision.getRegion() != null)
+//                newSubdivision.setRegion(entityManager.merge(newSubdivision.getRegion()));
+//            newSubdivision.setRegion((Region) entityMaps.get(EntityType.REGION).get(regionName));
 
-            String regionName = getCellStringValue(row.getCell(REGION_NAME));
-            newRegion.setName(regionName);
-            entityMaps.get(EntityType.REGION).put(regionName, newRegion);
-            newIvkeSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
-            newIvkeSubdivision.setRegion((Region) entityMaps.get(EntityType.REGION).get(regionName));
 
-            newIvkePowerSupplyEnterprise.setName(getCellStringValue(row.getCell(POWER_SUPPLY_ENTERPRISE_NAME)));
-            newIvkePowerSupplyEnterprise.setStructuralSubdivision(newIvkeSubdivision);
-            newIvkePowerSupplyDistrict.setName(getCellStringValue(row.getCell(POWER_SUPPLY_DISTRICT_NAME)));
-            newIvkePowerSupplyDistrict.setPowerSupplyEnterprise(newIvkePowerSupplyEnterprise);
-            newIvkeStation.setName(getCellStringValue(row.getCell(STATION_NAME)));
-            newIvkeStation.setPowerSupplyDistrict(newIvkePowerSupplyDistrict);
-            newIvkeSubstation.setName(getCellStringValue(row.getCell(SUBSTATION_NAME)));
-            newIvkeSubstation.setStation(newIvkeStation);
+//            entityMaps.get(EntityType.REGION).put(regionName, newRegion);
+//            newSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
+//            newSubdivision.setRegion((Region) entityMaps.get(EntityType.REGION).get(regionName));
+            newRegion.setName(getCellStringValue(row.getCell(REGION_NAME)));
+            newSubdivision.setRegion(newRegion);
+            newSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
+            newPowerSupplyEnterprise.setName(getCellStringValue(row.getCell(POWER_SUPPLY_ENTERPRISE_NAME)));
+            newPowerSupplyEnterprise.setStructuralSubdivision(newSubdivision);
+            newPowerSupplyDistrict.setName(getCellStringValue(row.getCell(POWER_SUPPLY_DISTRICT_NAME)));
+            newPowerSupplyDistrict.setPowerSupplyEnterprise(newPowerSupplyEnterprise);
+            newStation.setName(getCellStringValue(row.getCell(STATION_NAME)));
+            newStation.setPowerSupplyDistrict(newPowerSupplyDistrict);
+            newSubstation.setName(getCellStringValue(row.getCell(SUBSTATION_NAME)));
+            newSubstation.setStation(newStation);
             Dc newIvke = new Dc();
-            newIvke.setSubstation(newIvkeSubstation);
+            newIvke.setSubstation(newSubstation);
             newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(BUS_SECTION_NUM))));
-            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(10)), DATE_FORMATTER_DDMMYYYY));
+            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(INSTALLATION_DATE)), DATE_FORMATTER_DDMMYYYY));
             newIvke.setDcModel(DC_MODEL);
             String dcNumber = getCellStringValue(row.getCell(DC_NUMBER));
             newIvke.setDcNumber(dcNumber);
 
-            SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newIvkeSubstation), newIvkeSubstation);
+            SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newSubstation), newSubstation);
             DC_MAP.putIfAbsent(dcNumber, newIvke);
         }
-        ivkeService.createAll(DC_MAP.values().stream().toList());
+        for (Dc dc : DC_MAP.values()) {
+            dcService.createDc(dc);
+        }
     }
 
     private String getStringMapKey(Row row) {
@@ -147,9 +174,10 @@ public class PtoService {
             newIikMeter.setDc(DC_MAP.get(getCellStringValue(row.getCell(14))));
             newIikMeter.setMeteringPoint(newIik);
             meters.add(newIikMeter);
-
         }
-        meterService.saveAll(meters);
+        for (Dc dc : DC_MAP.values()) {
+            meterService.saveAll(meters);
+        }
     }
 
 //    private IikState getiikStatusData(Row row) {
