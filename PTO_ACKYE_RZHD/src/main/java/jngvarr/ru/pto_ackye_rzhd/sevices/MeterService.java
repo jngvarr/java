@@ -33,15 +33,17 @@ public class MeterService {
         meterRepository.saveAll(meters);
     }
 
-
     public void create(Meter meter) {
-        if (meter.getId() != null && meter.getMeteringPoint() != null) {
-            if (meterRepository.existsById(meter.getId())) {
-                if (meter.getMeteringPoint() != null) {
-                    meter.setMeteringPoint(entityManager.merge(meter.getMeteringPoint())); // Слияние объекта MeteringPoint
-                    meterRepository.save(meter);
-                }
-            } else throw new NotEnoughData("Not enough IIK data: " + meter.getId());
-        }
+        if (meter.getId() == null
+                && meter.getMeterNumber() != null
+                && meter.getMeterModel() != null
+                && meter.getDc() != null
+        ) {
+//                if (meter.getMeteringPoint() != null) {
+//                    meter.setMeteringPoint(entityManager.merge(meter.getMeteringPoint())); // Слияние объекта MeteringPoint
+//                }
+            meterRepository.save(meter);
+
+        } else throw new NotEnoughData("Not enough IIK data: " + meter.getId());
     }
 }

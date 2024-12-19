@@ -18,6 +18,6 @@ public class Meter {
     @JoinColumn(name = "metering_point_id")
     private MeteringPoint meteringPoint;
     @ManyToOne(cascade = CascadeType.MERGE)
-    @JoinColumn(name = "dc_id")
+    @JoinColumn(name = "dc_id", nullable = false)
     private Dc dc;
 }

@@ -4,4 +4,5 @@ import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DcRepository extends JpaRepository<Dc,Long> {
+    boolean existsByDcNumber(String num);
 }

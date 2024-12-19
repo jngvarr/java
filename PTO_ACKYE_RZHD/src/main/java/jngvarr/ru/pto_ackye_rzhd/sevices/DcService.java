@@ -35,9 +35,16 @@ public class DcService {
 //        else throw new NeededObjectNotFound("Dc with such meter number not found: " + dcNumber);
 //    }
 
-    public Dc createDc(Dc ivkeToCreate) {
-
-            return ivkeRepository.save(ivkeToCreate);
+    public Dc createDc(Dc dcToCreate) {
+        boolean dcIsExists = ivkeRepository.existsByDcNumber(dcToCreate.getDcNumber());
+        if (dcToCreate.getId() == null
+                && dcToCreate.getDcNumber() != null
+                && dcToCreate.getDcModel() != null
+                && !dcIsExists
+        ) {
+            return ivkeRepository.save(dcToCreate);
+        }
+        return null;
     }
 
     @Transactional

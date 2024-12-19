@@ -19,10 +19,11 @@ public class MeteringPoint {
     private String meteringPointAddress;
     private LocalDate installationDate;
     private String connection;
+//    @Transient
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "substation_id", nullable = false)
     private Substation substation;
+    @OneToOne(mappedBy = "meteringPoint",cascade = CascadeType.MERGE)
+    private Meter meter;
 }
-//    @OneToOne
-//    @JoinColumn(name = "iik_state_id")
-//    private IikState iikState;
+

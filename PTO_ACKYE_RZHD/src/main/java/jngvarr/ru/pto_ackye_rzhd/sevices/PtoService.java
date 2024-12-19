@@ -29,22 +29,31 @@ public class PtoService {
     private final EntityManager entityManager;
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия.xlsx";
+    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия2.xlsx";
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
     private static final Map<EntityType, Map<String, Object>> entityMaps = new EnumMap<>(EntityType.class);
     private static final Map<String, Region> REGION_MAP = new HashMap<>();
-    private static final int REGION_NAME = 1;
-    private static final int STATION_NAME = 2;
-    private static final int POWER_SUPPLY_ENTERPRISE_NAME = 3;
-    private static final int POWER_SUPPLY_DISTRICT_NAME = 4;
-    private static final int STRUCTURAL_SUBDIVISION_NAME = 5;
-    private static final int SUBSTATION_NAME = 6;
-    private static final int BUS_SECTION_NUM = 7;
+    private static final int CELL_NUMBER_REGION_NAME = 1;
+    private static final int CELL_NUMBER_STATION_NAME = 2;
+    private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 3;
+    private static final int CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME = 4;
+    private static final int CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME = 5;
+    private static final int CELL_NUMBER_SUBSTATION_NAME = 6;
+    private static final int CELL_NUMBER_BUS_SECTION_NUM = 7;
     private static final String DC_MODEL = "DC-1000/SL";
-    private static final int DC_NUMBER = 9;
-    private static final int INSTALLATION_DATE = 10;
+    private static final int CELL_NUMBER_DC_NUMBER = 9;
+    private static final int CELL_NUMBER_DC_INSTALLATION_DATE = 10;
+    private static final int CELL_NUMBER_METERING_POINT_ID = 1;
+    private static final int CELL_NUMBER_METERING_POINT_CONNECTION = 8;
+    private static final int CELL_NUMBER_METERING_POINT_NAME = 9;
+    private static final int CELL_NUMBER_METERING_POINT_PLACEMENT = 10;
+    private static final int CELL_NUMBER_METERING_POINT_ADDRESS = 11;
+    private static final int CELL_NUMBER_METERING_POINT_METER_NUMBER = 12;
+    private static final int CELL_NUMBER_METERING_POINT_METER_MODEL = 13;
+    private static final int CELL_NUMBER_METERING_POINT_DC_NUMBER = 14;
+    private static final int CELL_NUMBER_METERING_POINT_INSTALLATION_DATE = 15;
 
 
     private enum EntityType {
@@ -74,7 +83,7 @@ public class PtoService {
             entityMaps.put(type, new HashMap<>());
         }
         for (Row row : sheet) {
-            if (row.getRowNum() == 0 || row.getRowNum() == sheet.getLastRowNum()) {
+            if (row.getRowNum() == 0 ) {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
@@ -105,23 +114,24 @@ public class PtoService {
 //            entityMaps.get(EntityType.REGION).put(regionName, newRegion);
 //            newSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
 //            newSubdivision.setRegion((Region) entityMaps.get(EntityType.REGION).get(regionName));
-            newRegion.setName(getCellStringValue(row.getCell(REGION_NAME)));
+            newRegion.setName(getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
             newSubdivision.setRegion(newRegion);
-            newSubdivision.setName(getCellStringValue(row.getCell(STRUCTURAL_SUBDIVISION_NAME)));
-            newPowerSupplyEnterprise.setName(getCellStringValue(row.getCell(POWER_SUPPLY_ENTERPRISE_NAME)));
+            newSubdivision.setName(getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
+            newPowerSupplyEnterprise.setName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME)));
             newPowerSupplyEnterprise.setStructuralSubdivision(newSubdivision);
-            newPowerSupplyDistrict.setName(getCellStringValue(row.getCell(POWER_SUPPLY_DISTRICT_NAME)));
+            newPowerSupplyDistrict.setName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME)));
             newPowerSupplyDistrict.setPowerSupplyEnterprise(newPowerSupplyEnterprise);
-            newStation.setName(getCellStringValue(row.getCell(STATION_NAME)));
+            newStation.setName(getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME)));
             newStation.setPowerSupplyDistrict(newPowerSupplyDistrict);
-            newSubstation.setName(getCellStringValue(row.getCell(SUBSTATION_NAME)));
+            newSubstation.setName(getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
             newSubstation.setStation(newStation);
             Dc newIvke = new Dc();
             newIvke.setSubstation(newSubstation);
-            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(BUS_SECTION_NUM))));
-            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(INSTALLATION_DATE)), DATE_FORMATTER_DDMMYYYY));
+            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))));
+            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)), DATE_FORMATTER_DDMMYYYY));
             newIvke.setDcModel(DC_MODEL);
-            String dcNumber = getCellStringValue(row.getCell(DC_NUMBER));
+            newIvke.setMeters(new ArrayList<>());
+            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             newIvke.setDcNumber(dcNumber);
 
             SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newSubstation), newSubstation);
@@ -155,28 +165,31 @@ public class PtoService {
                 continue;
             }
             MeteringPoint newIik = new MeteringPoint();
-            Meter newIikMeter = new Meter();
-
+            Meter newMeter = new Meter();
+            newMeter.setMeteringPoint(newIik);
             try {
                 String mapKey = getStringMapKey(row);
                 newIik.setSubstation(SUBSTATION_MAP.get(mapKey));
             } catch (NullPointerException e) {
                 log.error("There is no such substation in DB {}: ", e.getMessage());
             }
-            newIik.setId(Long.parseLong(getCellStringValue(row.getCell(1))));
-            newIik.setConnection(getCellStringValue(row.getCell(8)));
-            newIik.setName(getCellStringValue(row.getCell(9)));
-            newIik.setMeterPlacement(getCellStringValue(row.getCell(10)));
-            newIik.setMeteringPointAddress(getCellStringValue(row.getCell(11)));
-            newIikMeter.setMeterModel(getCellStringValue(row.getCell(12)));
-            newIikMeter.setMeterNumber(getCellStringValue(row.getCell(13)));
-            newIik.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(15)), DATE_FORMATTER_DDMMYYYY));
-            newIikMeter.setDc(DC_MAP.get(getCellStringValue(row.getCell(14))));
-            newIikMeter.setMeteringPoint(newIik);
-            meters.add(newIikMeter);
+            newIik.setId(Long.parseLong(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
+            newIik.setConnection(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
+            newIik.setName(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
+            newIik.setMeterPlacement(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
+            newIik.setMeteringPointAddress(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
+            newIik.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE))
+                    , DATE_FORMATTER_DDMMYYYY));
+            newMeter.setMeterModel(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER)));
+            newMeter.setMeterNumber(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL)));
+            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
+            newMeter.setMeteringPoint(newIik);
+            Dc dcToAdd = addMeterToDc(newMeter, dcNumber);
+            newMeter.setDc(dcToAdd);
+            meters.add(newMeter);
         }
-        for (Dc dc : DC_MAP.values()) {
-            meterService.saveAll(meters);
+        for (Meter meter : meters) {
+            meterService.create(meter);
         }
     }
 
@@ -246,5 +259,14 @@ public class PtoService {
                 append("_").
                 append(substation.getName()).toString();
 
+    }
+
+    private Dc addMeterToDc(Meter meter, String dcNum) {
+        if (DC_MAP.containsKey(dcNum)) {
+            Dc dc = DC_MAP.get(dcNum);
+            dc.getMeters().add(meter);
+            return dc;
+        }
+        return null;
     }
 }
