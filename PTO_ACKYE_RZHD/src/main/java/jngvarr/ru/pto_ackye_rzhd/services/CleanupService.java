@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.sevices;
+package jngvarr.ru.pto_ackye_rzhd.services;
 
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Component;

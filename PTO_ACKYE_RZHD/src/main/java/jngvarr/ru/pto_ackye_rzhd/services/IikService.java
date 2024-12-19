@@ -1,10 +1,8 @@
-package jngvarr.ru.pto_ackye_rzhd.sevices;
+package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
-import jngvarr.ru.pto_ackye_rzhd.repositories.MeterRepository;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

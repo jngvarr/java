@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.sevices;
+package jngvarr.ru.pto_ackye_rzhd.services;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
