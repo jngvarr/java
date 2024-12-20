@@ -2,14 +2,12 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
+import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,21 +31,38 @@ public class MeteringPointService {
     }
 
     public MeteringPoint create(MeteringPoint iik) {
-        if
-        return meteringPointRepository.save(iik);
+        if (iik.getName() != null
+                && iik.getMeteringPointAddress() != null
+                && iik.getSubstation() != null) {
+            return meteringPointRepository.save(iik);
+        } else {
+            throw new NotEnoughDataException("Not enough data to create MeteringPoint");
+        }
     }
 
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
+        for (MeteringPoint iik : iiks) {
+            if (iik.getName() == null || iik.getMeteringPointAddress() == null || iik.getSubstation() == null) {
+                throw new NotEnoughDataException("Not enough data to create one or more MeteringPoints");
+            }
+        }
         return meteringPointRepository.saveAll(iiks);
     }
 
     public MeteringPoint update(MeteringPoint newData, Long id) {
-        return meteringPointRepository.save(newData, id);
+        MeteringPoint existingMeteringPoint = getIik(id);
+        existingMeteringPoint.setName(newData.getName());
+        existingMeteringPoint.setMeteringPointAddress(newData.getMeteringPointAddress());
+        existingMeteringPoint.setSubstation(newData.getSubstation());
+        return meteringPointRepository.save(existingMeteringPoint);
     }
 
     public void delete(Long id) {
-        meteringPointRepository.delete(id);
+        if (!meteringPointRepository.existsById(id)) {
+            throw new NeededObjectNotFound("MeteringPoint not found with id: " + id);
+        }
+        meteringPointRepository.deleteById(id);
     }
 }
 
-}
+

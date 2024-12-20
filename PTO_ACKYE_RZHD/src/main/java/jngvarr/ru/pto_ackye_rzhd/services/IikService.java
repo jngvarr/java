@@ -2,7 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
-import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
+import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class IikService {
                 iikToCreate.getName() != null
         )) {
             return iikRepository.save(iikToCreate);
-        } else throw new NotEnoughData("Not enough IIK data");
+        } else throw new NotEnoughDataException("Not enough IIK data");
     }
 
     @Transactional

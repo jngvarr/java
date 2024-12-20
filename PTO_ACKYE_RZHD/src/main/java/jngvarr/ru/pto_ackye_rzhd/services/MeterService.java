@@ -3,7 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
-import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
+import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeterRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +43,6 @@ public class MeterService {
 //                }
             meterRepository.save(meter);
 
-        } else throw new NotEnoughData("Not enough IIK data: " + meter.getId());
+        } else throw new NotEnoughDataException("Not enough IIK data: " + meter.getId());
     }
 }

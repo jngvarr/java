@@ -36,7 +36,7 @@ public class MeteringPointController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/createPack")
     public List<MeteringPoint> createSomeMeteringPoints(@RequestBody List<MeteringPoint> iiks) {
-        return meteringPointservice.createIiks(iiks);
+        return meteringPointservice.createIiks  (iiks);
     }
 
     @PutMapping("/update/{id}")
