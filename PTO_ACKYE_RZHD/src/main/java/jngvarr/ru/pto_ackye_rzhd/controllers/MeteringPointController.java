@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @Slf4j
 @RestController
-@RequestMapping("/iik")
+@RequestMapping("/iiks")
 public class MeteringPointController {
     private final MeteringPointService meteringPointservice;
 

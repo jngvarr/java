@@ -3,6 +3,8 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
+import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeterRepository;
 import lombok.Data;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Slf4j
@@ -19,6 +22,18 @@ import java.util.List;
 public class MeterService {
     private final MeterRepository meterRepository;
     private final EntityManager entityManager;
+
+
+    public List<Meter> getAll(){
+        return meterRepository.findAll();
+    }
+
+    public Meter getMeter(Long id) {
+        Optional<Meter> neededMeter = meterRepository.findById(id);
+        if (neededMeter.isPresent()) {
+            return neededMeter.get();
+        } else throw new NeededObjectNotFound("MeteringPoint not found: " + id);
+    }
 
     @Transactional
     public void saveAll(List<Meter> meters) {

@@ -22,14 +22,13 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class PtoService {
-    private final IikService iikService;
     private final DcService dcService;
     private final MeterService meterService;
     @PersistenceContext
     private final EntityManager entityManager;
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo - копия2.xlsx";
+    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия2.xlsx";
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();

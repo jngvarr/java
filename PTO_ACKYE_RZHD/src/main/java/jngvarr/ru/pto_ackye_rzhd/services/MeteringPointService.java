@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,7 @@ public class MeteringPointService {
         Optional<MeteringPoint> neededMeteringPoint = meteringPointRepository.findById(id);
         if (neededMeteringPoint.isPresent()) {
             return neededMeteringPoint.get();
-        } else throw new NeededObjectNotFound("Employee not found!");
+        } else throw new NeededObjectNotFound("MeteringPoint not found: " + id);
     }
 
     public MeteringPoint create(MeteringPoint iik) {
@@ -39,7 +40,7 @@ public class MeteringPointService {
             throw new NotEnoughDataException("Not enough data to create MeteringPoint");
         }
     }
-
+    @Transactional
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
         for (MeteringPoint iik : iiks) {
             if (iik.getName() == null || iik.getMeteringPointAddress() == null || iik.getSubstation() == null) {
@@ -49,12 +50,19 @@ public class MeteringPointService {
         return meteringPointRepository.saveAll(iiks);
     }
 
-    public MeteringPoint update(MeteringPoint newData, Long id) {
-        MeteringPoint existingMeteringPoint = getIik(id);
-        existingMeteringPoint.setName(newData.getName());
-        existingMeteringPoint.setMeteringPointAddress(newData.getMeteringPointAddress());
-        existingMeteringPoint.setSubstation(newData.getSubstation());
-        return meteringPointRepository.save(existingMeteringPoint);
+    public MeteringPoint update(MeteringPoint newData, Long iikId) {
+        Optional<MeteringPoint> oldIik = meteringPointRepository.findById(iikId);
+        if (oldIik.isPresent()) {
+            MeteringPoint newIik = oldIik.get();
+            if (newData.getName() != null) newIik.setName(newData.getName());
+            if (newData.getMeterPlacement() != null) newIik.setMeterPlacement(newData.getMeterPlacement());
+            if (newData.getMeteringPointAddress() != null) newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
+            if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
+            if (newData.getConnection() != null) newIik.setConnection(newData.getConnection());
+            if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
+
+            return meteringPointRepository.save(newIik);
+        } else throw new IllegalArgumentException("MeteringPoint not found");
     }
 
     public void delete(Long id) {

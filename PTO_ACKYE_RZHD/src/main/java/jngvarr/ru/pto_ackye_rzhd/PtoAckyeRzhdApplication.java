@@ -11,14 +11,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @RequiredArgsConstructor
 public class PtoAckyeRzhdApplication {
-//    private final IikService iikService;
+    //    private final IikService iikService;
     private final PtoService ptoService;
 //
-    @PostConstruct
-    public void init() {
-        ptoService.processFile();
+//    @PostConstruct
+//    public void init() {
+//        ptoService.processFile();
 ////        System.out.println("Iiks list: " + iikService.getIIKs());
-    }
+//    }
 
     public static void main(String[] args) {
         SpringApplication.run(PtoAckyeRzhdApplication.class, args);
