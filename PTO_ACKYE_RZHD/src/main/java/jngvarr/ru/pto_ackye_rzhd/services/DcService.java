@@ -24,9 +24,13 @@ public class DcService {
         return ivkeRepository.findAll();
     }
 
-    public Dc getDc(Long id) {
+    public Dc getDcById(Long id) {
         Optional<Dc> neededDc = ivkeRepository.findById(id);
         return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id));
+    }
+    public Dc getDcByNumber(String num) {
+        Optional<Dc> neededDc = ivkeRepository.getDcByDcNumber(num);
+        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
     }
 
 //    public Dc getDcByDcNum(Integer dcNumber) {

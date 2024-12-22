@@ -1,24 +1,41 @@
 package jngvarr.ru.pto_ackye_rzhd.mappers;
 
+import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
+import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
+import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
+import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
+import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
+import jngvarr.ru.pto_ackye_rzhd.services.DcService;
+import jngvarr.ru.pto_ackye_rzhd.services.MeterService;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Data
+@Component
+@RequiredArgsConstructor
 public class MeterMapper {
-    public static MeterSummaryDTO toSummaryDTO(Meter meter) {
-        MeterSummaryDTO dto = new MeterSummaryDTO();
-        dto.setId(meter.getId());
-        dto.setMeterNumber(meter.getMeterNumber());
-        dto.setMeterModel(meter.getMeterModel());
-        dto.setDcNumber(meter.getDc().getDcNumber());
-        return dto;
+    private static DcService service;
+
+
+    public static MeterDTO toMeterDTO(Meter meter) {
+        return new MeterDTO() {{
+            setId(meter.getId());
+            setMeterNumber(meter.getMeterNumber());
+            setMeterModel(meter.getMeterModel());
+            setDcNum(toDcDTO(meter.getDc()).getDcNumber());
+        }};
     }
 
-    public static MeterDetailsDTO toDetailsDTO(Meter meter) {
-        MeterDetailsDTO dto = new MeterDetailsDTO();
-        dto.setId(meter.getId());
-        dto.setMeterNumber(meter.getMeterNumber());
-        dto.setMeterModel(meter.getMeterModel());
-        dto.setMeteringPoint(toMeteringPointDTO(meter.getMeteringPoint()));
-        dto.setDc(toDcDTO(meter.getDc()));
-        return dto;
+    public static Meter fromMeterDTO(MeterDTO meterDTO) {
+        Meter meter = new Meter();
+        meter.setMeterNumber(meterDTO.getMeterNumber());
+        meter.setMeterModel(meterDTO.getMeterModel());
+        meter.setDc(fromDcDTO(meterDTO.getDcNum()));
+        return meter;
     }
+
 
     public static MeteringPointDTO toMeteringPointDTO(MeteringPoint meteringPoint) {
         MeteringPointDTO dto = new MeteringPointDTO();
@@ -26,8 +43,19 @@ public class MeterMapper {
         dto.setName(meteringPoint.getName());
         dto.setMeteringPointAddress(meteringPoint.getMeteringPointAddress());
         dto.setInstallationDate(meteringPoint.getInstallationDate());
-        dto.setSubstationName(meteringPoint.getSubstation().getName());
+        dto.setSubstation(meteringPoint.getSubstation().getName());
+        dto.setMeter(MeterMapper.toMeterDTO(meteringPoint.getMeter()));
         return dto;
+    }
+
+    public static MeteringPoint fromMeteringPointDTO(MeteringPointDTO iik) {
+        MeteringPoint meteringPoint = new MeteringPoint();
+        meteringPoint.setName(iik.getName());
+        meteringPoint.setMeterPlacement(iik.getMeterPlacement());
+        meteringPoint.setConnection(iik.getConnection());
+        meteringPoint.setMeteringPointAddress(iik.getMeteringPointAddress());
+        meteringPoint.getSubstation().setName(iik.getSubstation());
+        return meteringPoint;
     }
 
     public static DcDTO toDcDTO(Dc dc) {
@@ -35,6 +63,12 @@ public class MeterMapper {
         dto.setId(dc.getId());
         dto.setDcNumber(dc.getDcNumber());
         dto.setDcModel(dc.getDcModel());
+        dto.setSubstationId(dc.getSubstation().getName());
         return dto;
+    }
+
+    public static Dc fromDcDTO(String dcNum) {
+        Dc dc =  service.getDcByNumber(dcNum);
+        return dc;
     }
 }

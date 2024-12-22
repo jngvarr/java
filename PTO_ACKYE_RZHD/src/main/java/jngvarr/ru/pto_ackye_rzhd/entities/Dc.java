@@ -14,7 +14,7 @@ public class Dc {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "substation_id", nullable = false)
+    @JoinColumn(name = "substation_id")
     private Substation substation;
     private int busSection;
     @Column(nullable = false)

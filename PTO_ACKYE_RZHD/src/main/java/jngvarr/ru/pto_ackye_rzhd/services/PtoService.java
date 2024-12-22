@@ -190,6 +190,7 @@ public class PtoService {
         for (Meter meter : meters) {
             meterService.create(meter);
         }
+//            meterService.saveAll(meters);
     }
 
 //    private IikState getiikStatusData(Row row) {

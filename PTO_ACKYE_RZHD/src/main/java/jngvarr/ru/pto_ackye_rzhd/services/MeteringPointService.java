@@ -1,8 +1,10 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
+import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
+import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Data
 @Slf4j
@@ -20,26 +23,30 @@ import java.util.Optional;
 public class MeteringPointService {
     private final MeteringPointRepository meteringPointRepository;
 
-    public List<MeteringPoint> getAll() {
-        return meteringPointRepository.findAll();
+    public List<MeteringPointDTO> getAll() {
+        List<MeteringPoint> meteringPoints = meteringPointRepository.findAll();
+        return meteringPoints.stream()
+                .map(MeterMapper::toMeteringPointDTO)
+                .collect(Collectors.toList());
     }
 
-    public MeteringPoint getIik(Long id) {
+    public MeteringPointDTO getIik(Long id) {
         Optional<MeteringPoint> neededMeteringPoint = meteringPointRepository.findById(id);
         if (neededMeteringPoint.isPresent()) {
-            return neededMeteringPoint.get();
+            return MeterMapper.toMeteringPointDTO(neededMeteringPoint.get());
         } else throw new NeededObjectNotFound("MeteringPoint not found: " + id);
     }
 
-    public MeteringPoint create(MeteringPoint iik) {
+    public MeteringPointDTO create(MeteringPointDTO iik) {
         if (iik.getName() != null
                 && iik.getMeteringPointAddress() != null
                 && iik.getSubstation() != null) {
-            return meteringPointRepository.save(iik);
+            return MeterMapper.toMeteringPointDTO(meteringPointRepository.save(MeterMapper.fromMeteringPointDTO(iik)));
         } else {
             throw new NotEnoughDataException("Not enough data to create MeteringPoint");
         }
     }
+
     @Transactional
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
         for (MeteringPoint iik : iiks) {
@@ -56,7 +63,8 @@ public class MeteringPointService {
             MeteringPoint newIik = oldIik.get();
             if (newData.getName() != null) newIik.setName(newData.getName());
             if (newData.getMeterPlacement() != null) newIik.setMeterPlacement(newData.getMeterPlacement());
-            if (newData.getMeteringPointAddress() != null) newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
+            if (newData.getMeteringPointAddress() != null)
+                newIik.setMeteringPointAddress(newData.getMeteringPointAddress());
             if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
             if (newData.getConnection() != null) newIik.setConnection(newData.getConnection());
             if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());

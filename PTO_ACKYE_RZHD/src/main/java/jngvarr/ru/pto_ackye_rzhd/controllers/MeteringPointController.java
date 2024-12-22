@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.controllers;
 
-import jakarta.ws.rs.DELETE;
+import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.services.MeteringPointService;
 import lombok.Data;
@@ -15,37 +15,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/iiks")
 public class MeteringPointController {
-    private final MeteringPointService meteringPointservice;
+    private final MeteringPointService meteringPointService;
 
     @GetMapping
-    public List<MeteringPoint> getAll() {
-        return meteringPointservice.getAll();
+    public List<MeteringPointDTO> getAll() {
+        return meteringPointService.getAll();
     }
 
     @GetMapping("/{id}")
-    public MeteringPoint getMeteringPoint(@PathVariable Long id) {
-        return meteringPointservice.getIik(id);
+    public MeteringPointDTO getMeteringPoint(@PathVariable Long id) {
+        return meteringPointService.getIik(id);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
-    public MeteringPoint createMeteringPoint(@RequestBody MeteringPoint iik) {
-        return meteringPointservice.create(iik);
+    public MeteringPointDTO createMeteringPoint(@RequestBody MeteringPointDTO iik) {
+        return meteringPointService.create(iik);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/createPack")
     public List<MeteringPoint> createSomeMeteringPoints(@RequestBody List<MeteringPoint> iiks) {
-        return meteringPointservice.createIiks  (iiks);
+        return meteringPointService.createIiks  (iiks);
     }
 
     @PutMapping("/update/{id}")
     public MeteringPoint updateMeteringPoint(@RequestBody MeteringPoint newData, @PathVariable Long id) {
-        return meteringPointservice.update(newData, id);
+        return meteringPointService.update(newData, id);
     }
 
     @DeleteMapping("/delete/{id}")
     public void deleteMeteringPoint(@PathVariable Long id){
-        meteringPointservice.delete(id);
+        meteringPointService.delete(id);
     }
 }

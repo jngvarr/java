@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: PTO_ACKYE_RZHD
@@ -25,3 +26,5 @@ logging:
   level:
     ru.jngvarr: DEBUG
     org.springframework.cloud.config: DEBUG
+server:
+  port: 8081
