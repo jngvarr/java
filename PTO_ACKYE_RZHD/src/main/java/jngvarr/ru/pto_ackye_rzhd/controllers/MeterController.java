@@ -18,12 +18,13 @@ public class MeterController {
 
     @GetMapping
     public List<MeterDTO> getAll() {
+
         return meterService.getAll();
     }
 
     @GetMapping("/{id}")
     public MeterDTO getMeter(@PathVariable Long id) {
-        return meterService.getMeter(id);
+        return meterService.getMeterById(id);
     }
 
     @ResponseStatus(HttpStatus.CREATED)

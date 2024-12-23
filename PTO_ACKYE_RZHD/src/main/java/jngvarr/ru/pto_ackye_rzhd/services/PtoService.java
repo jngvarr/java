@@ -24,11 +24,12 @@ import java.util.*;
 public class PtoService {
     private final DcService dcService;
     private final MeteringPointService service;
+    private final SubstationService substationService;
     @PersistenceContext
     private final EntityManager entityManager;
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo — копия2.xlsx";
+    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo - копия2.xlsx";
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
@@ -135,6 +136,7 @@ public class PtoService {
 
             SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newSubstation), newSubstation);
             DC_MAP.putIfAbsent(dcNumber, newIvke);
+            substationService.create(newSubstation);
         }
         for (Dc dc : DC_MAP.values()) {
             dcService.createDc(dc);

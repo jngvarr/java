@@ -3,7 +3,10 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
+import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
+import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
+import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;
 import jngvarr.ru.pto_ackye_rzhd.repositories.DcRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -12,70 +15,90 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Data
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class DcService {
-    private final DcRepository ivkeRepository;
+    private final DcRepository dcRepository;
+    private final SubstationService substationService;
 
 
-    public List<Dc> getDCs() {
-        return ivkeRepository.findAll();
+    public List<DcDTO> getAll() {
+        List<Dc> dcs = dcRepository.findAll();
+        return dcs.stream()
+                .map(MeterMapper::toDcDTO)
+                .collect(Collectors.toList());
     }
 
-    public Dc getDcById(Long id) {
-        Optional<Dc> neededDc = ivkeRepository.findById(id);
-        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id));
+    public DcDTO getDcById(Long id) {
+        Optional<Dc> neededDc = dcRepository.findById(id);
+        return MeterMapper.toDcDTO(neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id)));
     }
+
     public Dc getDcByNumber(String num) {
-        Optional<Dc> neededDc = ivkeRepository.getDcByDcNumber(num);
+        Optional<Dc> neededDc = dcRepository.getDcByDcNumber(num);
         return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
     }
 
-//    public Dc getDcByDcNum(Integer dcNumber) {
-//        Dc iik = ivkeRepository.findByDcNumber(dcNumber);
-//        if (iik != null) return iik;
-//        else throw new NeededObjectNotFound("Dc with such meter number not found: " + dcNumber);
-//    }
-
-    public Dc createDc(Dc dcToCreate) {
-        boolean dcIsExists = ivkeRepository.existsByDcNumber(dcToCreate.getDcNumber());
-        if (dcToCreate.getId() == null
-                && dcToCreate.getDcNumber() != null
-                && dcToCreate.getDcModel() != null
+    public DcDTO createDc(DcDTO dcToCreate) {
+        boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
+        if (dcToCreate.getDcNumber() != null
+//                && dcToCreate.getDcModel() != null
+                && dcToCreate.getSubstationId() != null
                 && !dcIsExists
         ) {
-            return ivkeRepository.save(dcToCreate);
-        }
-        return null;
+            Dc dc = MeterMapper.fromDcDTO(dcToCreate);
+            dc.setSubstation(updateSubstation(dcToCreate.getSubstationId()));
+            return MeterMapper.toDcDTO(dcRepository.save(dc));
+        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
     }
+
+    public void createDc(Dc dcToCreate) {
+        boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
+        if (dcToCreate.getDcNumber() != null
+                && !dcIsExists
+        ) {
+            dcRepository.save(dcToCreate);
+        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
+    }
+
 
     @Transactional
     public void createAll(List<Dc> ivke) {
-        ivkeRepository.saveAll(ivke);
+        dcRepository.saveAll(ivke);
     }
 
-    public Dc updateDc(Dc newData, Long ivkeId) {
-        Optional<Dc> oldDc = ivkeRepository.findById(ivkeId);
+    public DcDTO updateDc(DcDTO newData, Long ivkeId) {
+        Optional<Dc> oldDc = dcRepository.findById(ivkeId);
         if (oldDc.isPresent()) {
             Dc newDc = oldDc.get();
-            if (newData.getSubstation() != null) newDc.setSubstation(newData.getSubstation());
             if (newData.getBusSection() != 0) newDc.setBusSection(newData.getBusSection());
             if (newData.getDcNumber() != null) newDc.setDcNumber(newData.getDcNumber());
             if (newData.getDcModel() != null) newDc.setDcModel(newData.getDcModel());
             if (newData.getInstallationDate() != null) newDc.setInstallationDate(newData.getInstallationDate());
             if (newData.getManufactureDate() != null) newDc.setManufactureDate(newData.getManufactureDate());
-
-            return ivkeRepository.save(newDc);
+            if (newData.getSubstationId() != null) {
+                newDc.setSubstation(updateSubstation(newData.getSubstationId()));
+            }
+            return MeterMapper.toDcDTO(dcRepository.save(newDc));
         } else throw new IllegalArgumentException("Dc not found");
     }
 
     public void delete(Long iikId) {
-        ivkeRepository.deleteById(iikId);
+        dcRepository.deleteById(iikId);
     }
 
-    public List<DcDTO> getAll() {
+    private Substation updateSubstation(Long id) {
+        Substation newDcSubstation = new Substation();
+        try {
+            newDcSubstation = substationService.getSubstationById(id);
+        } catch (Exception e) {
+            log.error("Something went wrong {}: ", e.getMessage());
+        }
+        return newDcSubstation;
     }
+
 }

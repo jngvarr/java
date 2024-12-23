@@ -6,13 +6,6 @@ import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
-import jngvarr.ru.pto_ackye_rzhd.services.DcService;
-import jngvarr.ru.pto_ackye_rzhd.services.MeterService;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-//@Data
 public class MeterMapper {
 
 
@@ -59,7 +52,7 @@ public class MeterMapper {
         dto.setId(dc.getId());
         dto.setDcNumber(dc.getDcNumber());
         dto.setDcModel(dc.getDcModel());
-        dto.setSubstationId(dc.getSubstation().getName());
+        dto.setSubstationId(dc.getSubstation().getId());
         return dto;
     }
 

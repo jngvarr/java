@@ -8,7 +8,6 @@ import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeterRepository;
-import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +29,14 @@ public class MeterService {
 
     public List<MeterDTO> getAll() {
         List<Meter> meters = meterRepository.findAll();
-
-//        List<MeterDTO> meterDTOS = new ArrayList<>();
-//        for (Meter m : meters){
-//            meterDTOS.add(MeterMapper.toMeterDTO(m));
-//        }
-//        return meterDTOS;
         return meters.stream()
                 .map(MeterMapper::toMeterDTO)
                 .collect(Collectors.toList());
     }
 
-    public MeterDTO getMeter(Long id) {
+    public MeterDTO getMeterById(Long id) {
         Optional<Meter> neededMeter = meterRepository.findById(id);
-        if (neededMeter.isPresent()) {
-            return MeterMapper.toMeterDTO(neededMeter.get());
-        } else throw new NeededObjectNotFound("MeteringPoint not found: " + id);
+        return MeterMapper.toMeterDTO(neededMeter.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id)));
     }
 
     @Transactional
@@ -66,9 +57,6 @@ public class MeterService {
                 && meterDTO.getMeterModel() != null
                 && meterDTO.getDcNum() != null
         ) {
-//                if (meterDTO.getMeteringPoint() != null) {
-//                    meterDTO.setMeteringPoint(entityManager.merge(meterDTO.getMeteringPoint())); // Слияние объекта MeteringPoint
-//                }
             Dc dc = new Dc();
             try {
                 dc = dcService.getDcByNumber(meterDTO.getDcNum());
@@ -79,7 +67,7 @@ public class MeterService {
             meter.setDc(dc);
             dc.getMeters().add(meter);
             return MeterMapper.toMeterDTO(meterRepository.save(meter));
-        } else throw new NotEnoughDataException("Not enough Meter data: " + meterDTO.getId());
+        } else throw new NotEnoughDataException("Not enough DC data: " + meterDTO.getId());
     }
 
     public void create(Meter meter) {
