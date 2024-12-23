@@ -12,11 +12,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-@Data
-@Component
-@RequiredArgsConstructor
+//@Data
 public class MeterMapper {
-    private static DcService service;
 
 
     public static MeterDTO toMeterDTO(Meter meter) {
@@ -32,7 +29,6 @@ public class MeterMapper {
         Meter meter = new Meter();
         meter.setMeterNumber(meterDTO.getMeterNumber());
         meter.setMeterModel(meterDTO.getMeterModel());
-        meter.setDc(fromDcDTO(meterDTO.getDcNum()));
         return meter;
     }
 
@@ -67,8 +63,11 @@ public class MeterMapper {
         return dto;
     }
 
-    public static Dc fromDcDTO(String dcNum) {
-        Dc dc =  service.getDcByNumber(dcNum);
+    public static Dc fromDcDTO(DcDTO dcDTO) {
+        Dc dc = new Dc();
+        dc.setId(dcDTO.getId());
+        dc.setDcNumber(dcDTO.getDcNumber());
+        dc.setDcModel(dcDTO.getDcModel());
         return dc;
     }
 }

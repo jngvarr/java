@@ -3,11 +3,14 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
+import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeterRepository;
+import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MeterService {
     private final MeterRepository meterRepository;
-    private final EntityManager entityManager;
+    private final MeteringPointRepository meteringPointRepository;
+    //    private final EntityManager entityManager;
+    private final DcService dcService;
 
 
     public List<MeterDTO> getAll() {
@@ -59,18 +64,26 @@ public class MeterService {
         meterRepository.saveAll(meters);
     }
 
-    public Meter create(MeterDTO meter) {
-        if (meter.getId() == null
-                && meter.getMeterNumber() != null
-                && meter.getMeterModel() != null
-                && meter.getDcNum() != null
+    public MeterDTO create(MeterDTO meterDTO) {
+        if (meterDTO.getId() == null
+                && meterDTO.getMeterNumber() != null
+                && meterDTO.getMeterModel() != null
+                && meterDTO.getDcNum() != null
         ) {
-//                if (meter.getMeteringPoint() != null) {
-//                    meter.setMeteringPoint(entityManager.merge(meter.getMeteringPoint())); // Слияние объекта MeteringPoint
+//                if (meterDTO.getMeteringPoint() != null) {
+//                    meterDTO.setMeteringPoint(entityManager.merge(meterDTO.getMeteringPoint())); // Слияние объекта MeteringPoint
 //                }
-            return meterRepository.save(MeterMapper.fromMeterDTO(meter));
-
-        } else throw new NotEnoughDataException("Not enough IIK data: " + meter.getId());
+            Dc dc = new Dc();
+            try {
+                dc = dcService.getDcByNumber(meterDTO.getDcNum());
+            } catch (Exception e) {
+                log.error("Something went wrong {}", e.getMessage());
+            }
+            Meter meter = MeterMapper.fromMeterDTO(meterDTO);
+            meter.setDc(dc);
+            dc.getMeters().add(meter);
+            return MeterMapper.toMeterDTO(meterRepository.save(meter));
+        } else throw new NotEnoughDataException("Not enough IIK data: " + meterDTO.getId());
     }
 
     public void create(Meter meter) {
@@ -82,4 +95,22 @@ public class MeterService {
             meterRepository.save(meter);
         } else throw new NotEnoughDataException("Not enough IIK data: " + meter.getId());
     }
+
+//    public MeterDTO update(MeterDTO newData, Long id) {
+//        Optional<Meter> oldMeter = meterRepository.findById(id);
+//        if (oldMeter.isPresent()) {
+//            Meter newMeter = oldMeter.get();
+//            if (newData.getMeterNumber() != null) newMeter.setMeterNumber(newData.getMeterNumber());
+//            if (newData.getMeterModel() != null) newMeter.setMeterModel(newData.getMeterModel());
+////            if (newData.getMeteringPointId() != newMeter.getMeteringPoint().getId()){
+////
+////                newMeter.setMeteringPoint(meteringPointRepository.newData.getMeteringPointId());
+////            }
+////            if (newData.getInstallationDate() != null) newMeter.setInstallationDate(newData.getInstallationDate());
+////            if (newData.getConnection() != null) newMeter.setConnection(newData.getConnection());
+////            if (newData.getSubstation() != null) newMeter.setSubstation(newData.getSubstation());
+//
+//            return meterRepository.save(newMeter);
+//        } else throw new IllegalArgumentException("MeteringPoint not found");
+//    }
 }

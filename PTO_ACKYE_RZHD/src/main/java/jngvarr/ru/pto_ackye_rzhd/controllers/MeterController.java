@@ -1,9 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.controllers;
 
 import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
-import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
-import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
-import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.services.MeterService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +28,14 @@ public class MeterController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/create")
-    public Meter createMeteringPoint(@RequestBody MeterDTO meter) {
+    public MeterDTO createMeter(@RequestBody MeterDTO meter) {
         return meterService.create(meter);
     }
+
+//    @PutMapping("/{id}")
+//    public MeterDTO updateMeter(@RequestBody MeterDTO meter, @PathVariable Long id){
+//        return meterService.update(meter, id);
+//    }
 }
 
 

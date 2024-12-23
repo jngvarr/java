@@ -23,7 +23,8 @@ public class MeteringPoint {
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "substation_id", nullable = false)
     private Substation substation;
-    @OneToOne(mappedBy = "meteringPoint", cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "meter_id")
     private Meter meter;
 }
 

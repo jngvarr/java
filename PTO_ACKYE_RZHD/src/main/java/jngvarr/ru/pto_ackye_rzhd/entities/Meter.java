@@ -14,9 +14,9 @@ public class Meter {
     private String meterNumber;
     @Column(nullable = false)
     private String meterModel;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "metering_point_id")
-    private MeteringPoint meteringPoint;
+//    @OneToOne(cascade = CascadeType.ALL)
+//    @JoinColumn(name = "metering_point_id")
+//    private MeteringPoint meteringPoint;
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "dc_id", nullable = false)
     private Dc dc;

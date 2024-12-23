@@ -47,6 +47,16 @@ public class MeteringPointService {
         }
     }
 
+    public MeteringPoint create(MeteringPoint iik) {
+        if (iik.getName() != null
+                && iik.getMeteringPointAddress() != null
+                && iik.getSubstation() != null) {
+            return meteringPointRepository.save(iik);
+        } else {
+            throw new NotEnoughDataException("Not enough data to create MeteringPoint");
+        }
+    }
+
     @Transactional
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
         for (MeteringPoint iik : iiks) {

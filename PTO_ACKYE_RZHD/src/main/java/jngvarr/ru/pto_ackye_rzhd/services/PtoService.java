@@ -23,7 +23,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PtoService {
     private final DcService dcService;
-    private final MeterService meterService;
+    private final MeteringPointService service;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -82,7 +82,7 @@ public class PtoService {
             entityMaps.put(type, new HashMap<>());
         }
         for (Row row : sheet) {
-            if (row.getRowNum() == 0 ) {
+            if (row.getRowNum() == 0) {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
@@ -158,14 +158,13 @@ public class PtoService {
     }
 
     private void fillDbWithIikData(Sheet sheet) {
-        List<Meter> meters = new ArrayList<>();
+        List<MeteringPoint> meteringPoints = new ArrayList<>();
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 continue;
             }
             MeteringPoint newIik = new MeteringPoint();
             Meter newMeter = new Meter();
-            newMeter.setMeteringPoint(newIik);
             try {
                 String mapKey = getStringMapKey(row);
                 newIik.setSubstation(SUBSTATION_MAP.get(mapKey));
@@ -182,13 +181,14 @@ public class PtoService {
             newMeter.setMeterModel(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER)));
             newMeter.setMeterNumber(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL)));
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-            newMeter.setMeteringPoint(newIik);
+//            newMeter.setMeteringPoint(newIik);
             Dc dcToAdd = addMeterToDc(newMeter, dcNumber);
+            newIik.setMeter(newMeter);
             newMeter.setDc(dcToAdd);
-            meters.add(newMeter);
+            meteringPoints.add(newIik);
         }
-        for (Meter meter : meters) {
-            meterService.create(meter);
+        for (MeteringPoint point : meteringPoints) {
+            service.create(point);
         }
 //            meterService.saveAll(meters);
     }
