@@ -32,10 +32,14 @@ public class MeterController {
         return meterService.create(meter);
     }
 
-//    @PutMapping("/{id}")
-//    public MeterDTO updateMeter(@RequestBody MeterDTO meter, @PathVariable Long id){
-//        return meterService.update(meter, id);
-//    }
+    @PutMapping("/update/{id}")
+    public MeterDTO updateMeter(@RequestBody MeterDTO meter, @PathVariable Long id){
+        return meterService.updateMeter(meter, id);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public void deleteMeter(@PathVariable Long id){meterService.delete(id);
+    }
 }
 
 

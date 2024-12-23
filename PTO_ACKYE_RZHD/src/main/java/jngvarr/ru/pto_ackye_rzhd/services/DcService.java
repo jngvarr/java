@@ -1,6 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
 import jakarta.transaction.Transactional;
+import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.repositories.DcRepository;
@@ -73,5 +74,8 @@ public class DcService {
 
     public void delete(Long iikId) {
         ivkeRepository.deleteById(iikId);
+    }
+
+    public List<DcDTO> getAll() {
     }
 }

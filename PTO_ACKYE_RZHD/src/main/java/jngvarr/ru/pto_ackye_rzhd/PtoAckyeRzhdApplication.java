@@ -9,14 +9,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class PtoAckyeRzhdApplication {
-    private final PtoService ptoService;
+//    private final PtoService ptoService;
 //
-    @PostConstruct
-    public void init() {
-        ptoService.processFile();
-    }
+//    @PostConstruct
+//    public void init() {
+//        ptoService.processFile();
+//    }
 
     public static void main(String[] args) {
         SpringApplication.run(PtoAckyeRzhdApplication.class, args);
