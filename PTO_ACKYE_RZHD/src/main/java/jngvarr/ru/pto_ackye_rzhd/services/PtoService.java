@@ -24,7 +24,6 @@ public class PtoService {
     private final MeteringPointService service;
     private final SubstationService substationService;
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo - копия2.xlsx";
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
@@ -55,8 +54,8 @@ public class PtoService {
         SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION
     }
 
-    public void addDataFromExcelFile() {
-        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))
+    public void addDataFromExcelFile(String dataFilePath) {
+        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
         ) {
             fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
             fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
@@ -124,7 +123,8 @@ public class PtoService {
             Dc newIvke = new Dc();
             newIvke.setSubstation(newSubstation);
             newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))) == 2 ? 2 : 1);
-            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)), DATE_FORMATTER_DDMMYYYY));
+            newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)),
+                    DATE_FORMATTER_DDMMYYYY));
             newIvke.setDcModel(DC_MODEL);
             newIvke.setMeters(new ArrayList<>());
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));

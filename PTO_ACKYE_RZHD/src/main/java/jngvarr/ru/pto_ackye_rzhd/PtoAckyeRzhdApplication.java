@@ -15,7 +15,7 @@ public class PtoAckyeRzhdApplication {
 //
 //    @PostConstruct
 //    public void init() {
-//        ptoService.processFile();
+//        ptoService.addDataFromExcelFile("d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo - копия2.xlsx");
 //    }
 
     public static void main(String[] args) {
