@@ -1,7 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +23,6 @@ public class PtoService {
     private final DcService dcService;
     private final MeteringPointService service;
     private final SubstationService substationService;
-    @PersistenceContext
-    private final EntityManager entityManager;
-
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final String PLAN_OTO_PATH = "d:\\Downloads\\Контроль ПУ РРЭ (Задания на ОТО РРЭ)demo - копия2.xlsx";
     private final long startTime = System.currentTimeMillis();
@@ -60,7 +55,7 @@ public class PtoService {
         SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION
     }
 
-    public void processFile() {
+    public void addDataFromExcelFile() {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))
         ) {
             fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
@@ -125,9 +120,10 @@ public class PtoService {
             newStation.setPowerSupplyDistrict(newPowerSupplyDistrict);
             newSubstation.setName(getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
             newSubstation.setStation(newStation);
+            substationService.create(newSubstation);
             Dc newIvke = new Dc();
             newIvke.setSubstation(newSubstation);
-            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))));
+            newIvke.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))) == 2 ? 2 : 1);
             newIvke.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)), DATE_FORMATTER_DDMMYYYY));
             newIvke.setDcModel(DC_MODEL);
             newIvke.setMeters(new ArrayList<>());
@@ -136,7 +132,6 @@ public class PtoService {
 
             SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(newSubstation), newSubstation);
             DC_MAP.putIfAbsent(dcNumber, newIvke);
-            substationService.create(newSubstation);
         }
         for (Dc dc : DC_MAP.values()) {
             dcService.createDc(dc);
@@ -183,7 +178,6 @@ public class PtoService {
             newMeter.setMeterModel(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER)));
             newMeter.setMeterNumber(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL)));
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-//            newMeter.setMeteringPoint(newIik);
             Dc dcToAdd = addMeterToDc(newMeter, dcNumber);
             newIik.setMeter(newMeter);
             newMeter.setDc(dcToAdd);
@@ -195,37 +189,6 @@ public class PtoService {
 //            meterService.saveAll(meters);
     }
 
-//    private IikState getiikStatusData(Row row) {
-//
-//        IikState newStatusData = new IikState();
-//
-//        newStatusData.setCurrentStatus(getCellStringValue(row.getCell(16)));
-//        newStatusData.setNotOrNotNot(getCellStringValue(row.getCell(17)));
-//        newStatusData.setStatus(getCellStringValue(row.getCell(19)));
-//        newStatusData.setDispatcherTask(getCellStringValue(row.getCell(20)));
-//        newStatusData.setTeamReport(getCellStringValue(row.getCell(21)));
-//
-//        return iikStatusDataService.createData(newStatusData);
-//    }
-
-
-    //    private List<IikState> fillIikStatusData(Sheet worksheet) {
-//        List<IikState> iikStatusData = new ArrayList<>();
-//        for (Row row : worksheet) {
-//            IikState newStatusData = new IikState();
-//            if (row.getRowNum() == 0) {
-//                // Пропускаем первую строку, если это заголовок
-//                continue;
-//            }
-//            newStatusData.setCurrentStatus(getCellStringValue(row.getCell(16)));
-//            newStatusData.setNotOrNotNot(getCellStringValue(row.getCell(17)));
-//            newStatusData.setStatus(getCellStringValue(row.getCell(19)));
-//            newStatusData.setDispatcherTask(getCellStringValue(row.getCell(20)));
-//            newStatusData.setTeamReport(getCellStringValue(row.getCell(21)));
-//            iikStatusData.add(newStatusData);
-//        }
-//        return iikStatusDataService.createAll(iikStatusData);
-//    }
     private static String getCellStringValue(Cell cell) {
         if (cell != null) {
             switch (cell.getCellType()) {

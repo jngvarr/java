@@ -43,12 +43,18 @@ public class DcService {
         return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
     }
 
+    public DcDTO getDcDTOByNumber(String num) {
+        Optional<Dc> neededDc = dcRepository.getDcByDcNumber(num);
+        return MeterMapper.toDcDTO(neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num)));
+    }
+
     public DcDTO createDc(DcDTO dcToCreate) {
         boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
-        if (dcToCreate.getDcNumber() != null
+        if (dcIsExists) throw new IllegalArgumentException("Dc with such number already exists!");
+        else if (dcToCreate.getDcNumber() != null
 //                && dcToCreate.getDcModel() != null
                 && dcToCreate.getSubstationId() != null
-                && !dcIsExists
+
         ) {
             Dc dc = MeterMapper.fromDcDTO(dcToCreate);
             dc.setSubstation(updateSubstation(dcToCreate.getSubstationId()));

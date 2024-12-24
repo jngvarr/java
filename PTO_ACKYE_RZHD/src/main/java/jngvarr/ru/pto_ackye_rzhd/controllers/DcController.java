@@ -29,9 +29,10 @@ public class DcController {
     public DcDTO getDcById(@PathVariable Long id) {
         return service.getDcById(id);
     }
+
     @GetMapping("/byDcNum/{num}")
-    public Dc getDcByNumber(@PathVariable String num) {
-        return service.getDcByNumber(num);
+    public DcDTO getDcDTOByNumber(@PathVariable String num) {
+        return service.getDcDTOByNumber(num);
     }
 
     @ResponseStatus(HttpStatus.CREATED)

@@ -19,8 +19,7 @@ public class MeteringPoint {
     private String meteringPointAddress;
     private LocalDate installationDate;
     private String connection;
-    //    @Transient
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne
     @JoinColumn(name = "substation_id", nullable = false)
     private Substation substation;
     @OneToOne(cascade = CascadeType.MERGE)

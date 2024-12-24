@@ -6,6 +6,7 @@ import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;
 import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;
 import jngvarr.ru.pto_ackye_rzhd.repositories.MeteringPointRepository;
+import jngvarr.ru.pto_ackye_rzhd.repositories.others.SubstationRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MeteringPointService {
     private final MeteringPointRepository meteringPointRepository;
+    private Long id = 100000000000L;
+    private final SubstationRepository substationRepository;
 
     public List<MeteringPointDTO> getAll() {
         List<MeteringPoint> meteringPoints = meteringPointRepository.findAll();
@@ -41,10 +44,18 @@ public class MeteringPointService {
         if (iik.getName() != null
                 && iik.getMeteringPointAddress() != null
                 && iik.getSubstation() != null) {
-            return MeterMapper.toMeteringPointDTO(meteringPointRepository.save(MeterMapper.fromMeteringPointDTO(iik)));
+            MeteringPoint m = MeterMapper.fromMeteringPointDTO(iik);
+            substationRepository.save(m.getSubstation());
+            m.setId(getExternalId());
+            meteringPointRepository.save(m);
+            return MeterMapper.toMeteringPointDTO(m);
         } else {
             throw new NotEnoughDataException("Not enough data to create MeteringPoint");
         }
+    }
+
+    private Long getExternalId() {
+        return id++;
     }
 
     public MeteringPoint create(MeteringPoint iik) {

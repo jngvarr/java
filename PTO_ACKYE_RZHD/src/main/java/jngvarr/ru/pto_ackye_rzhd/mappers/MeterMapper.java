@@ -6,6 +6,8 @@ import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
+import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
+
 public class MeterMapper {
 
 
@@ -43,17 +45,24 @@ public class MeterMapper {
         meteringPoint.setMeterPlacement(iik.getMeterPlacement());
         meteringPoint.setConnection(iik.getConnection());
         meteringPoint.setMeteringPointAddress(iik.getMeteringPointAddress());
-        meteringPoint.getSubstation().setName(iik.getSubstation());
+        meteringPoint.setSubstation(new Substation() {{
+            setName(iik.getSubstation());
+        }});
         return meteringPoint;
     }
 
     public static DcDTO toDcDTO(Dc dc) {
-        DcDTO dto = new DcDTO();
-        dto.setId(dc.getId());
-        dto.setDcNumber(dc.getDcNumber());
-        dto.setDcModel(dc.getDcModel());
-        dto.setSubstationId(dc.getSubstation().getId());
-        return dto;
+        return new DcDTO() {
+            {
+                setId(dc.getId());
+                setDcNumber(dc.getDcNumber());
+                setDcModel(dc.getDcModel());
+                setSubstationId(dc.getSubstation().getId());
+                setBusSection((dc.getBusSection()));
+                setInstallationDate(dc.getInstallationDate());
+                setManufactureDate(dc.getManufactureDate());
+            }
+        };
     }
 
     public static Dc fromDcDTO(DcDTO dcDTO) {
@@ -61,6 +70,9 @@ public class MeterMapper {
         dc.setId(dcDTO.getId());
         dc.setDcNumber(dcDTO.getDcNumber());
         dc.setDcModel(dcDTO.getDcModel());
+        dc.setInstallationDate(dcDTO.getInstallationDate());
+        dc.setManufactureDate(dcDTO.getManufactureDate());
+        dc.setBusSection(dcDTO.getBusSection());
         return dc;
     }
 }

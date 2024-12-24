@@ -17,7 +17,8 @@ public class Meter {
 //    @OneToOne(cascade = CascadeType.ALL)
 //    @JoinColumn(name = "metering_point_id")
 //    private MeteringPoint meteringPoint;
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne
+//    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "dc_id", nullable = false)
     private Dc dc;
 }
