@@ -43,9 +43,14 @@ public class TBot extends TelegramLongPollingBot {
     static final String NO_BUTTON = "NO_BUTTON";
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
+    private final Map<String, Consumer<Long>> commandHandlers = Map.of(
+            "/start", this::handleStartCommand,
+            "/help", chatId -> sendMessage(chatId, PtoTelegramBotContent.HELP, null),
+            "/register", this::registerUser
+    );
 
     public TBot(BotConfig config, UserServiceImpl service) {
-        super( config.getBotToken());
+        super(config.getBotToken());
         this.config = config;
         this.service = service;
 
@@ -73,21 +78,11 @@ public class TBot extends TelegramLongPollingBot {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        // Упрощена логика с использованием switch
-        switch (msgText) {
-            case "/start":
-                handleStartCommand(chatId, update.getMessage().getChat().getFirstName(), update);
-                break;
-            case "/help":
-                sendMessage(chatId, PtoTelegramBotContent.HELP, null);
-                break;
-            case "/register":
-                registerUser(chatId);
-                break;
-            default:
-                sendMessage(chatId, "Sorry, the command was not recognized!", null);
-        }
+        commandHandlers.getOrDefault(msgText, chatId ->
+                sendMessage(chatId, "Sorry, the command was not recognized!", null)
+        ).accept(chatId);
     }
+
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -153,7 +148,6 @@ public class TBot extends TelegramLongPollingBot {
         return markup;
     }
 
-
     private void sendMessage(long chatId, String textToSend, ReplyKeyboard replyKeyboard) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
@@ -164,10 +158,8 @@ public class TBot extends TelegramLongPollingBot {
         } else if (replyKeyboard instanceof InlineKeyboardMarkup) {
             message.setReplyMarkup(replyKeyboard);
         }
-
-        executeMessage(message);
+        executeRequest(message);
     }
-
 
 
     private void executeMessage(SendMessage message) {
