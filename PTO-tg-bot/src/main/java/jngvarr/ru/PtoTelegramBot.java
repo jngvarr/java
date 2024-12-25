@@ -42,8 +42,6 @@ public class    PtoTelegramBot extends MultiSessionTelegramBot {
             currentMode = WorkTypes.NEW_TU;
             sendTextMessageAsync(NEW_TU);
         }
-
-
     }
 
 

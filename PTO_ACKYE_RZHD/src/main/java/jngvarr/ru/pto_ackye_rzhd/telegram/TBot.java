@@ -68,14 +68,6 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private <T> void executeRequest(T method) {
-        try {
-            execute(method);
-        } catch (TelegramApiException e) {
-            log.error("Telegram API error: {}", e.getMessage());
-        }
-    }
-
 
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
@@ -126,11 +118,11 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
-        String welcomeMessage = String.format("Hi, %s, nice to meet you! What do you want to do?", firstName);
+        String welcomeMessage = String.format("Привет, %s, чем займемся?", firstName);
         log.info("Replied to user: {}", firstName);
 
         sendMessage(chatId, welcomeMessage, null);
-        sendTextMessageAsync(PtoTelegramBotContent.MAIN_MENU, Map.of(
+        sendTextMessageAsync(MAIN_MENU, Map.of(
                 "ПТО", "pto",
                 "ОТО", "oto",
                 "Монтаж новой ТУ", "newTU"
