@@ -43,14 +43,9 @@ public class TBot extends TelegramLongPollingBot {
     static final String NO_BUTTON = "NO_BUTTON";
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
-    private final Map<String, Consumer<Long>> commandHandlers = Map.of(
-            "/start", this::handleStartCommand,
-            "/help", chatId -> sendMessage(chatId, PtoTelegramBotContent.HELP, null),
-            "/register", this::registerUser
-    );
 
     public TBot(BotConfig config, UserServiceImpl service) {
-        super(config.getBotToken());
+        super( config.getBotToken());
         this.config = config;
         this.service = service;
 
@@ -73,16 +68,34 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
+    private <T> void executeRequest(T method) {
+        try {
+            execute(method);
+        } catch (TelegramApiException e) {
+            log.error("Telegram API error: {}", e.getMessage());
+        }
+    }
+
 
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        commandHandlers.getOrDefault(msgText, chatId ->
-                sendMessage(chatId, "Sorry, the command was not recognized!", null)
-        ).accept(chatId);
+        // Упрощена логика с использованием switch
+        switch (msgText) {
+            case "/start":
+                handleStartCommand(chatId, update.getMessage().getChat().getFirstName(), update);
+                break;
+            case "/help":
+                sendMessage(chatId, PtoTelegramBotContent.HELP, null);
+                break;
+            case "/register":
+                registerUser(chatId);
+                break;
+            default:
+                sendMessage(chatId, "Sorry, the command was not recognized!", null);
+        }
     }
-
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -113,11 +126,11 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
-        String welcomeMessage = String.format("Привет, %s, чем займемся?", firstName);
+        String welcomeMessage = String.format("Hi, %s, nice to meet you! What do you want to do?", firstName);
         log.info("Replied to user: {}", firstName);
 
         sendMessage(chatId, welcomeMessage, null);
-        sendTextMessageAsync(MAIN_MENU, Map.of(
+        sendTextMessageAsync(PtoTelegramBotContent.MAIN_MENU, Map.of(
                 "ПТО", "pto",
                 "ОТО", "oto",
                 "Монтаж новой ТУ", "newTU"
@@ -158,8 +171,10 @@ public class TBot extends TelegramLongPollingBot {
         } else if (replyKeyboard instanceof InlineKeyboardMarkup) {
             message.setReplyMarkup(replyKeyboard);
         }
-        executeRequest(message);
+
+        executeMessage(message);
     }
+
 
 
     private void executeMessage(SendMessage message) {
