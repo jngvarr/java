@@ -1,7 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
-import jngvarr.ru.pto_ackye_rzhd.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +18,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.nio.charset.StandardCharsets;
@@ -27,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.HELP;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.MAIN_MENU;
 
 
@@ -104,12 +101,24 @@ public class TBot extends TelegramLongPollingBot {
         String responseText = switch (callbackData) {
             case YES_BUTTON -> "You pressed YES button";
             case NO_BUTTON -> "You pressed NO button";
+            case NO_BUTTON -> "You pressed NO button";
             default -> null;
         };
-
         if (responseText != null) {
             editMessageText(responseText, chatId, messageId);
         }
+    }
+
+    private void handleStartCommand(long chatId, String firstName, Update update) {
+        String welcomeMessage = String.format("Hi, %s, nice to meet you! What do you want to do?", firstName);
+        log.info("Replied to user: {}", firstName);
+
+        sendMessage(chatId, welcomeMessage, null);
+        sendTextMessage(MAIN_MENU, Map.of(
+                "ПТО", "pto",
+                "ОТО", "oto",
+                "Монтаж новой ТУ", "newTU"
+        ), update);
     }
 
     private void editMessageText(String text, long chatId, int messageId) {
@@ -124,19 +133,6 @@ public class TBot extends TelegramLongPollingBot {
             log.error("{} {}", ERROR_TEXT, e.getMessage());
         }
     }
-
-    private void handleStartCommand(long chatId, String firstName, Update update) {
-        String welcomeMessage = String.format("Hi, %s, nice to meet you! What do you want to do?", firstName);
-        log.info("Replied to user: {}", firstName);
-
-        sendMessage(chatId, welcomeMessage, null);
-        sendTextMessageAsync(PtoTelegramBotContent.MAIN_MENU, Map.of(
-                "ПТО", "pto",
-                "ОТО", "oto",
-                "Монтаж новой ТУ", "newTU"
-        ), update);
-    }
-
     private void registerUser(long chatId) {
         InlineKeyboardMarkup keyboardMarkup = createInlineKeyboardMarkup(Map.of(
                 "Yes", YES_BUTTON,
@@ -220,7 +216,7 @@ public class TBot extends TelegramLongPollingBot {
 //        return replyKeyboardMarkup;
 //    }
 
-    public void sendTextMessageAsync(String text, Map<String, String> buttons, Update update) {
+    public void sendTextMessage(String text, Map<String, String> buttons, Update update) {
         try {
             SendMessage message = createMessage(text, buttons, update);
             var task = sendApiMethodAsync(message);
