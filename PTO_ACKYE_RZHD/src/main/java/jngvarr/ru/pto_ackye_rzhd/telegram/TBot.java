@@ -22,10 +22,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.MAIN_MENU;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 
 @Data
@@ -41,10 +42,23 @@ public class TBot extends TelegramLongPollingBot {
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
 
+    private Map<String, Map<String, String>> modes = Map.of(
+            "pto", Map.of(
+                    "Проведение ПТО ИИК", "ptoIIK",
+                    "Проведение ПТО ИВКЭ", "ptoIVKE"),
+            "oto", Map.of(
+                    "Проведение ОТО ИИК", "otoIIK",
+                    "Проведение ОТО ИВКЭ","otoIVKE"),
+            "newTU", Map.of(
+                    "Монтаж новой точки учёта", "addIIK",
+                    "Демонтаж точки учёта", "delIIK"));
+
     public TBot(BotConfig config, UserServiceImpl service) {
-        super( config.getBotToken());
+        super(config.getBotToken());
         this.config = config;
         this.service = service;
+
+//        modes.put("pto", Map.of())
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
@@ -65,13 +79,13 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private <T> void executeRequest(T method) {
-        try {
-            execute(method);
-        } catch (TelegramApiException e) {
-            log.error("Telegram API error: {}", e.getMessage());
-        }
-    }
+//    private <T> void executeRequest(T method) {
+//        try {
+//            execute(method);
+//        } catch (TelegramApiException e) {
+//            log.error("Telegram API error: {}", e.getMessage());
+//        }
+//    }
 
 
     private void handleTextMessage(Update update) {
@@ -93,46 +107,36 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, "Sorry, the command was not recognized!", null);
         }
     }
+
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
         int messageId = update.getCallbackQuery().getMessage().getMessageId();
 
         String responseText = switch (callbackData) {
-            case YES_BUTTON -> "You pressed YES button";
-            case NO_BUTTON -> "You pressed NO button";
-            case NO_BUTTON -> "You pressed NO button";
+            case "newTU" -> NEW_TU;
+            case "pto" -> PTO;
+            case "oto" -> OTO;
             default -> null;
         };
         if (responseText != null) {
-            editMessageText(responseText, chatId, messageId);
+            sendTextMessage(responseText, chatId, messageId);
         }
     }
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
-        String welcomeMessage = String.format("Hi, %s, nice to meet you! What do you want to do?", firstName);
+//        String welcomeMessage = String.format("Приветствую тебя, пользователь %s, Что будем делать?", firstName);
         log.info("Replied to user: {}", firstName);
+//        sendMessage(chatId, welcomeMessage, null);
 
-        sendMessage(chatId, welcomeMessage, null);
         sendTextMessage(MAIN_MENU, Map.of(
                 "ПТО", "pto",
                 "ОТО", "oto",
-                "Монтаж новой ТУ", "newTU"
+                "Монтаж / демонтаж ТУ", "newTU"
         ), update);
     }
 
-    private void editMessageText(String text, long chatId, int messageId) {
-        EditMessageText editMessage = new EditMessageText();
-        editMessage.setChatId(chatId);
-        editMessage.setMessageId(messageId);
-        editMessage.setText(text);
 
-        try {
-            execute(editMessage);
-        } catch (TelegramApiException e) {
-            log.error("{} {}", ERROR_TEXT, e.getMessage());
-        }
-    }
     private void registerUser(long chatId) {
         InlineKeyboardMarkup keyboardMarkup = createInlineKeyboardMarkup(Map.of(
                 "Yes", YES_BUTTON,
@@ -170,7 +174,6 @@ public class TBot extends TelegramLongPollingBot {
 
         executeMessage(message);
     }
-
 
 
     private void executeMessage(SendMessage message) {
