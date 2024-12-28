@@ -51,7 +51,9 @@ public class TBot extends TelegramLongPollingBot {
                     "Проведение ОТО ИВКЭ","otoIVKE"),
             "newTU", Map.of(
                     "Монтаж новой точки учёта", "addIIK",
-                    "Демонтаж точки учёта", "delIIK"));
+                    "Демонтаж точки учёта", "delIIK",
+                    "Монтаж концентратора","dcMount",
+                    "Демонтаж концентратора","dcRemove"));
 
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
@@ -120,8 +122,9 @@ public class TBot extends TelegramLongPollingBot {
             default -> null;
         };
         if (responseText != null) {
-            sendTextMessage(responseText, chatId, messageId);
+            sendMessage(chatId, responseText,  null);
         }
+        sendTextMessage("Что хотите сделать: ",modes.get(callbackData), update);
     }
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
