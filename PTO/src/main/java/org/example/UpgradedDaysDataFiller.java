@@ -22,7 +22,7 @@ import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UpgradedDaysDataFiller {
+public class UpgradedDaysDataFiller { //заполнение файла Контроль ПУ РРЭ (Задания на ОТО РРЭ)
 
     private static final Logger logger = LoggerFactory.getLogger(UpgradedDaysDataFiller.class);
 

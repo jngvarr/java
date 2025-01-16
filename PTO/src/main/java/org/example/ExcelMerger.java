@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -20,7 +19,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.poi.ss.format.CellFormatType.DATE;
+import static org.example.DataFiller.findMonthColumnIndex;
 
 public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
@@ -28,7 +27,7 @@ public class ExcelMerger { // Объединение нескольких ана
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
 //        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
         File folder = new File(folderPath);
 
@@ -84,14 +83,14 @@ public class ExcelMerger { // Объединение нескольких ана
         logger.info("Все задачи завершены");
 
 
-        for (String group : fileGroups.keySet()) {
-            if (!fileGroups.get(group).isEmpty()) {
-                String month = extractMonthFromFileName(fileGroups.get(group).getFirst().getName());
-                String year = extractYearFromFileName(fileGroups.get(group).getFirst().getName());
-                String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, year, month.toUpperCase());
-                mergeExcelFiles(fileGroups.get(group), folderPath + File.separator + "Свод" + File.separator + outputFileName);
-            }
-        }
+//        for (String group : fileGroups.keySet()) {
+//            if (!fileGroups.get(group).isEmpty()) {
+//                String month = extractMonthFromFileName(fileGroups.get(group).getFirst().getName());
+//                String year = extractYearFromFileName(fileGroups.get(group).getFirst().getName());
+//                String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, year, month.toUpperCase());
+//                mergeExcelFiles(fileGroups.get(group), folderPath + File.separator + "Свод" + File.separator + outputFileName);
+//            }
+//        }
     }
 
     private static void processGroup(List<File> files, String folderPath, String group) {
@@ -168,7 +167,6 @@ public class ExcelMerger { // Объединение нескольких ана
                     Row targetRow = resultSheet.createRow(rowCount++);
                     copyRow(sourceRow, targetRow, columnCount, newCellStyle, dateCellStyle);
                 }
-
                 adjustColumnWidths(resultSheet, sheet, columnCount);
                 applyAutoFilterAndFreezeHeader(resultSheet);
             } catch (IOException e) {
@@ -179,6 +177,13 @@ public class ExcelMerger { // Объединение нескольких ана
         try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
             resultWorkbook.write(fos);
         }
+
+        int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
+        if (monthColumnIndex == -1) {
+            System.out.println("Month column not found.");
+            return;
+        }
+
     }
 
     private static boolean isCellEmpty(Cell cell) {

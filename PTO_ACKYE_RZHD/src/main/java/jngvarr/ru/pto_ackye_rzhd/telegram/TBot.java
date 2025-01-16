@@ -48,12 +48,12 @@ public class TBot extends TelegramLongPollingBot {
                     "Проведение ПТО ИВКЭ", "ptoIVKE"),
             "oto", Map.of(
                     "Проведение ОТО ИИК", "otoIIK",
-                    "Проведение ОТО ИВКЭ","otoIVKE"),
+                    "Проведение ОТО ИВКЭ", "otoIVKE"),
             "newTU", Map.of(
                     "Монтаж новой точки учёта", "addIIK",
                     "Демонтаж точки учёта", "delIIK",
-                    "Монтаж концентратора","dcMount",
-                    "Демонтаж концентратора","dcRemove"));
+                    "Монтаж концентратора", "dcMount",
+                    "Демонтаж концентратора", "dcRemove"));
 
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
@@ -122,9 +122,9 @@ public class TBot extends TelegramLongPollingBot {
             default -> null;
         };
         if (responseText != null) {
-            sendMessage(chatId, responseText,  null);
+            sendMessage(chatId, responseText, null);
+            sendTextMessage("Что хотите сделать: ", modes.get(callbackData), update);
         }
-        sendTextMessage("Что хотите сделать: ",modes.get(callbackData), update);
     }
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
@@ -187,40 +187,6 @@ public class TBot extends TelegramLongPollingBot {
             log.error(ERROR_TEXT + e.getMessage());
         }
     }
-
-//    public void handleUpdate(Update update) {
-//        if (service.getRepository().findById(update.getMessage().getChatId()).isEmpty()) {
-//
-//            User user = service.createUser(update);
-//            service.registerUser(user);
-//            log.info("user saved: " + user);
-//        }
-//    }
-
-//    private void startCommandReceived(long chatId, String name) {
-//        String answer = "Hi, " + name + ", nice to meet you!\n" +
-//                "What do you want to do?";
-//        log.info("Replied to user " + name);
-//        sendMessage(chatId, answer, replyKeyboardMarkup());
-//        sendTextMessageAsync(MAIN_MENU,
-//                Map.of("ПТО", "pto", "ОТО", "oto", "Монтаж новой ТУ", "newTU"), update);
-//    }
-
-//    private ReplyKeyboardMarkup replyKeyboardMarkup() {
-//        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-////        replyKeyboardMarkup.setResizeKeyboard(true); // Автоматически изменяет размер кнопок
-//        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура будет отображаться постоянно
-////        replyKeyboardMarkup.setSelective(true); // Отображение только для пользователей, взаимодействующих с ботом
-//
-//        List<KeyboardRow> keyboardRows = new ArrayList<>();
-//
-//        KeyboardRow row = new KeyboardRow();
-//        row.add("start");
-//        row.add("help");
-//        keyboardRows.add(row);
-//        replyKeyboardMarkup.setKeyboard(keyboardRows);
-//        return replyKeyboardMarkup;
-//    }
 
     public void sendTextMessage(String text, Map<String, String> buttons, Update update) {
         try {

@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ExcelSplitter {
+public class ExcelSplitter { //разбиение сводных файлов на несколько в зависимости от наименования ЭЭЛ
 
     private static final Logger logger = LoggerFactory.getLogger(ExcelSplitter.class);
 

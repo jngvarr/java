@@ -1,6 +1,5 @@
 package org.example;
 
-import com.itextpdf.kernel.pdf.tagging.StandardRoles;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -12,13 +11,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-// Добавление данных профилей
+// Добавление данных профилей в свод ИИК
 public class DataFiller {
     private static final String ORDER_MONTH = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
     private static final String ORDER_YEAR = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("yyyy", Locale.forLanguageTag("ru-RU")));
-    private static final String FOLDER_PATH = new StringBuilder().append("d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
+    private static final String FOLDER_PATH = new StringBuilder().append("c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
             .append(ORDER_YEAR)
             .append("\\")
             .append(ORDER_MONTH.toUpperCase())
@@ -31,8 +30,10 @@ public class DataFiller {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
         String[] fileNames = new File(FOLDER_PATH).list((dir, name) -> name.endsWith(".xlsx"));
-        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
-        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\ДЕКАБРЬ\\Профили\\";
+        String summaryFilePath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
+//        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
+        String profileFilesPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\ДЕКАБРЬ\\Профили\\";
+//        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\ДЕКАБРЬ\\Профили\\";
 
         SimpleDateFormat today = new SimpleDateFormat();
         // Extract month from the profile filename
@@ -144,7 +145,7 @@ public class DataFiller {
         return "";
     }
 
-    private static int findMonthColumnIndex(Sheet sheet, String month) {
+    static int findMonthColumnIndex(Sheet sheet, String month) {
         Row headerRow = sheet.getRow(0); // Assuming the first row is the header
         if (headerRow != null) {
             for (int colIndex = 0; colIndex < headerRow.getLastCellNum(); colIndex++) {
