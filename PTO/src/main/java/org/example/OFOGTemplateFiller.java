@@ -71,14 +71,17 @@ public class OFOGTemplateFiller {
                         LocalDate localDate = cellDate.toInstant()
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate();
-                        int year = LocalDate.now().getYear();
-                        int month = LocalDate.now().getMonthValue();
+//                        int year = LocalDate.now().getYear();
+//                        int month = LocalDate.now().getMonthValue();
+
+                        int year = 2024;
+                        int month = 12;
 
                         int eventYear = localDate.getYear();
                         int eventMonth = localDate.getMonthValue();
-                        logger.info("Дата в строке: день {}, месяц {}, год {}", localDate.getDayOfMonth(), eventMonth, eventYear);
+//                        logger.info("Дата в строке: день {}, месяц {}, год {}", localDate.getDayOfMonth(), eventMonth, eventYear);
                         // Проверяем, совпадает ли месяц
-                        logger.info("Выполнение условия {}:", month == eventMonth && year == eventYear);
+//                        logger.info("Выполнение условия {}:", month == eventMonth && year == eventYear);
                         if (month == eventMonth && year == eventYear) {
                             logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                             reportRows++;
@@ -89,9 +92,9 @@ public class OFOGTemplateFiller {
                                         .replace("\u00A0", "")
                                         .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
 
-                                logger.info("Обрабатываемая строка: '{}'", faultReason);
+//                                logger.info("Обрабатываемая строка: '{}'", faultReason);
 
-                                if (!faultReason.equals("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
+                                if (!faultReason.contains("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
                                     copyRowsData(row, ofLogSheet, ofLogSheetInsertPosition++, commonCellStyle, true);
                                 } else {
                                     copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
