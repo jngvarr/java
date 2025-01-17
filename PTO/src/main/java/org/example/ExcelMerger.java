@@ -24,11 +24,18 @@ import static org.example.DataFiller.findMonthColumnIndex;
 public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
 
+    private static final Map<String, int[]> DC = new HashMap<>();
+    private static final int DC_NUMBER_COL_NUMBER = 9;
+    private static final int REGION_COL_NUMBER = 1;
+    private static final int STATION_COL_NUMBER = 2;
+    private static final int EEL_COL_NUMBER = 5;
+    private static final int COUNTER_TYPE_COL_NUMBER = 9;
+
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
-//        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+//        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+        String folderPath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
         File folder = new File(folderPath);
 
 //        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
@@ -178,12 +185,18 @@ public class ExcelMerger { // Объединение нескольких ана
             resultWorkbook.write(fos);
         }
 
+        String monthFromFileName = extractMonthFromFileName(outputFilePath.toLowerCase());
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
             return;
         }
-
+        for (int i = 1; i <= resultSheet.getLastRowNum(); i++) {
+            Row targetRow = resultSheet.getRow(i);
+            if (targetRow.getCell(monthColumnIndex) != null) {
+                DC.put(targetRow.getCell(DC_NUMBER_COL_NUMBER,))
+            }
+        }
     }
 
     private static boolean isCellEmpty(Cell cell) {
