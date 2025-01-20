@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +33,11 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int EEL_COL_NUMBER = 5;
     private static final int SUBSTATION_COL_NUMBER = 6;
     private static final int COUNTER_TYPE_COL_NUMBER = 9;
+
+    private static int meter1021 = 0;
+    private static int meter1023 = 0;
+    private static int meter2023 = 0;
+    private static int dc = 0;
 
     public static void main(String[] args) throws IOException {
 
@@ -185,8 +192,13 @@ public class ExcelMerger { // Объединение нескольких ана
         try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
             resultWorkbook.write(fos);
         }
-        setMonthSchedule(outputFilePath, resultSheet);
-
+        if (outputFilePath.contains("ИВКЭ")) {
+            setMonthSchedule(outputFilePath, resultSheet);
+        } else if (outputFilePath.contains("ИИК"))
+            logger.info("1021: {}", meter1021);
+        logger.info("1021: {}", meter1023);
+        logger.info("1021: {}", meter2023);
+        logger.info("dc: {}", (long) DC.entrySet().size());
     }
 
     private static void setMonthSchedule(String path, Sheet resultSheet) {
@@ -198,10 +210,28 @@ public class ExcelMerger { // Объединение нескольких ана
         }
         for (int i = 1; i <= resultSheet.getLastRowNum(); i++) {
             Row targetRow = resultSheet.getRow(i);
-            if (targetRow.getCell(monthColumnIndex) != null) {
-                DC.putIfAbsent(setKey(targetRow, monthColumnIndex), new int[3]);
+            Cell targetRowCell = targetRow.getCell(monthColumnIndex);
+            if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
+                String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
+                String key = setKey(targetRow, monthColumnIndex);
+                DC.putIfAbsent(key, new int[3]);
+                if (counterType.contains("1021")) {
+                    DC.get(key)[0]++;
+                    meter1021++;
+                } else if (counterType.contains("1023")) {
+                    DC.get(key)[1]++;
+                    meter1023++;
+                } else if (counterType.contains("2023")) {
+                    DC.get(key)[2]++;
+                    meter2023++;
+//                } else {
+//                    throw new IllegalStateException("Unexpected value: " + counterType);
+                }
             }
         }
+    }
+
+    private static void meterSum() {
     }
 
     private static String setKey(Row row, int monthColumnIndex) {
@@ -284,18 +314,6 @@ public class ExcelMerger { // Объединение нескольких ана
         }
     }
 
-
-    // Метод для проверки, пуста ли строка
-    private static boolean isRowEmpty(Row row) {
-        for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++) {
-            Cell cell = row.getCell(i);
-            if (cell != null && cell.getCellType() != CellType.BLANK) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     // Метод для настройки ширины столбцов
     private static void adjustColumnWidths(Sheet resultSheet, Sheet sourceSheet, int columnCount) {
         for (int i = 0; i < columnCount; i++) {
@@ -320,5 +338,28 @@ public class ExcelMerger { // Объединение нескольких ана
         CellRangeAddress cellRangeAddress = new CellRangeAddress(firstRowNum, lastRowNum - 1, firstColNum, lastColNum - 1);
         workSheet.setAutoFilter(cellRangeAddress);
         workSheet.createFreezePane(firstRowNum, firstRowNum + 1);
+    }
+
+    private static String getCellStringValue(Cell cell) {
+        if (cell != null) {
+            switch (cell.getCellType()) {
+                case STRING:
+                    return cell.getStringCellValue();
+                case NUMERIC:
+                    // Check if it's a date or numeric value
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        // Format date to dd.MM.yyyy
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+                        return dateFormat.format(cell.getDateCellValue());
+                    } else {
+                        return new DecimalFormat("0").format(cell.getNumericCellValue()); // Convert numeric to string
+                    }
+                case FORMULA:
+                    return String.valueOf(cell.getCellFormula());
+                default:
+                    return null;
+            }
+        }
+        return null;
     }
 }
