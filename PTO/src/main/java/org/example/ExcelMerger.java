@@ -29,6 +29,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int REGION_COL_NUMBER = 1;
     private static final int STATION_COL_NUMBER = 2;
     private static final int EEL_COL_NUMBER = 5;
+    private static final int SUBSTATION_COL_NUMBER = 6;
     private static final int COUNTER_TYPE_COL_NUMBER = 9;
 
     public static void main(String[] args) throws IOException {
@@ -184,8 +185,12 @@ public class ExcelMerger { // Объединение нескольких ана
         try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
             resultWorkbook.write(fos);
         }
+        setMonthSchedule(outputFilePath, resultSheet);
 
-        String monthFromFileName = extractMonthFromFileName(outputFilePath.toLowerCase());
+    }
+
+    private static void setMonthSchedule(String path, Sheet resultSheet) {
+        String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
@@ -194,9 +199,25 @@ public class ExcelMerger { // Объединение нескольких ана
         for (int i = 1; i <= resultSheet.getLastRowNum(); i++) {
             Row targetRow = resultSheet.getRow(i);
             if (targetRow.getCell(monthColumnIndex) != null) {
-                DC.put(targetRow.getCell(DC_NUMBER_COL_NUMBER,))
+                DC.putIfAbsent(setKey(targetRow, monthColumnIndex), new int[3]);
             }
         }
+    }
+
+    private static String setKey(Row row, int monthColumnIndex) {
+        return new StringBuilder()
+                .append(row.getCell(REGION_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(STATION_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(EEL_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(DC_NUMBER_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(monthColumnIndex))
+                .toString();
     }
 
     private static boolean isCellEmpty(Cell cell) {
