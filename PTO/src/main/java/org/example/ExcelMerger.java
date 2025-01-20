@@ -192,9 +192,7 @@ public class ExcelMerger { // Объединение нескольких ана
         try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
             resultWorkbook.write(fos);
         }
-        if (outputFilePath.contains("ИВКЭ")) {
             setMonthSchedule(outputFilePath, resultSheet);
-        } else if (outputFilePath.contains("ИИК"))
             logger.info("1021: {}", meter1021);
         logger.info("1021: {}", meter1023);
         logger.info("1021: {}", meter2023);
@@ -203,6 +201,10 @@ public class ExcelMerger { // Объединение нескольких ана
 
     private static void setMonthSchedule(String path, Sheet resultSheet) {
         String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
+        if (path.contains("ИВКЭ")) {
+        } else if (path.contains("ИИК")) {
+
+        }
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
