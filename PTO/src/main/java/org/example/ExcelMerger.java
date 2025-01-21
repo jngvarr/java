@@ -144,25 +144,38 @@ public class ExcelMerger { // Объединение нескольких ана
                 // Создаём новую строку в таблице
                 Row newRow = scheduleSheet.createRow(currentRow++);
 
-                    Cell cell = newRow.createCell(0);
-                    cell.setCellValue(currentRow-13);
-                    cell.setCellStyle(commonCellStyle);
+                Cell cell = newRow.createCell(0);
+                cell.setCellValue(currentRow - 13);
+                cell.setCellStyle(commonCellStyle);
 
-                for (int i = 1; i < 5; i++) {
+                for (int i = 1; i <= 5; i++) {
                     Cell c = newRow.createCell(i);
-                    c.setCellValue(placement[i-1]);
+                    c.setCellValue(placement[i - 1]);
                     c.setCellStyle(commonCellStyle);
                 }
 
-//                for (int i = 0; i < counters.length; i++) {
-//                    Cell cell = row.createCell(placement.length + i);
-//                    cell.setCellValue(counters[i]);
-//                    cell.setCellStyle(commonCellStyle);
-//                }
-//                // Отмечаем источник
-//                Cell sourceCell = row.createCell(placement.length + counters.length);
-//                sourceCell.setCellValue(source);
-//                sourceCell.setCellStyle(commonCellStyle);
+                for (int i = 0; i < counters.length; i++) {
+                    Cell cell1 = newRow.createCell(placement.length + 1 + i);
+                    cell1.setCellValue(counters[i]);
+                    cell1.setCellStyle(commonCellStyle);
+                }
+                // Расставляем даты
+                if (source.equals("ИВКЭ") && counters[0] + counters[1] + counters[2] > 0) {
+                    Cell dateCell = newRow.createCell(placement.length);
+                    dateCell.setCellValue(placement[placement.length - 1]);
+                    dateCell.setCellStyle(commonCellStyle);
+                    Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
+                    dateCell2.setCellValue(placement[placement.length - 1]);
+                    dateCell2.setCellStyle(commonCellStyle);
+                } else if (source.equals("ИВКЭ")) {
+                    Cell dateCell = newRow.createCell(placement.length);
+                    dateCell.setCellValue(placement[placement.length - 1]);
+                    dateCell.setCellStyle(commonCellStyle);
+                } else {
+                    Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
+                    dateCell2.setCellValue(placement[placement.length - 1]);
+                    dateCell2.setCellStyle(commonCellStyle);
+                }
             }
 
             // Сохраняем файл
@@ -264,12 +277,13 @@ public class ExcelMerger { // Объединение нескольких ана
         setMonthSchedule(outputFilePath, resultSheet);
 
     }
+
     private static CellStyle createCommonCellStyle(Sheet sheet) {
         Workbook workbook = sheet.getWorkbook();
         CellStyle cellStyle = workbook.createCellStyle();
 
         // Пример настроек стиля
-        cellStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyle.setAlignment(HorizontalAlignment.LEFT);
         cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
         cellStyle.setBorderBottom(BorderStyle.THIN);
         cellStyle.setBorderTop(BorderStyle.THIN);
