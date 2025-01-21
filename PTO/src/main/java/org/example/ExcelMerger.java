@@ -7,12 +7,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -22,15 +22,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.example.DataFiller.findMonthColumnIndex;
+import static org.example.OFOGTemplateFiller.*;
 
 public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
+    private static final DateTimeFormatter DATE_FORMATTER_DDMMMM = DateTimeFormatter.ofPattern("dd MMMM", new Locale("ru"));
+    private static final LocalDate TODAY = LocalDate.now();
 
-    private static final Map<String, int[]> DC = new HashMap<>();
-    private static final int DC_NUMBER_COL_NUMBER = 9;
+    private static final Map<String, DCEntry> DC = new HashMap<>();
+    private static int dcNumberColNumber;
     private static final int REGION_COL_NUMBER = 1;
-    private static final int STATION_COL_NUMBER = 2;
-    private static final int EEL_COL_NUMBER = 5;
+    private static final int STATION_COL_NUMBER = 5;
+    private static final int EEL_COL_NUMBER = 2;
     private static final int SUBSTATION_COL_NUMBER = 6;
     private static final int COUNTER_TYPE_COL_NUMBER = 9;
 
@@ -39,12 +42,35 @@ public class ExcelMerger { // Объединение нескольких ана
     private static int meter2023 = 0;
     private static int dc = 0;
 
+    public static class DCEntry {
+        private int[] counts = new int[3]; // Для типов 1021, 1023, 2023
+        private String source; // Источник элемента ("ИВКЭ" или "ИИК")
+
+        public DCEntry(String source) {
+            this.source = source;
+        }
+
+        public int[] getCounts() {
+            return counts;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public void incrementCount(int index) {
+            counts[index]++;
+        }
+    }
+
+
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-//        String folderPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\";
+//        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
         String folderPath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
         File folder = new File(folderPath);
+        String scheduleTemplatePath = "d:\\Downloads\\пто\\month_reports\\templates\\works_schedule_template.xlsx";
 
 //        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
 
@@ -76,7 +102,7 @@ public class ExcelMerger { // Объединение нескольких ана
             if (!files.isEmpty()) {
                 futures.add(executorService.submit(() -> processGroup(files, folderPath, group)));
                 logger.info("Начало обработки группы '{}'", group);
-                processGroup(files, folderPath, group);
+//                processGroup(files, folderPath, group);
                 logger.info("Обработка группы '{}' завершена", group);
             } else {
                 logger.warn("Группа '{}' не содержит файлов для обработки", group);
@@ -96,16 +122,59 @@ public class ExcelMerger { // Объединение нескольких ана
         // Завершаем работу ExecutorService
         executorService.shutdown();
         logger.info("Все задачи завершены");
+        fillSchedule(scheduleTemplatePath);
+        printDCEntries();
+    }
 
+    private static void fillSchedule(String scheduleTemplatePath) throws FileNotFoundException {
+        try (FileInputStream templateFis = new FileInputStream(scheduleTemplatePath);
+             XSSFWorkbook scheduleTemplateWorkbook = new XSSFWorkbook(templateFis)) {
+            XSSFSheet scheduleSheet = scheduleTemplateWorkbook.getSheet("ГРАФИК");
+            CellStyle commonCellStyle = createCommonCellStyle(scheduleSheet);
+            int currentRow = 13;
+            String scheduleDate = "на Западно-Сибирской жд на " + TODAY.getMonthValue() + " от " + TODAY.getYear();
+            System.out.println(scheduleDate);
+            scheduleSheet.getRow(4).getCell(0).setCellValue(scheduleDate);
 
-//        for (String group : fileGroups.keySet()) {
-//            if (!fileGroups.get(group).isEmpty()) {
-//                String month = extractMonthFromFileName(fileGroups.get(group).getFirst().getName());
-//                String year = extractYearFromFileName(fileGroups.get(group).getFirst().getName());
-//                String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, year, month.toUpperCase());
-//                mergeExcelFiles(fileGroups.get(group), folderPath + File.separator + "Свод" + File.separator + outputFileName);
-//            }
-//        }
+            for (Map.Entry<String, DCEntry> dc : DC.entrySet()) {
+                String[] placement = dc.getKey().split("_");
+                String source = dc.getValue().getSource();
+                int[] counters = dc.getValue().getCounts();
+
+                // Создаём новую строку в таблице
+                Row newRow = scheduleSheet.createRow(currentRow++);
+
+                    Cell cell = newRow.createCell(0);
+                    cell.setCellValue(currentRow-13);
+                    cell.setCellStyle(commonCellStyle);
+
+                for (int i = 1; i < 5; i++) {
+                    Cell c = newRow.createCell(i);
+                    c.setCellValue(placement[i-1]);
+                    c.setCellStyle(commonCellStyle);
+                }
+
+//                for (int i = 0; i < counters.length; i++) {
+//                    Cell cell = row.createCell(placement.length + i);
+//                    cell.setCellValue(counters[i]);
+//                    cell.setCellStyle(commonCellStyle);
+//                }
+//                // Отмечаем источник
+//                Cell sourceCell = row.createCell(placement.length + counters.length);
+//                sourceCell.setCellValue(source);
+//                sourceCell.setCellStyle(commonCellStyle);
+            }
+
+            // Сохраняем файл
+            try (FileOutputStream fos = new FileOutputStream("d:\\Downloads\\пто\\month_reports\\templates\\new_schedule.xlsx")) {
+                scheduleTemplateWorkbook.write(fos);
+            }
+
+            System.out.println("Файл успешно сохранён как 'new_schedule.xlsx'");
+
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при работе с файлом-шаблоном", e);
+        }
     }
 
     private static void processGroup(List<File> files, String folderPath, String group) {
@@ -192,42 +261,64 @@ public class ExcelMerger { // Объединение нескольких ана
         try (FileOutputStream fos = new FileOutputStream(outputFilePath)) {
             resultWorkbook.write(fos);
         }
-            setMonthSchedule(outputFilePath, resultSheet);
-            logger.info("1021: {}", meter1021);
-        logger.info("1021: {}", meter1023);
-        logger.info("1021: {}", meter2023);
-        logger.info("dc: {}", (long) DC.entrySet().size());
+        setMonthSchedule(outputFilePath, resultSheet);
+
+    }
+    private static CellStyle createCommonCellStyle(Sheet sheet) {
+        Workbook workbook = sheet.getWorkbook();
+        CellStyle cellStyle = workbook.createCellStyle();
+
+        // Пример настроек стиля
+        cellStyle.setAlignment(HorizontalAlignment.CENTER);
+        cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderLeft(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+
+        return cellStyle;
+    }
+
+    private static void printDCEntries() {
+        System.out.println("Содержимое DC:");
+        for (Map.Entry<String, DCEntry> entry : DC.entrySet()) {
+            String key = entry.getKey();
+            DCEntry value = entry.getValue();
+            System.out.printf("Key: %s, Source: %s, Counts: %s%n",
+                    key,
+                    value.getSource(),
+                    Arrays.toString(value.getCounts()));
+        }
     }
 
     private static void setMonthSchedule(String path, Sheet resultSheet) {
         String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
-        if (path.contains("ИВКЭ")) {
-        } else if (path.contains("ИИК")) {
-
-        }
+        String source = path.contains("ИВКЭ") ? "ИВКЭ" : "ИИК";
+        dcNumberColNumber = path.contains("ИВКЭ") ? 9 : 12;
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
             return;
         }
+
         for (int i = 1; i <= resultSheet.getLastRowNum(); i++) {
             Row targetRow = resultSheet.getRow(i);
             Cell targetRowCell = targetRow.getCell(monthColumnIndex);
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
                 String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
-                DC.putIfAbsent(key, new int[3]);
+                DC.putIfAbsent(key, new DCEntry(source));
+                DCEntry entry = DC.get(key);
+
                 if (counterType.contains("1021")) {
-                    DC.get(key)[0]++;
+                    entry.incrementCount(0);
                     meter1021++;
                 } else if (counterType.contains("1023")) {
-                    DC.get(key)[1]++;
+                    entry.incrementCount(1);
                     meter1023++;
                 } else if (counterType.contains("2023")) {
-                    DC.get(key)[2]++;
+                    entry.incrementCount(2);
                     meter2023++;
-//                } else {
-//                    throw new IllegalStateException("Unexpected value: " + counterType);
                 }
             }
         }
@@ -240,13 +331,13 @@ public class ExcelMerger { // Объединение нескольких ана
         return new StringBuilder()
                 .append(row.getCell(REGION_COL_NUMBER).getStringCellValue())
                 .append("_")
-                .append(row.getCell(STATION_COL_NUMBER).getStringCellValue())
-                .append("_")
                 .append(row.getCell(EEL_COL_NUMBER).getStringCellValue())
+                .append("_")
+                .append(row.getCell(STATION_COL_NUMBER).getStringCellValue())
                 .append("_")
                 .append(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
                 .append("_")
-                .append(row.getCell(DC_NUMBER_COL_NUMBER).getStringCellValue())
+                .append(row.getCell(dcNumberColNumber).getStringCellValue())
                 .append("_")
                 .append(row.getCell(monthColumnIndex))
                 .toString();

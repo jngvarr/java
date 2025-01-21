@@ -219,7 +219,7 @@ public class OFOGTemplateFiller {
                 getCellStringValue(sourceRow.getCell(7)),
                 concatAndCopyRowsData(sourceRow),
                 getCellStringValue(sourceRow.getCell(17)),
-                "Демянчук В.М., диспетчер",
+                "диспетчер ООО \"УК СТС\"",
                 restorationDate.format(DATE_FORMATTER_DDMMYYYY),
                 generateRandomTime(9, 17),
                 getCellStringValue(sourceRow.getCell(18)),
@@ -311,7 +311,7 @@ public class OFOGTemplateFiller {
         return dateCellStyle;
     }
 
-    private static CellStyle createCommonCellStyle(Sheet resultSheet) {
+    static CellStyle createCommonCellStyle(Sheet resultSheet) {
         CellStyle simpleCellStyle = resultSheet.getWorkbook().createCellStyle();
         simpleCellStyle.setBorderBottom(BorderStyle.THIN);
         simpleCellStyle.setBorderLeft(BorderStyle.THIN);
