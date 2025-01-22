@@ -150,6 +150,9 @@ public class ExcelMerger { // Объединение нескольких ана
                 String source = dc.getValue().getSource();
                 int[] counters = dc.getValue().getCounts();
 
+                if (currentRow <= scheduleSheet.getLastRowNum()) {
+                    scheduleSheet.shiftRows(currentRow, scheduleSheet.getLastRowNum(), 1);
+                }
                 // Создаём новую строку в таблице
                 Row newRow = scheduleSheet.createRow(currentRow++);
 
