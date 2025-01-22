@@ -79,9 +79,6 @@ public class OFOGTemplateFiller {
 
                         int eventYear = localDate.getYear();
                         int eventMonth = localDate.getMonthValue();
-//                        logger.info("Дата в строке: день {}, месяц {}, год {}", localDate.getDayOfMonth(), eventMonth, eventYear);
-                        // Проверяем, совпадает ли месяц
-//                        logger.info("Выполнение условия {}:", month == eventMonth && year == eventYear);
                         if (month == eventMonth && year == eventYear) {
                             logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                             reportRows++;
@@ -91,9 +88,6 @@ public class OFOGTemplateFiller {
                                 String faultReason = faultReasonCell.getStringCellValue().trim()
                                         .replace("\u00A0", "")
                                         .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
-
-//                                logger.info("Обрабатываемая строка: '{}'", faultReason);
-
                                 if (!faultReason.contains("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
                                     copyRowsData(row, ofLogSheet, ofLogSheetInsertPosition++, commonCellStyle, true);
                                 } else {

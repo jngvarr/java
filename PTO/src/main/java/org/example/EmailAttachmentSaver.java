@@ -177,7 +177,6 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
                 // Считываем поток в массив байтов
                 byte[] fileData = inputStreamToByteArray(bodyPart.getInputStream());
                 saveStreamAttachment(new ByteArrayInputStream(fileData), saveDirectory, fileName);
-                System.out.println("Вложение сохранено (PMPC) ");
             }
         }
     }
