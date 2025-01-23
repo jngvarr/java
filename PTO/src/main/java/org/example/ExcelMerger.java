@@ -426,7 +426,9 @@ public class ExcelMerger { // Объединение нескольких ана
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
                 String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
-                if (!DC.containsKey(key) & DC.get(key).source.equals("ИВКЭ"))dc++;
+                if (DC.get(key) != null) {
+                    if (!DC.containsKey(key) & DC.get(key).source.equals("ИВКЭ")) dc++;
+                }
                 DC.putIfAbsent(key, new DCEntry(source));
                 DCEntry entry = DC.get(key);
 
@@ -440,6 +442,7 @@ public class ExcelMerger { // Объединение нескольких ана
                     entry.incrementCount(2);
                     meter2023++;
                 }
+
             }
         }
     }
