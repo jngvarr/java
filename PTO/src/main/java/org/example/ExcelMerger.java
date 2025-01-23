@@ -89,9 +89,9 @@ public class ExcelMerger { // Объединение нескольких ана
         logger.info("Разделение файлов по группам...");
 
         for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> name.endsWith(".xlsx")))) {
-            if (file.getName().contains("ИИК")) {
+            if (file.getName().contains("ИИК") && !file.getName().contains("СВОД")) {
                 fileGroups.get("ИИК").add(file);
-            } else if (file.getName().contains("ИВКЭ")) {
+            } else if (file.getName().contains("ИВКЭ") && !file.getName().contains("СВОД")) {
                 fileGroups.get("ИВКЭ").add(file);
             }
         }
@@ -149,9 +149,9 @@ public class ExcelMerger { // Объединение нескольких ана
                 String[] placement = dc.getKey().split("_");
                 String source = dc.getValue().getSource();
                 int[] counters = dc.getValue().getCounts();
-
-                if (currentRow <= scheduleSheet.getLastRowNum()) {
-                    scheduleSheet.shiftRows(currentRow, scheduleSheet.getLastRowNum(), 1);
+                int lastRowNum = scheduleSheet.getLastRowNum();
+                if (currentRow <= lastRowNum) {
+                    scheduleSheet.shiftRows(currentRow, lastRowNum, 1);
                 }
                 // Создаём новую строку в таблице
                 Row newRow = scheduleSheet.createRow(currentRow++);
@@ -426,11 +426,9 @@ public class ExcelMerger { // Объединение нескольких ана
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
                 String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
+                if (!DC.containsKey(key) & DC.get(key).source.equals("ИВКЭ"))dc++;
                 DC.putIfAbsent(key, new DCEntry(source));
                 DCEntry entry = DC.get(key);
-                if (entry.source.equals("ИВКЭ")) {
-                    dc++;
-                }
 
                 if (counterType.contains("1021")) {
                     entry.incrementCount(0);
@@ -444,9 +442,6 @@ public class ExcelMerger { // Объединение нескольких ана
                 }
             }
         }
-    }
-
-    private static void meterSum() {
     }
 
     private static String setKey(Row row, int monthColumnIndex) {
