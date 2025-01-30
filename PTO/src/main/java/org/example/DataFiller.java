@@ -25,15 +25,15 @@ public class DataFiller {
             .append("Профили")
             .toString();
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
-    private static int  count = 0;
+    private static int count = 0;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
         String[] fileNames = new File(FOLDER_PATH).list((dir, name) -> name.endsWith(".xlsx"));
-        String summaryFilePath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
-//        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
-        String profileFilesPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\ДЕКАБРЬ\\Профили\\";
-//        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\2024\\ДЕКАБРЬ\\Профили\\";
+//        String summaryFilePath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО 2024\\СВОД_ИИК ПТО РРЭ 2024_" + ORDER_MONTH.toUpperCase() + ".xlsx";
+        String summaryFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ " + ORDER_YEAR + "_" + ORDER_MONTH.toUpperCase() + ".xlsx";
+//        String profileFilesPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + ORDER_YEAR + "\\" + ORDER_MONTH.toUpperCase() + "\\Профили\\";
+        String profileFilesPath = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + ORDER_YEAR + "\\" + ORDER_MONTH.toUpperCase() + "\\Профили\\";
 
         SimpleDateFormat today = new SimpleDateFormat();
         // Extract month from the profile filename

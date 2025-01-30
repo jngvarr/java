@@ -74,8 +74,8 @@ public class ExcelMerger { // Объединение нескольких ана
     public static void main(String[] args) throws IOException {
 
 //        String folderPath = "d:\\Downloads\\пто\\";
-//        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
-        String folderPath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
+        String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
+//        String folderPath = "d:\\Downloads\\пто\\план ПТО\\2024\\декабрь\\";
         File folder = new File(folderPath);
         String scheduleTemplatePath = "d:\\Downloads\\пто\\month_reports\\templates\\works_schedule_template.xlsx";
 
@@ -457,7 +457,7 @@ public class ExcelMerger { // Объединение нескольких ана
                 .append("_")
                 .append(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
                 .append("_")
-                .append(row.getCell(dcNumberColNumber).getStringCellValue())
+                .append(getCellStringValue(row.getCell(dcNumberColNumber)))
                 .append("_")
                 .append(getCellStringValue(row.getCell(monthColumnIndex)))
                 .toString();
