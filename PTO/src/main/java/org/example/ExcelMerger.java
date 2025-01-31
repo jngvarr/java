@@ -41,6 +41,8 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int METER1023_CELL_NUMBER = 8;
     private static final int METER2023_CELL_NUMBER = 9;
     private static int dcNumberColNumber;
+    private static final int DC_COLUMN_NUMBER_METER_SHEET = 12;
+    private static final int DC_COLUMN_NUMBER_DC_SHEET = 9;
     private static String orderMonth;
     private static String orderYear;
 
@@ -130,7 +132,7 @@ public class ExcelMerger { // Объединение нескольких ана
         executorService.shutdown();
         logger.info("Все задачи завершены");
         fillSchedule(scheduleTemplatePath);
-        printDCEntries();
+//        printDCEntries();
     }
 
     private static void fillSchedule(String scheduleTemplatePath) throws FileNotFoundException {
@@ -140,58 +142,73 @@ public class ExcelMerger { // Объединение нескольких ана
             CellStyle commonCellStyle = createCommonCellStyle(scheduleSheet);
             CellStyle dateCellStyle = createDateCellStyle(scheduleSheet);
             CellStyle horizontalAlignmentCellStyle = createHorizontalAlignmentCellStyle(scheduleSheet);
-            int currentRow = 13;
+            int currentRowNum = 13;
+            int ordersFirstRowNum = 13;
+            int firstCellOfRowNum = 0;
             String scheduleDate = "на Западно-Сибирской жд на " + orderMonth + " " + orderYear + "г.";
             System.out.println(scheduleDate);
-            scheduleSheet.getRow(4).getCell(0).setCellValue(scheduleDate);
+            scheduleSheet.getRow(4).getCell(firstCellOfRowNum).setCellValue(scheduleDate);
 
             for (Map.Entry<String, DCEntry> dc : DC.entrySet()) {
                 String[] placement = dc.getKey().split("_");
                 String source = dc.getValue().getSource();
                 int[] counters = dc.getValue().getCounts();
                 int lastRowNum = scheduleSheet.getLastRowNum();
-                if (currentRow <= lastRowNum) {
-                    scheduleSheet.shiftRows(currentRow, lastRowNum, 1);
+                if (currentRowNum <= lastRowNum) {
+                    scheduleSheet.shiftRows(currentRowNum, lastRowNum, 1);
                 }
                 // Создаём новую строку в таблице
-                Row newRow = scheduleSheet.createRow(currentRow++);
+                Row newRow = scheduleSheet.createRow(currentRowNum++);
+                for (int i = 0; i < scheduleSheet.getRow(currentRowNum - 1).getLastCellNum(); i++) {
+                    Cell cell = newRow.createCell(i);
+                    cell.setCellStyle(commonCellStyle);
+                    final int pointsCellNum = 0;
+                    final int regionCellNum = 1;
+                    final int eelCellNum = 2;
+                    final int stationCellNum = 3;
+                    final int substationCellNum = 4;
+                    final int dcNumCellNum = 5;
+                    final int dcDateCellNum = 6;
+                    final int meter1021CellNum = 7;
+                    final int meter1023CellNum = 8;
+                    final int meter2023CellNum = 9;
+                    final int meterDateCellNum = 10;
 
-                Cell cell = newRow.createCell(0);
-                cell.setCellValue(currentRow - 13);
-                cell.setCellStyle(commonCellStyle);
+                    switch (i) {
+                        case pointsCellNum -> cell.setCellValue(currentRowNum - ordersFirstRowNum);
+                        case regionCellNum, eelCellNum, stationCellNum, substationCellNum, dcNumCellNum ->
+                                cell.setCellValue(placement[i - 1]);
+                        case meter1021CellNum, meter1023CellNum, meter2023CellNum -> {
+                            cell.setCellValue(counters[i]);
+                            cell.setCellStyle(horizontalAlignmentCellStyle);
+                        }
+                        case dcDateCellNum, meterDateCellNum -> {
 
-                for (int i = 1; i <= 5; i++) {
-                    Cell c = newRow.createCell(i);
-                    c.setCellValue(placement[i - 1]);
-                    c.setCellStyle(commonCellStyle);
+                            // Расставляем даты
+                            if (source.equals("ИВКЭ") && counters[0] + counters[1] + counters[2] > 0) {
+//                                Cell dateCell = newRow.createCell(i);
+                                cell.setCellValue(placement[i - 1]);
+                                cell.setCellStyle(dateCellStyle);
+//                                Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
+//                                dateCell2.setCellValue(placement[i - 1]);
+//                                dateCell2.setCellStyle(dateCellStyle);
+                            } else if (source.equals("ИВКЭ")) {
+//                                Cell dateCell = newRow.createCell(i);
+                                cell.setCellValue(placement[i - 1]);
+                                cell.setCellStyle(dateCellStyle);
+                            } else {
+//                                Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
+                                cell.setCellValue(placement[i - 1]);
+                                cell.setCellStyle(dateCellStyle);
+
+                            }
+
+                        }
+                    }
                 }
 
-                for (int i = 0; i < counters.length; i++) {
-                    Cell cell1 = newRow.createCell(placement.length + 1 + i);
-                    cell1.setCellValue(counters[i]);
-                    cell1.setCellStyle(horizontalAlignmentCellStyle);
-                }
-
-                // Расставляем даты
-                if (source.equals("ИВКЭ") && counters[0] + counters[1] + counters[2] > 0) {
-                    Cell dateCell = newRow.createCell(placement.length);
-                    dateCell.setCellValue(placement[placement.length - 1]);
-                    dateCell.setCellStyle(dateCellStyle);
-                    Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
-                    dateCell2.setCellValue(placement[placement.length - 1]);
-                    dateCell2.setCellStyle(dateCellStyle);
-                } else if (source.equals("ИВКЭ")) {
-                    Cell dateCell = newRow.createCell(placement.length);
-                    dateCell.setCellValue(placement[placement.length - 1]);
-                    dateCell.setCellStyle(dateCellStyle);
-                } else {
-                    Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
-                    dateCell2.setCellValue(placement[placement.length - 1]);
-                    dateCell2.setCellStyle(dateCellStyle);
-
-                }
             }
-            setSummData(scheduleSheet);
+            setSummRow(scheduleSheet);
 
             Path directoryPath = Paths.get("d:\\Downloads\\пто\\month_reports\\"
                     + orderMonth);
@@ -210,42 +227,23 @@ public class ExcelMerger { // Объединение нескольких ана
         }
     }
 
-    private static void setSummData(Sheet scheduleSheet) {
+    private static void setSummRow(Sheet scheduleSheet) {
         Row summRow = scheduleSheet.createRow(SUMM_ROW_NUMBER);
         CellStyle sumCellStyle = createSumCellStyle(scheduleSheet);
 
-        Cell sum = summRow.createCell(IVKE_CELL_NUMBER - 1);
-        sum.setCellValue("ИТОГО: ");
-        sum.setCellStyle(sumCellStyle);
+        int lastCellNum = scheduleSheet.getRow(SUMM_ROW_NUMBER + 1).getLastCellNum();
+        for (int i = 0; i < lastCellNum; i++) {
+            Cell cell = summRow.createCell(i);
+            cell.setCellStyle(sumCellStyle);
 
-        Cell ivkeCell = summRow.createCell(IVKE_CELL_NUMBER);
-        ivkeCell.setCellValue(dc);
-        ivkeCell.setCellStyle(sumCellStyle);
-
-        Cell cell1021 = summRow.createCell(METER1021_CELL_NUMBER);
-        cell1021.setCellValue(meter1021);
-        cell1021.setCellStyle(sumCellStyle);
-
-        Cell cell1023 = summRow.createCell(METER1023_CELL_NUMBER);
-        cell1023.setCellValue(meter1023);
-        cell1023.setCellStyle(sumCellStyle);
-
-        Cell cell2023 = summRow.createCell(METER2023_CELL_NUMBER);
-        cell2023.setCellValue(meter2023);
-        cell2023.setCellStyle(sumCellStyle);
-
-//        for (int i = 0; i < summRow.getLastCellNum(); i++) {
-//            Cell cell = summRow.createCell(i);
-//            cell.setCellStyle(sumCellStyle);
-//
-//            switch (i){
-//                case IVKE_CELL_NUMBER - 1: cell.setCellValue("ИТОГО: "); break;
-//                case IVKE_CELL_NUMBER : cell.setCellValue(dc); break;
-//                case METER1021_CELL_NUMBER : cell.setCellValue(meter1021); break;
-//                case METER1023_CELL_NUMBER : cell.setCellValue(meter1023); break;
-//                case METER2023_CELL_NUMBER : cell.setCellValue(meter2023); break;
-//            }
-//        }
+            switch (i) {
+                case IVKE_CELL_NUMBER - 1 -> cell.setCellValue("ИТОГО: ");
+                case IVKE_CELL_NUMBER -> cell.setCellValue(dc);
+                case METER1021_CELL_NUMBER -> cell.setCellValue(meter1021);
+                case METER1023_CELL_NUMBER -> cell.setCellValue(meter1023);
+                case METER2023_CELL_NUMBER -> cell.setCellValue(meter2023);
+            }
+        }
     }
 
     private static CellStyle createSumCellStyle(Sheet scheduleSheet) {
@@ -413,7 +411,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static void setMonthSchedule(String path, Sheet resultSheet) {
         String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
         String source = path.contains("ИВКЭ") ? "ИВКЭ" : "ИИК";
-        dcNumberColNumber = path.contains("ИВКЭ") ? 9 : 12;
+        dcNumberColNumber = path.contains("ИВКЭ") ? DC_COLUMN_NUMBER_DC_SHEET : DC_COLUMN_NUMBER_METER_SHEET;
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
@@ -426,9 +424,9 @@ public class ExcelMerger { // Объединение нескольких ана
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
                 String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
-                if (DC.get(key) != null) {
-                    if (!DC.containsKey(key) & DC.get(key).source.equals("ИВКЭ")) dc++;
-                }
+
+                if (path.contains("ИВКЭ")) dc++;
+
                 DC.putIfAbsent(key, new DCEntry(source));
                 DCEntry entry = DC.get(key);
 
@@ -521,8 +519,6 @@ public class ExcelMerger { // Объединение нескольких ана
                         targetCell.setCellStyle(defaultCellStyle);
                         break;
                 }
-//            } else {
-//                targetCell.setCellStyle(defaultCellStyle);
             }
         }
     }
