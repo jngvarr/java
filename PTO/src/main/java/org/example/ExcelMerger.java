@@ -182,27 +182,18 @@ public class ExcelMerger { // Объединение нескольких ана
                             cell.setCellValue(counters[i]);
                             cell.setCellStyle(horizontalAlignmentCellStyle);
                         }
-                        case dcDateCellNum, meterDateCellNum -> {
-
-                            // Расставляем даты
-                            if (source.equals("ИВКЭ") && counters[0] + counters[1] + counters[2] > 0) {
-//                                Cell dateCell = newRow.createCell(i);
+                        // Расставляем даты
+                        case dcDateCellNum -> {
+                            if (source.equals("ИВКЭ")) {
                                 cell.setCellValue(placement[i - 1]);
                                 cell.setCellStyle(dateCellStyle);
-//                                Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
-//                                dateCell2.setCellValue(placement[i - 1]);
-//                                dateCell2.setCellStyle(dateCellStyle);
-                            } else if (source.equals("ИВКЭ")) {
-//                                Cell dateCell = newRow.createCell(i);
-                                cell.setCellValue(placement[i - 1]);
-                                cell.setCellStyle(dateCellStyle);
-                            } else {
-//                                Cell dateCell2 = newRow.createCell(newRow.getLastCellNum());
-                                cell.setCellValue(placement[i - 1]);
-                                cell.setCellStyle(dateCellStyle);
-
                             }
-
+                        }
+                        case meterDateCellNum -> {
+                            if (counters[0] + counters[1] + counters[2] > 0) {
+                                cell.setCellValue(placement[i - 1]);
+                                cell.setCellStyle(dateCellStyle);
+                            }
                         }
                     }
                 }
