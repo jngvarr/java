@@ -82,7 +82,9 @@ public class ExcelSplitter { //разбиение сводных файлов н
             // Найти индекс столбца "ЭЭЛ"
             int eelColumnIndex = findColumnIndex(sheet, "ЭЭЛ");
             int regionColumnIndex = findColumnIndex(sheet, "Регион");
-            if (regionColumnIndex == -1) regionColumnIndex = findColumnIndex(sheet, "Субъект РФ");
+            if (regionColumnIndex == -1) {
+                regionColumnIndex = findColumnIndex(sheet, "Субъект РФ");
+            }
 
             if (eelColumnIndex == -1) {
                 logger.error("Столбец 'ЭЭЛ' не найден в файле: {}", inputFilePath.getName());
