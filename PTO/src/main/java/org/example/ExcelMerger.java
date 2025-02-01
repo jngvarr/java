@@ -261,6 +261,7 @@ public class ExcelMerger { // Объединение нескольких ана
         cellStyle.setBorderRight(BorderStyle.THIN);
         Font font = workbook.createFont();
         font.setBold(true);
+        font.setFontHeightInPoints((short) 12);
         cellStyle.setFont(font);
 
         return cellStyle;
@@ -413,7 +414,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static void setMonthSchedule(String path, Sheet resultSheet) {
         String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
         String source = path.contains("ИВКЭ") ? "ИВКЭ" : "ИИК";
-        dcNumberColNumber = path.contains("ИВКЭ") ? 9 : 12;
+        dcNumberColNumber = path.contains("ИВКЭ") ? 9 : 11;
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
@@ -426,9 +427,7 @@ public class ExcelMerger { // Объединение нескольких ана
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
                 String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
-                if (DC.get(key) != null) {
-                    if (!DC.containsKey(key) & DC.get(key).source.equals("ИВКЭ")) dc++;
-                }
+                if (!DC.containsKey(key) && path.contains("ИВКЭ")) dc++;
                 DC.putIfAbsent(key, new DCEntry(source));
                 DCEntry entry = DC.get(key);
 
@@ -457,7 +456,7 @@ public class ExcelMerger { // Объединение нескольких ана
                 .append("_")
                 .append(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
                 .append("_")
-                .append(row.getCell(dcNumberColNumber).getStringCellValue())
+                .append(getCellStringValue(row.getCell(dcNumberColNumber)))
                 .append("_")
                 .append(getCellStringValue(row.getCell(monthColumnIndex)))
                 .toString();

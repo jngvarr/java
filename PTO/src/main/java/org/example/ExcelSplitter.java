@@ -25,8 +25,8 @@ public class ExcelSplitter { //разбиение сводных файлов н
 
         // Путь к папке "свод"
 //        String inputFilePath = "d:\\Downloads\\пто"; // дома
-        String inputFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
-//        String inputFilePath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
+//        String inputFilePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
+        String inputFilePath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
         File inputFolder = new File(inputFilePath);
 
         if (!inputFolder.exists() || !inputFolder.isDirectory()) {
@@ -43,8 +43,8 @@ public class ExcelSplitter { //разбиение сводных файлов н
         }
 
 //        String outputFolderPath = "d:\\Downloads\\пто\\";                        //дома
-//        String outputFolderPath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
-        String outputFolderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
+        String outputFolderPath = "d:\\Downloads\\пто\\план ПТО\\2025\\";
+//        String outputFolderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
         File outputFolder = new File(outputFolderPath);
         if (!outputFolder.exists()) {
             outputFolder.mkdirs();
