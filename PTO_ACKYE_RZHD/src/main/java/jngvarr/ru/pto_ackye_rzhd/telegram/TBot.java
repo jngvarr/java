@@ -81,32 +81,16 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-//    private <T> void executeRequest(T method) {
-//        try {
-//            execute(method);
-//        } catch (TelegramApiException e) {
-//            log.error("Telegram API error: {}", e.getMessage());
-//        }
-//    }
-
-
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
         // Упрощена логика с использованием switch
         switch (msgText) {
-            case "/start":
-                handleStartCommand(chatId, update.getMessage().getChat().getFirstName(), update);
-                break;
-            case "/help":
-                sendMessage(chatId, PtoTelegramBotContent.HELP, null);
-                break;
-            case "/register":
-                registerUser(chatId);
-                break;
-            default:
-                sendMessage(chatId, "Sorry, the command was not recognized!", null);
+            case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName(), update);
+            case "/help" -> sendMessage(chatId, PtoTelegramBotContent.HELP, null);
+            case "/register" -> registerUser(chatId);
+            default -> sendMessage(chatId, "Sorry, the command was not recognized!", null);
         }
     }
 
@@ -118,6 +102,7 @@ public class TBot extends TelegramLongPollingBot {
         String responseText = switch (callbackData) {
             case "newTU" -> NEW_TU;
             case "pto" -> PTO;
+            case "oto" -> OTO;
             case "oto" -> OTO;
             default -> null;
         };
