@@ -15,29 +15,26 @@ public class PtoTelegramBotContent {
     public static final String PTO = """
             *ВЫБРАН РЕЖИМ "ПТО"*
             В данном режиме вам нужно просто загружать фотографии ИИК или ИВКЭ.
-//            Итак начнём:
-//            
-//            Прикрепите фотографию:
-            """;
+            Выберите тип оборудования:
+                        """;
 
     public static final String OTO = """
             *ВЫБРАН РЕЖИМ "ОТО"*
             В данном режиме вам нужно выбрать вид работ ОТО и следовать дальнейшим подсказкам.
-//            Итак начнём:
-//             
-//            Выберите вид работ ОТО:
-            """;
+            Выберите вид работ ОТО:
+             """;
 
     public static final String NEW_TU = """
-            *ДОБАВЛЕНИЕ НОВОЙ ТОЧКИ УЧЁТА*
-                                    
-//            Последовательно вводите данные необходимые для заполнения НСИ:
+            *Монтажные/демонтажные работы *\s
             """;
 
-    static final String HELP = "This bot is created to demonstrate Spring capabilities. \n\n" +
+    static final String HELP = "This bot was created to facilitate data processing during\n " +
+            "maintenance of the commercial electricity metering system\n " +
+            "of the West Siberian Railway of Russian Railways by the\n" +
+            "personnel of CPC Management Company LLC CC CTC\n\n" +
             "You can execute commands from the main menu or by typing a command\n\n" +
             "Type /start to see \"Welcome\" message\n\n" +
-            "Type /mydata to see data stored about yourself\n\n" +
+//            "Type /mydata to see data stored about yourself\n\n" +
             "Type /help to see this message again\n\n";
 }
 

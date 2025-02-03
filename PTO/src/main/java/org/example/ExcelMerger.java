@@ -150,55 +150,10 @@ public class ExcelMerger { // Объединение нескольких ана
             scheduleSheet.getRow(4).getCell(firstCellOfRowNum).setCellValue(scheduleDate);
 
             for (Map.Entry<String, DCEntry> dc : DC.entrySet()) {
-                String[] placement = dc.getKey().split("_");
-                String source = dc.getValue().getSource();
-                int[] counters = dc.getValue().getCounts();
-                int lastRowNum = scheduleSheet.getLastRowNum();
-                if (currentRowNum <= lastRowNum) {
-                    scheduleSheet.shiftRows(currentRowNum, lastRowNum, 1);
-                }
-                // Создаём новую строку в таблице
-                Row newRow = scheduleSheet.createRow(currentRowNum++);
-                for (int i = 0; i < scheduleSheet.getRow(currentRowNum - 1).getLastCellNum(); i++) {
-                    Cell cell = newRow.createCell(i);
-                    cell.setCellStyle(commonCellStyle);
-                    final int pointsCellNum = 0;
-                    final int regionCellNum = 1;
-                    final int eelCellNum = 2;
-                    final int stationCellNum = 3;
-                    final int substationCellNum = 4;
-                    final int dcNumCellNum = 5;
-                    final int dcDateCellNum = 6;
-                    final int meter1021CellNum = 7;
-                    final int meter1023CellNum = 8;
-                    final int meter2023CellNum = 9;
-                    final int meterDateCellNum = 10;
-
-                    switch (i) {
-                        case pointsCellNum -> cell.setCellValue(currentRowNum - ordersFirstRowNum);
-                        case regionCellNum, eelCellNum, stationCellNum, substationCellNum, dcNumCellNum ->
-                                cell.setCellValue(placement[i - 1]);
-                        case meter1021CellNum, meter1023CellNum, meter2023CellNum -> {
-                            cell.setCellValue(counters[i]);
-                            cell.setCellStyle(horizontalAlignmentCellStyle);
-                        }
-                        // Расставляем даты
-                        case dcDateCellNum -> {
-                            if (source.equals("ИВКЭ")) {
-                                cell.setCellValue(placement[i - 1]);
-                                cell.setCellStyle(dateCellStyle);
-                            }
-                        }
-                        case meterDateCellNum -> {
-                            if (counters[0] + counters[1] + counters[2] > 0) {
-                                cell.setCellValue(placement[i - 1]);
-                                cell.setCellStyle(dateCellStyle);
-                            }
-                        }
-                    }
-                }
-
+                insertRow(scheduleSheet, dc, currentRowNum++, ordersFirstRowNum, commonCellStyle,
+                        dateCellStyle, horizontalAlignmentCellStyle);
             }
+
             setSummRow(scheduleSheet);
 
             Path directoryPath = Paths.get("d:\\Downloads\\пто\\month_reports\\"
@@ -216,6 +171,62 @@ public class ExcelMerger { // Объединение нескольких ана
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при работе с файлом-шаблоном", e);
         }
+    }
+
+    private static void insertRow(Sheet scheduleSheet, Map.Entry<String, DCEntry> dc, int currentRowNum,
+                                  int ordersFirstRowNum, CellStyle commonCellStyle,
+                                  CellStyle dateCellStyle, CellStyle horizontalAlignmentCellStyle) {
+        String[] placement = dc.getKey().split("_");
+        String source = dc.getValue().getSource();
+        int[] counters = dc.getValue().getCounts();
+        int lastRowNum = scheduleSheet.getLastRowNum();
+        if (currentRowNum <= lastRowNum) {
+            scheduleSheet.shiftRows(currentRowNum, lastRowNum, 1);
+        }
+        // Создаём новую строку в таблице
+        Row newRow = scheduleSheet.createRow(currentRowNum++);
+
+        final int pointsCellNum = 0;
+        final int regionCellNum = 1;
+        final int eelCellNum = 2;
+        final int stationCellNum = 3;
+        final int substationCellNum = 4;
+        final int dcNumCellNum = 5;
+        final int dcDateCellNum = 6;
+        final int meter1021CellNum = 7;
+        final int meter1023CellNum = 8;
+        final int meter2023CellNum = 9;
+        final int meterDateCellNum = 10;
+
+        for (int i = 0; i < scheduleSheet.getRow(ordersFirstRowNum - 1).getLastCellNum(); i++) {
+            Cell cell = newRow.createCell(i);
+            cell.setCellStyle(commonCellStyle);
+
+            switch (i) {
+                case pointsCellNum ->
+                        cell.setCellValue(currentRowNum - ordersFirstRowNum);
+
+                case regionCellNum, eelCellNum, stationCellNum, substationCellNum, dcNumCellNum ->
+                        cell.setCellValue(placement[i - 1]);
+
+                case meter1021CellNum, meter1023CellNum, meter2023CellNum -> {
+                    cell.setCellValue(counters[i - 7]);
+                    cell.setCellStyle(horizontalAlignmentCellStyle);
+                }
+
+                case dcDateCellNum -> {
+                    if ("ИВКЭ".equalsIgnoreCase(source)) setDateCell(cell, placement[i - 1], dateCellStyle);
+                }
+
+                case meterDateCellNum -> {
+                    if (Arrays.stream(counters).sum() > 0) setDateCell(cell, placement[i - 5], dateCellStyle);
+                }
+            }
+        }
+    }
+    private static void setDateCell(Cell cell, String value, CellStyle style) {
+        cell.setCellValue(value);
+        cell.setCellStyle(style);
     }
 
     private static void setSummRow(Sheet scheduleSheet) {

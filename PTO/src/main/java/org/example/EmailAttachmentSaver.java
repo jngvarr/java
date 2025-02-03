@@ -44,7 +44,6 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
         // Создаём фильтр по дате
         SearchTerm dateFilter = new SentDateTerm(ComparisonTerm.EQ, targetDate);
 
-
         try {
             Session session = Session.getDefaultInstance(properties, null);
             Store store = session.getStore("imap");
@@ -52,7 +51,6 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
 
             Folder inbox = store.getFolder("Ackye reports");
             inbox.open(Folder.READ_ONLY);
-
 
             Message[] messages = inbox.search(dateFilter); // Получаем только сообщения, соответствующие дате
             for (Message message : messages) {
