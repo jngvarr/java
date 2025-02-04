@@ -162,12 +162,9 @@ public class ExcelMerger { // Объединение нескольких ана
                 Files.createDirectories(directoryPath); // Создает все недостающие каталоги
             }
             // Сохраняем файл
-            try (FileOutputStream fos = new FileOutputStream(directoryPath + "\\График ПТО за " + orderMonth + " " + orderYear + " г..xlsx")) {
+            try (FileOutputStream fos = new FileOutputStream(directoryPath + "\\График ПТО на " + orderMonth + " " + orderYear + " г..xlsx")) {
                 scheduleTemplateWorkbook.write(fos);
             }
-
-            System.out.println("График ПТО за " + orderMonth + " " + orderYear + " г..xlsx'");
-
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при работе с файлом-шаблоном", e);
         }
