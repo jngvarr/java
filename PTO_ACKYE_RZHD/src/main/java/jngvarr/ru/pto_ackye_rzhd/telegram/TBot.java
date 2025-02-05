@@ -1,5 +1,8 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
+import com.google.zxing.*;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
 import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
 import lombok.Data;
@@ -7,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -20,7 +24,15 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +67,13 @@ public class TBot extends TelegramLongPollingBot {
                     "Монтаж концентратора", "dcMount",
                     "Демонтаж концентратора", "dcRemove"));
 
+    // Карта для хранения состояния диалога по chatId
+    private Map<Long, String> userStates = new HashMap<>();
+    // Карта для хранения информации о фото, ожидающих подтверждения
+    private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
+
+
+
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
         this.config = config;
@@ -74,43 +93,170 @@ public class TBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            handleTextMessage(update);
+        if (update.hasMessage()) {
+            // Если сообщение содержит текст
+            if (update.getMessage().hasText()) {
+                handleTextMessage(update);
+            }
+            // Если сообщение содержит фото
+            else if (update.getMessage().hasPhoto()) {
+                handlePhotoMessage(update);
+            }
         } else if (update.hasCallbackQuery()) {
             handleCallbackQuery(update);
         }
     }
+    private void handlePhotoMessage(Update update) {
+        long chatId = update.getMessage().getChatId();
+
+        // Если фото не запрашивалось
+        if (!userStates.containsKey(chatId)) {
+            sendMessage(chatId, "Фото не запрашивалось. Если хотите начать, нажмите /start", null);
+            return;
+        }
+
+        String currentState = userStates.get(chatId);
+        // Получаем самое большое фото
+        var photos = update.getMessage().getPhoto();
+        var photo = photos.get(photos.size() - 1);
+        String fileId = photo.getFileId();
+
+        try {
+            // Скачивание файла с сервера Telegram
+            GetFile getFileMethod = new GetFile();
+            getFileMethod.setFileId(fileId);
+            org.telegram.telegrambots.meta.api.objects.File telegramFile = execute(getFileMethod);
+            String filePath = telegramFile.getFilePath();
+            String fileUrl = "https://api.telegram.org/file/bot" + config.getBotToken() + "/" + filePath;
+
+            // Сохраняем файл во временное хранилище
+            java.io.File tempFile = java.io.File.createTempFile("photo_" + chatId + "_", ".jpg");
+            try (InputStream in = new URL(fileUrl).openStream()) {
+                Files.copy(in, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Считываем изображение
+            BufferedImage bufferedImage = ImageIO.read(tempFile);
+            if (bufferedImage == null) {
+                sendMessage(chatId, "Не удалось обработать изображение.", null);
+                userStates.remove(chatId);
+                return;
+            }
+
+            // Декодируем штрих-код с помощью ZXing
+
+            BufferedImage grayImage = convertToGrayscale(bufferedImage);
+            String barcodeText = decodeBarcode(grayImage);
+            if (barcodeText == null) {
+                sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.", null);
+                userStates.remove(chatId);
+                return;
+            }
+
+            // Определяем тип фото в зависимости от состояния
+            String type;
+            if ("WAITING_FOR_PTOIIK_PHOTO".equals(currentState)) {
+                type = "counter"; // для счетчика
+            } else if ("WAITING_FOR_PTOIVKE_PHOTO".equals(currentState)) {
+                type = "concentrator"; // для концентратора
+            } else {
+                type = "unknown";
+            }
+
+            // Сохраняем данные во временной структуре для последующей обработки
+            pendingPhotos.put(chatId, new PendingPhoto(type, tempFile.toPath(), barcodeText));
+
+            // Запрашиваем подтверждение: отправляем сообщение с inline-кнопками
+            Map<String, String> buttons = Map.of(
+                    "Да", "CONFIRM_BARCODE_YES",
+                    "Нет", "CONFIRM_BARCODE_NO"
+            );
+            sendTextMessage("Считанный штрих-код: " + barcodeText + "\nЕсли он верный, нажмите «Да», иначе – «Нет» и введите корректное значение.", buttons, update);
+        } catch (Exception e) {
+            log.error("Ошибка обработки фото: " + e.getMessage());
+            sendMessage(chatId, "Произошла ошибка при обработке фото.", null);
+            userStates.remove(chatId);
+        }
+    }
+
+
 
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        // Упрощена логика с использованием switch
+        // Если бот ожидает корректировки штрих-кода
+        if ("WAITING_FOR_CORRECT_BARCODE".equals(userStates.get(chatId))) {
+            PendingPhoto pending = pendingPhotos.get(chatId);
+            if (pending != null) {
+                pending.setScannedBarcode(msgText.trim());
+                // После ввода корректного штрих-кода сохраняем фото
+                savePhotoWithBarcode(chatId, pending);
+                // Сбрасываем состояние ожидания корректировки
+                userStates.remove(chatId);
+            } else {
+                sendMessage(chatId, "Нет ожидающих фото для коррекции.", null);
+            }
+            return;
+        }
+
+        // Обработка остальных текстовых сообщений
         switch (msgText) {
             case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName(), update);
             case "/help" -> sendMessage(chatId, PtoTelegramBotContent.HELP, null);
             case "/register" -> registerUser(chatId);
-            default -> sendMessage(chatId, "Sorry, the command was not recognized!", null);
+            default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.", null);
         }
     }
+
 
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
-        int messageId = update.getCallbackQuery().getMessage().getMessageId();
 
-        String responseText = switch (callbackData) {
-            case "newTU" -> NEW_TU;
-            case "pto" -> PTO;
-            case "oto" -> OTO;
-            case "oto" -> OTO;
-            default -> null;
-        };
-        if (responseText != null) {
-            sendMessage(chatId, responseText, null);
-            sendTextMessage("Что хотите сделать: ", modes.get(callbackData), update);
+        switch (callbackData) {
+            case "newTU" -> {
+                sendMessage(chatId, PtoTelegramBotContent.NEW_TU, null);
+                sendTextMessage("Что хотите сделать: ", modes.get("newTU"), update);
+            }
+            case "pto" -> {
+                sendMessage(chatId, PtoTelegramBotContent.PTO, null);
+                sendTextMessage("Что хотите сделать: ", modes.get("pto"), update);
+            }
+            case "oto" -> {
+                sendMessage(chatId, PtoTelegramBotContent.OTO, null);
+                sendTextMessage("Что хотите сделать: ", modes.get("oto"), update);
+            }
+            // Обработка выбора для счетчика и концентратора
+            case "ptoIIK" -> {
+                sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.", null);
+                userStates.put(chatId, "WAITING_FOR_PTOIIK_PHOTO");
+            }
+            case "ptoIVKE" -> {
+                sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.", null);
+                userStates.put(chatId, "WAITING_FOR_PTOIVKE_PHOTO");
+            }
+            // Подтверждение считанного штрих-кода
+            case "CONFIRM_BARCODE_YES" -> {
+                PendingPhoto pending = pendingPhotos.get(chatId);
+                if (pending != null) {
+                    // Сохраняем фото с уже подтверждённым штрих-кодом
+                    savePhotoWithBarcode(chatId, pending);
+                } else {
+                    sendMessage(chatId, "Нет ожидающих фото для подтверждения.", null);
+                }
+            }
+            case "CONFIRM_BARCODE_NO" -> {
+                // Устанавливаем состояние, что ожидается корректировка штрих-кода
+                sendMessage(chatId, "Введите правильный штрих-код:", null);
+                // Для этого можно, например, записать состояние в userStates:
+                userStates.put(chatId, "WAITING_FOR_CORRECT_BARCODE");
+            }
+            default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
         }
     }
+
+
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
 //        String welcomeMessage = String.format("Приветствую тебя, пользователь %s, Что будем делать?", firstName);
@@ -122,6 +268,93 @@ public class TBot extends TelegramLongPollingBot {
                 "ОТО", "oto",
                 "Монтаж / демонтаж ТУ", "newTU"
         ), update);
+    }
+
+    private void savePhotoWithBarcode(long chatId, PendingPhoto pending) {
+        try {
+            String baseDir = "photos" + java.io.File.separator + chatId;
+            Path userDir = Paths.get(baseDir);
+            if (!Files.exists(userDir)) {
+                Files.createDirectories(userDir);
+            }
+
+            String prefix;
+            if ("counter".equals(pending.getType())) {
+                prefix = "counter_";
+            } else if ("concentrator".equals(pending.getType())) {
+                prefix = "concentrator_";
+            } else {
+                prefix = "unknown_";
+            }
+
+            String newFileName = prefix + pending.getScannedBarcode() + ".jpg";
+            Path destination = userDir.resolve(newFileName);
+
+            Files.move(pending.getTempFilePath(), destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            sendMessage(chatId, "Фото получено и сохранено!\nШтрихкод: " + pending.getScannedBarcode() + "\nПуть: " + destination.toString(), null);
+            // Удаляем данные из pendingPhotos
+            pendingPhotos.remove(chatId);
+            // Сбрасываем состояние ожидания, если оно ещё осталось
+            userStates.remove(chatId);
+        } catch (Exception e) {
+            log.error("Ошибка сохранения фото: " + e.getMessage());
+            sendMessage(chatId, "Произошла ошибка при сохранении фото.", null);
+        }
+    }
+
+    /**
+     * Метод декодирования штрихкода с изображения с помощью ZXing.
+     * @param image BufferedImage, считанное из файла.
+     * @return текст штрихкода или null, если декодирование не удалось.
+     */
+    private String decodeBarcode(BufferedImage image) {
+        try {
+            LuminanceSource source = new BufferedImageLuminanceSource(image);
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+            Result result = new MultiFormatReader().decode(bitmap);
+            return result.getText();
+        } catch (NotFoundException e) {
+            log.warn("Штрихкод не найден при первой попытке: {}", e.getMessage());
+            // Попытка декодирования при повороте изображения
+            for (int angle = 90; angle < 360; angle += 90) {
+                BufferedImage rotated = rotateImage(image, angle);
+                try {
+                    LuminanceSource rotatedSource = new BufferedImageLuminanceSource(rotated);
+                    BinaryBitmap rotatedBitmap = new BinaryBitmap(new HybridBinarizer(rotatedSource));
+                    Result rotatedResult = new MultiFormatReader().decode(rotatedBitmap);
+                    return rotatedResult.getText();
+                } catch (NotFoundException ignored) {
+                    // Продолжаем, если штрихкод не найден
+                }
+            }
+            return null;
+        }
+    }
+
+    private BufferedImage rotateImage(BufferedImage src, int angle) {
+        double rads = Math.toRadians(angle);
+        double sin = Math.abs(Math.sin(rads));
+        double cos = Math.abs(Math.cos(rads));
+        int w = src.getWidth();
+        int h = src.getHeight();
+        int newWidth = (int) Math.floor(w * cos + h * sin);
+        int newHeight = (int) Math.floor(h * cos + w * sin);
+
+        BufferedImage rotated = new BufferedImage(newWidth, newHeight, src.getType());
+        Graphics2D g2d = rotated.createGraphics();
+        g2d.translate((newWidth - w) / 2, (newHeight - h) / 2);
+        g2d.rotate(rads, w / 2, h / 2);
+        g2d.drawRenderedImage(src, null);
+        g2d.dispose();
+        return rotated;
+    }
+
+    private BufferedImage convertToGrayscale(BufferedImage src) {
+        BufferedImage gray = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics g = gray.getGraphics();
+        g.drawImage(src, 0, 0, null);
+        g.dispose();
+        return gray;
     }
 
 
