@@ -73,7 +73,6 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
 
-
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
         this.config = config;
@@ -106,6 +105,7 @@ public class TBot extends TelegramLongPollingBot {
             handleCallbackQuery(update);
         }
     }
+
     private void handlePhotoMessage(Update update) {
         long chatId = update.getMessage().getChatId();
 
@@ -145,12 +145,19 @@ public class TBot extends TelegramLongPollingBot {
 
             // Декодируем штрих-код с помощью ZXing
 
-            BufferedImage grayImage = convertToGrayscale(bufferedImage);
-            String barcodeText = decodeBarcode(grayImage);
+            String barcodeText = decodeBarcode(bufferedImage);
+
             if (barcodeText == null) {
-                sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.", null);
-                userStates.remove(chatId);
-                return;
+                BufferedImage grayImage = convertToGrayscale(bufferedImage);
+                String barcodeTextFromGray = decodeBarcode(grayImage);
+                if (barcodeTextFromGray == null) {
+                    sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.\n Пожалуйста введите номер вручную: ", null);
+                    Map<String, String> buttons = Map.of("Закончить загрузку", "LOADING_COMPLETE",
+                            "Ввести номер вручную", "MANUAL_INSERT");
+                    sendTextMessage("Выберите действие: ", buttons, null);
+                    userStates.remove(chatId);
+                    return;
+                }
             }
 
             // Определяем тип фото в зависимости от состояния
@@ -180,7 +187,6 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
@@ -198,6 +204,9 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, "Нет ожидающих фото для коррекции.", null);
             }
             return;
+        }
+        if ("MANUAL_INSERT".equals(userStates.get(chatId))) {
+            String deviceNumber = update.getMessage().getText();
         }
 
         // Обработка остальных текстовых сообщений
@@ -252,10 +261,19 @@ public class TBot extends TelegramLongPollingBot {
                 // Для этого можно, например, записать состояние в userStates:
                 userStates.put(chatId, "WAITING_FOR_CORRECT_BARCODE");
             }
+
+            case "LOADING_COMPLETE" -> {
+                userStates.clear();
+                sendMessage(chatId, "/start", null);
+            }
+            case "MANUAL_INSERT" -> {
+                sendMessage(chatId, "Введите номер счетчика:", null);
+                userStates.put(chatId, "MANUAL_INSERT");
+            }
+
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
         }
     }
-
 
 
     private void handleStartCommand(long chatId, String firstName, Update update) {
@@ -280,9 +298,9 @@ public class TBot extends TelegramLongPollingBot {
 
             String prefix;
             if ("counter".equals(pending.getType())) {
-                prefix = "counter_";
+                prefix = "ИИК_";
             } else if ("concentrator".equals(pending.getType())) {
-                prefix = "concentrator_";
+                prefix = "ИВКЭ_";
             } else {
                 prefix = "unknown_";
             }
@@ -304,6 +322,7 @@ public class TBot extends TelegramLongPollingBot {
 
     /**
      * Метод декодирования штрихкода с изображения с помощью ZXing.
+     *
      * @param image BufferedImage, считанное из файла.
      * @return текст штрихкода или null, если декодирование не удалось.
      */
@@ -316,7 +335,7 @@ public class TBot extends TelegramLongPollingBot {
         } catch (NotFoundException e) {
             log.warn("Штрихкод не найден при первой попытке: {}", e.getMessage());
             // Попытка декодирования при повороте изображения
-            for (int angle = 90; angle < 360; angle += 90) {
+            for (int angle = 90; angle < 360; angle += 30) {
                 BufferedImage rotated = rotateImage(image, angle);
                 try {
                     LuminanceSource rotatedSource = new BufferedImageLuminanceSource(rotated);
@@ -331,6 +350,13 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
+    /**
+     * Метод разворота изображения с помощью.
+     *
+     * @param src   BufferedImage, считанное из файла,
+     * @param angle int, угол поворота изображения
+     *              * @return BufferedImage повернутое на заданный угол исходное изображение
+     */
     private BufferedImage rotateImage(BufferedImage src, int angle) {
         double rads = Math.toRadians(angle);
         double sin = Math.abs(Math.sin(rads));
@@ -349,6 +375,7 @@ public class TBot extends TelegramLongPollingBot {
         return rotated;
     }
 
+    // Преобразование цветного изображение в оттенки серого
     private BufferedImage convertToGrayscale(BufferedImage src) {
         BufferedImage gray = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
         Graphics g = gray.getGraphics();
