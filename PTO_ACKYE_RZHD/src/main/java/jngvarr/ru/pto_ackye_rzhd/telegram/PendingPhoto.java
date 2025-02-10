@@ -14,7 +14,7 @@ public class PendingPhoto {
     private final String type; // "counter" или "concentrator"
     private final Path tempFilePath;
     private String scannedBarcode;
-//    private String indications;
+    private String meterReading;
 }
 //    public PendingPhoto(String type, Path tempFilePath, String scannedBarcode) {
 //        this.type = type;

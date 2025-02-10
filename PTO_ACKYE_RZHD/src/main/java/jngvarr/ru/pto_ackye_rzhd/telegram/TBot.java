@@ -27,12 +27,14 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,7 @@ public class TBot extends TelegramLongPollingBot {
         WAITING_FOR_PTOIVKE_PHOTO,
         WAITING_FOR_CORRECT_BARCODE,
         MANUAL_INSERT,
-        NONE
+        WAITING_FOR_METER_READING, NONE
     }
 
 
@@ -121,6 +123,9 @@ public class TBot extends TelegramLongPollingBot {
     private void handlePhotoMessage(Update update) {
         long chatId = update.getMessage().getChatId();
 
+        // Проверяем, есть ли подпись к фото
+        String manualReading = update.getMessage().getCaption();
+
         // Если фото не запрашивалось
         if (!userStates.containsKey(chatId)) {
             sendMessage(chatId, "Фото не запрашивалось. Если хотите начать, нажмите /start", null);
@@ -141,66 +146,73 @@ public class TBot extends TelegramLongPollingBot {
             String filePath = telegramFile.getFilePath();
             String fileUrl = "https://api.telegram.org/file/bot" + config.getBotToken() + "/" + filePath;
 
-            // Сохраняем файл во временное хранилище
-            java.io.File tempFile = java.io.File.createTempFile("photo_" + chatId + "_", ".jpg");
+//            // Сохраняем файл во временное хранилище
+//            File tempFile = File.createTempFile("photo_" + chatId + "_", ".jpg");
+//            try (InputStream in = new URL(fileUrl).openStream()) {
+//                Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+//            }
+            // 2. Сохраняем фото в папку пользователя
+            Path userDir = Paths.get("photos", String.valueOf(chatId));
+            if (!Files.exists(userDir)) {
+                Files.createDirectories(userDir);
+            }
+            Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
             try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(in, tempFilePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // Считываем изображение
-            BufferedImage bufferedImage = ImageIO.read(tempFile);
+            // 3. Читаем изображение
+            BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
             if (bufferedImage == null) {
                 sendMessage(chatId, "Не удалось обработать изображение.", null);
-                userStates.remove(chatId);
                 return;
             }
 
             // Декодируем штрих-код с помощью ZXing
+// 4. Декодируем штрихкод
             String barcodeText = decodeBarcode(bufferedImage);
-
             if (barcodeText == null) {
-                BufferedImage scaledImage = resizeImage(bufferedImage, bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2);
-                barcodeText = decodeBarcode(scaledImage);
+                barcodeText = decodeBarcode(resizeImage(bufferedImage, bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2));
             }
             if (barcodeText == null) {
-                BufferedImage grayImage = convertToGrayscale(bufferedImage);
-                barcodeText = decodeBarcode(grayImage);
+                barcodeText = decodeBarcode(convertToGrayscale(bufferedImage));
             }
+
+            // 5. Определяем тип фото (счётчик или концентратор)
+            String type = (currentState == UserState.WAITING_FOR_PTOIIK_PHOTO) ? "counter" : "concentrator";
+
+            // 6. Создаём объект для хранения фото
+            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText, null);
+
+            // 7. Проверяем, введены ли показания в подписи
+            if (manualReading != null && !manualReading.isBlank()) {
+                pendingPhoto.setMeterReading(manualReading.trim());
+            }
+
+            pendingPhotos.put(chatId, pendingPhoto);
+
+            // 8. Если штрихкод найден и есть показания – сразу сохраняем
+            if (barcodeText != null && pendingPhoto.getMeterReading() != null) {
+                savePhotoWithBarcode(chatId, pendingPhoto);
+                return;
+            }
+
+            // 9. Если штрихкод не найден, просим ввести вручную
             if (barcodeText == null) {
-                sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.\nПожалуйста, введите номер вручную: ", null);
-
-                Map<String, String> buttons = Map.of(
-                        "Закончить загрузку", "LOADING_COMPLETE",
-                        "Ввести номер вручную", "MANUAL_INSERT"
-                );
-
-                sendTextMessage("Выберите действие: ", buttons, update);
-                return; // Удалили `userStates.put(chatId, UserState.MANUAL_INSERT);`
+                sendMessage(chatId, "Штрихкод не найден. Введите номер вручную:", null);
+                userStates.put(chatId, UserState.MANUAL_INSERT);
+                return;
             }
 
-            // Определяем тип фото в зависимости от состояния
-            String type;
-            if (UserState.WAITING_FOR_PTOIIK_PHOTO.equals(currentState)) {
-                type = "counter"; // для счетчика
-            } else if (UserState.WAITING_FOR_PTOIVKE_PHOTO.equals(currentState)) {
-                type = "concentrator"; // для концентратора
-            } else {
-                type = "unknown";
+            // 10. Если нет показаний, просим ввести вручную
+            if (pendingPhoto.getMeterReading() == null) {
+                sendMessage(chatId, "Введите показания счётчика:", null);
+                userStates.put(chatId, UserState.WAITING_FOR_METER_READING);
             }
 
-            // Сохраняем данные во временной структуре для последующей обработки
-            pendingPhotos.put(chatId, new PendingPhoto(type, tempFile.toPath(), barcodeText));
-
-            // Запрашиваем подтверждение: отправляем сообщение с inline-кнопками
-            Map<String, String> buttons = Map.of(
-                    "Да", "CONFIRM_BARCODE_YES",
-                    "Нет", "CONFIRM_BARCODE_NO"
-            );
-            sendTextMessage("Считанный штрих-код: " + barcodeText + "\nЕсли он верный, нажмите «Да», иначе – «Нет» и введите корректное значение.", buttons, update);
         } catch (Exception e) {
             log.error("Ошибка обработки фото: " + e.getMessage());
             sendMessage(chatId, "Произошла ошибка при обработке фото.", null);
-            userStates.remove(chatId);
         }
     }
 
@@ -223,8 +235,19 @@ public class TBot extends TelegramLongPollingBot {
             }
             return;
         }
-        if (UserState.MANUAL_INSERT.equals(userStates.get(chatId))) {
-            String deviceNumber = update.getMessage().getText();
+        if (userStates.get(chatId) == UserState.MANUAL_INSERT) {
+            String deviceNumber = update.getMessage().getText().trim();
+
+            PendingPhoto pending = pendingPhotos.get(chatId);
+            if (pending != null) {
+                pending.setScannedBarcode(deviceNumber);
+                savePhotoWithBarcode(chatId, pending);
+                sendMessage(chatId, "Номер успешно сохранён!", null);
+                userStates.remove(chatId);
+            } else {
+                sendMessage(chatId, "Ошибка: нет ожидающих фото для привязки номера.", null);
+            }
+            return;
         }
 
         // Обработка остальных текстовых сообщений
