@@ -54,6 +54,15 @@ public class TBot extends TelegramLongPollingBot {
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
 
+    public enum UserState {
+        WAITING_FOR_PTOIIK_PHOTO,
+        WAITING_FOR_PTOIVKE_PHOTO,
+        WAITING_FOR_CORRECT_BARCODE,
+        MANUAL_INSERT,
+        NONE
+    }
+
+
     private Map<String, Map<String, String>> modes = Map.of(
             "pto", Map.of(
                     "Проведение ПТО ИИК", "ptoIIK",
@@ -67,8 +76,11 @@ public class TBot extends TelegramLongPollingBot {
                     "Монтаж концентратора", "dcMount",
                     "Демонтаж концентратора", "dcRemove"));
 
-    // Карта для хранения состояния диалога по chatId
-    private Map<Long, String> userStates = new HashMap<>();
+//    // Карта для хранения состояния диалога по chatId
+//    private Map<Long, String> userStates = new HashMap<>();
+
+    private Map<Long, UserState> userStates = new HashMap<>();
+
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
@@ -115,7 +127,7 @@ public class TBot extends TelegramLongPollingBot {
             return;
         }
 
-        String currentState = userStates.get(chatId);
+        UserState currentState = userStates.get(chatId);
         // Получаем самое большое фото
         var photos = update.getMessage().getPhoto();
         var photo = photos.get(photos.size() - 1);
@@ -144,27 +156,33 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             // Декодируем штрих-код с помощью ZXing
-
             String barcodeText = decodeBarcode(bufferedImage);
 
             if (barcodeText == null) {
+                BufferedImage scaledImage = resizeImage(bufferedImage, bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2);
+                barcodeText = decodeBarcode(scaledImage);
+            }
+            if (barcodeText == null) {
                 BufferedImage grayImage = convertToGrayscale(bufferedImage);
-                String barcodeTextFromGray = decodeBarcode(grayImage);
-                if (barcodeTextFromGray == null) {
-                    sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.\n Пожалуйста введите номер вручную: ", null);
-                    Map<String, String> buttons = Map.of("Закончить загрузку", "LOADING_COMPLETE",
-                            "Ввести номер вручную", "MANUAL_INSERT");
-                    sendTextMessage("Выберите действие: ", buttons, null);
-                    userStates.remove(chatId);
-                    return;
-                }
+                barcodeText = decodeBarcode(grayImage);
+            }
+            if (barcodeText == null) {
+                sendMessage(chatId, "Штрихкод не найден или не удалось его прочитать.\nПожалуйста, введите номер вручную: ", null);
+
+                Map<String, String> buttons = Map.of(
+                        "Закончить загрузку", "LOADING_COMPLETE",
+                        "Ввести номер вручную", "MANUAL_INSERT"
+                );
+
+                sendTextMessage("Выберите действие: ", buttons, update);
+                return; // Удалили `userStates.put(chatId, UserState.MANUAL_INSERT);`
             }
 
             // Определяем тип фото в зависимости от состояния
             String type;
-            if ("WAITING_FOR_PTOIIK_PHOTO".equals(currentState)) {
+            if (UserState.WAITING_FOR_PTOIIK_PHOTO.equals(currentState)) {
                 type = "counter"; // для счетчика
-            } else if ("WAITING_FOR_PTOIVKE_PHOTO".equals(currentState)) {
+            } else if (UserState.WAITING_FOR_PTOIVKE_PHOTO.equals(currentState)) {
                 type = "concentrator"; // для концентратора
             } else {
                 type = "unknown";
@@ -192,7 +210,7 @@ public class TBot extends TelegramLongPollingBot {
         long chatId = update.getMessage().getChatId();
 
         // Если бот ожидает корректировки штрих-кода
-        if ("WAITING_FOR_CORRECT_BARCODE".equals(userStates.get(chatId))) {
+        if (UserState.WAITING_FOR_CORRECT_BARCODE.equals(userStates.get(chatId))) {
             PendingPhoto pending = pendingPhotos.get(chatId);
             if (pending != null) {
                 pending.setScannedBarcode(msgText.trim());
@@ -205,7 +223,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             return;
         }
-        if ("MANUAL_INSERT".equals(userStates.get(chatId))) {
+        if (UserState.MANUAL_INSERT.equals(userStates.get(chatId))) {
             String deviceNumber = update.getMessage().getText();
         }
 
@@ -239,11 +257,11 @@ public class TBot extends TelegramLongPollingBot {
             // Обработка выбора для счетчика и концентратора
             case "ptoIIK" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.", null);
-                userStates.put(chatId, "WAITING_FOR_PTOIIK_PHOTO");
+                userStates.put(chatId, UserState.WAITING_FOR_PTOIIK_PHOTO);
             }
             case "ptoIVKE" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.", null);
-                userStates.put(chatId, "WAITING_FOR_PTOIVKE_PHOTO");
+                userStates.put(chatId, UserState.WAITING_FOR_PTOIVKE_PHOTO);
             }
             // Подтверждение считанного штрих-кода
             case "CONFIRM_BARCODE_YES" -> {
@@ -259,7 +277,7 @@ public class TBot extends TelegramLongPollingBot {
                 // Устанавливаем состояние, что ожидается корректировка штрих-кода
                 sendMessage(chatId, "Введите правильный штрих-код:", null);
                 // Для этого можно, например, записать состояние в userStates:
-                userStates.put(chatId, "WAITING_FOR_CORRECT_BARCODE");
+                userStates.put(chatId, UserState.WAITING_FOR_CORRECT_BARCODE);
             }
 
             case "LOADING_COMPLETE" -> {
@@ -268,7 +286,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             case "MANUAL_INSERT" -> {
                 sendMessage(chatId, "Введите номер счетчика:", null);
-                userStates.put(chatId, "MANUAL_INSERT");
+                userStates.put(chatId, UserState.MANUAL_INSERT);
             }
 
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
@@ -286,6 +304,15 @@ public class TBot extends TelegramLongPollingBot {
                 "ОТО", "oto",
                 "Монтаж / демонтаж ТУ", "newTU"
         ), update);
+    }
+
+    private BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
+        BufferedImage resizedImage = new BufferedImage(width, height, originalImage.getType());
+        Graphics2D g2d = resizedImage.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.drawImage(originalImage, 0, 0, width, height, null);
+        g2d.dispose();
+        return resizedImage;
     }
 
     private void savePhotoWithBarcode(long chatId, PendingPhoto pending) {
