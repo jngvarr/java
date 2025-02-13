@@ -4,15 +4,13 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
@@ -29,11 +27,17 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMM = DateTimeFormatter.ofPattern("dd MMMM", new Locale("ru"));
-
-//    private static final String PLAN_OTO_PATH = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
     private static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
-//    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
+    //    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
     private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
+    private static final LocalDate TODAY = LocalDate.now();
+    private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
+    //    private static final String RESERVE_FILE_DATE = TODAY.getMonth().getDisplayName(TextStyle.FULL, new Locale("ru")).toUpperCase() + " " + TODAY.getYear();
+    private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ  РРЭ\\Архив заданий на ОТО\\";
+    private static final int COUNTER_NUMBER_CELL_NUMBER = 13;
+    private static final int IIK_STATUS_CELL_NUMBER = 19;
+    private static final int TASK_CELL_NUMBER = 20;
+    private static final int CONNECTION_DATE_CELL_NUMBER = 22;
 
     private enum DataType {
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
@@ -73,7 +77,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-            EmailSenderMultipleRecipients.main(args);
+//            EmailSenderMultipleRecipients.main(args);
+            createReserveCopy(planOTOWorkbook);
 
 
             logger.info("Data filled successfully!");
@@ -86,7 +91,26 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         logger.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    private static void processFile(File file, Map<DataType, Map<String, String>>   dataMaps) {
+    private static void createReserveCopy(Workbook planOTOWorkbook) {
+        File cloudDir = new File(CLOUD_PATH);
+        if (!cloudDir.exists()) {
+            cloudDir.mkdirs(); // Создаем папку, если её нет
+        }
+        File reserveFile = new File(CLOUD_PATH + "Контроль ПУ РРЭ (Задания на ОТО РРЭ) " + RESERVE_FILE_DATE + ".xlsx");
+
+        if (!reserveFile.exists()) {
+            try (FileOutputStream reserveFileOut = new FileOutputStream(reserveFile)) {
+                planOTOWorkbook.write(reserveFileOut);
+                logger.info("Reserve file saved: " + reserveFile.getName());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to save reserve copy", e);
+            }
+        } else {
+            logger.info("Reserve file already exists: " + reserveFile.getName());
+        }
+    }
+
+    private static void processFile(File file, Map<DataType, Map<String, String>> dataMaps) {
         String fileName = file.getName();
         try {
             if (fileName.startsWith("Контроль поступления данных")) {
@@ -94,7 +118,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             } else if (fileName.startsWith("Состав ИИК")) {
                 dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(11, 8, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
-                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
+                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithMoreData(11, 12, file));
             } else if (fileName.startsWith("Диагностика связи")) {
                 dataMaps.get(DataType.CONNECTION_DIAG).putAll(fillingMapWithData(9, 11, file));
             }
@@ -125,29 +149,67 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         return workMap;
     }
 
+    private static Map<String, String> fillingMapWithMoreData(int meterColumn, int neededDataColumn, File file) {
+        Map<String, String> workMap = new HashMap<>();
+        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                Cell cellKey = row.getCell(meterColumn);
+                Cell cellValue = row.getCell(neededDataColumn);
+                Cell cell2Value = row.getCell(neededDataColumn + 1);
+                if (cellKey != null && cellValue != null) {
+                    String key = getCellStringValue(cellKey);
+                    String value = getCellStringValue(cellValue) + "_" + getCellStringValue(cell2Value);
+                    if (key != null && value != null) {
+                        workMap.put(key.trim(), value);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("Error reading file: " + file.getName(), ex);
+        }
+        return workMap;
+    }
+
     private static void fillIIKData(Sheet worksheet, Map<DataType, Map<String, String>> dataMaps) {
         Row firstRow = worksheet.getRow(0);
         int lastColumnNum = firstRow.getLastCellNum();
         int enabledCount = 0;
-
+        boolean isNormallyTurnedOff = false;
+        boolean hasWrongKey = false;
         for (Row row : worksheet) {
-            Cell counterCell = row.getCell(13);
+            Cell counterCell = row.getCell(COUNTER_NUMBER_CELL_NUMBER);
             String counterNumber = getCellStringValue(counterCell);
             if (counterNumber != null) {
                 String key = counterNumber.trim();
-                if (dataMaps.get(DataType.DATA_CONTROL).containsKey(key)) {
-                    Cell cell = row.createCell(lastColumnNum);
-                    String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
-                    if ("Достоверные".equals(profile)) enabledCount++;
-                    cell.setCellValue(profile);
+                if (dataMaps.get(DataType.IIK_STATUS).containsKey(key)) {
+                    Cell cell = row.createCell(IIK_STATUS_CELL_NUMBER);
+                    Cell connectionDatecell = row.createCell(CONNECTION_DATE_CELL_NUMBER);
+                    String iikStatusData = dataMaps.get(DataType.IIK_STATUS).get(key);
+                    if (!"_".equals(iikStatusData)) {
+                        String[] iikStatusValues = iikStatusData.split("_");
+                        String iikStatus = iikStatusValues[0].trim();
+                        cell.setCellValue(iikStatus);
+                        connectionDatecell.setCellValue(iikStatusValues[1]);
+                        hasWrongKey = iikStatus.equals("Неверный ключ аутентификации");
+                    }
                 }
                 if (dataMaps.get(DataType.NORMALLY_TURNED_OFF).containsKey(key)) {
                     Cell cell = row.createCell(17);
-                    cell.setCellValue(dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(key));
+                    String normallyTurnedOff = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(key);
+                    cell.setCellValue(normallyTurnedOff);
+                    isNormallyTurnedOff = normallyTurnedOff.equals("Да");
                 }
-                if (dataMaps.get(DataType.IIK_STATUS).containsKey(key)) {
-                    Cell cell = row.createCell(19);
-                    cell.setCellValue(dataMaps.get(DataType.IIK_STATUS).get(key));
+                if (dataMaps.get(DataType.DATA_CONTROL).containsKey(key)) {
+                    Cell cell = row.createCell(lastColumnNum);
+                    Cell taskCell = row.createCell(TASK_CELL_NUMBER);
+                    String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
+                    if ("Достоверные".equals(profile)) {
+                        taskCell.setCellValue("");
+                        enabledCount++;
+                    } else if (!isNormallyTurnedOff) taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
+                    if (hasWrongKey) taskCell.setCellValue("Выезд нужен - WrongKey");
+                    cell.setCellValue(profile);
                 }
             }
         }

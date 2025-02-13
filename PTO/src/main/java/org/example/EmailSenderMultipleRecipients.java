@@ -9,22 +9,23 @@ import java.io.File;
 public class EmailSenderMultipleRecipients {
     public static void main(String[] args) {
 
-        final String senderEmail = "jngvarr.jd@yandex.ru";
-        final String senderPassword = "cfbfhdlzejiaiuil"; // Лучше использовать переменные окружения!
+        final String senderEmail = "ooouksts@ooouksts.ru";
+        final String senderPassword = "gixxffqgixhyxbel"; //
+//        final String senderPassword = "cfbfhdlzejiaiuil"; // jngvarr.jd@yandex.ru
         final String smtpHost = "smtp.yandex.ru"; // Или другой SMTP-сервер
         final int smtpPort = 465; // 465 для SSL, 587 для TLS
         final String TODAY = String.valueOf(LocalDate.now());
 
         // Список получателей
         final String toRecipients =
-                "stspopov@mail.ru," +
-                        "bayaskin@mail.ru," +
-                        "sergofan20051@yandex.ru," +
-                        "vov_keks@mail.ru," +
-                        "gritsyna.vg@yandex.ru," +
-                        "ostrekalov@yandex.ru," +
-                        "40xx@inbox.ru," +
-                        "vv@brusenin.ru," +
+//                "stspopov@mail.ru," +
+//                        "bayaskin@mail.ru," +
+//                        "sergofan20051@yandex.ru," +
+//                        "vov_keks@mail.ru," +
+//                        "gritsyna.vg@yandex.ru," +
+//                        "ostrekalov@yandex.ru," +
+//                        "40xx@inbox.ru," +
+//                        "vv@brusenin.ru," +
                         "jngvarr@inbox.ru";
 //        final String ccRecipients = "cc@example.com";
 //        final String bccRecipients = "bcc@example.com";
