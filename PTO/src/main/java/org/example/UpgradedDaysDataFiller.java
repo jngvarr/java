@@ -36,6 +36,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ  РРЭ\\Архив заданий на ОТО\\";
     private static final int COUNTER_NUMBER_CELL_NUMBER = 13;
     private static final int IIK_STATUS_CELL_NUMBER = 19;
+    private static final int NORMALLY_TURNED_OFF_CELL_NUMBER = 17;
     private static final int TASK_CELL_NUMBER = 20;
     private static final int CONNECTION_DATE_CELL_NUMBER = 22;
 
@@ -77,7 +78,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-//            EmailSenderMultipleRecipients.main(args);
+            EmailSenderMultipleRecipients.main(args);
             createReserveCopy(planOTOWorkbook);
 
 
@@ -118,7 +119,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             } else if (fileName.startsWith("Состав ИИК")) {
                 dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(11, 8, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
-                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithMoreData(11, 12, file));
+                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
             } else if (fileName.startsWith("Диагностика связи")) {
                 dataMaps.get(DataType.CONNECTION_DIAG).putAll(fillingMapWithData(9, 11, file));
             }
@@ -132,37 +133,16 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         Map<String, String> workMap = new HashMap<>();
         try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
             Sheet sheet = workbook.getSheetAt(0);
+            boolean isStatusPUFile = file.getName().contains("Статусы ПУ");
             for (Row row : sheet) {
-                Cell cellKey = row.getCell(meterColumn);
-                Cell cellValue = row.getCell(neededDataColumn);
-                if (cellKey != null && cellValue != null) {
-                    String key = getCellStringValue(cellKey);
-                    String value = getCellStringValue(cellValue);
-                    if (key != null && value != null) {
-                        workMap.put(key.trim(), value);
-                    }
+                String key = getCellStringValue(row.getCell(meterColumn));
+                String value = getCellStringValue(row.getCell(neededDataColumn));
+                if (isStatusPUFile) {
+                    Cell statusCell = row.getCell(neededDataColumn + 1);
+                    value += "_" + (statusCell != null ? getCellStringValue(statusCell) : "");
                 }
-            }
-        } catch (IOException ex) {
-            logger.error("Error reading file: " + file.getName(), ex);
-        }
-        return workMap;
-    }
-
-    private static Map<String, String> fillingMapWithMoreData(int meterColumn, int neededDataColumn, File file) {
-        Map<String, String> workMap = new HashMap<>();
-        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
-            Sheet sheet = workbook.getSheetAt(0);
-            for (Row row : sheet) {
-                Cell cellKey = row.getCell(meterColumn);
-                Cell cellValue = row.getCell(neededDataColumn);
-                Cell cell2Value = row.getCell(neededDataColumn + 1);
-                if (cellKey != null && cellValue != null) {
-                    String key = getCellStringValue(cellKey);
-                    String value = getCellStringValue(cellValue) + "_" + getCellStringValue(cell2Value);
-                    if (key != null && value != null) {
-                        workMap.put(key.trim(), value);
-                    }
+                if (key != null && value != null) {
+                    workMap.put(key.trim(), value);
                 }
             }
         } catch (IOException ex) {
@@ -175,42 +155,59 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         Row firstRow = worksheet.getRow(0);
         int lastColumnNum = firstRow.getLastCellNum();
         int enabledCount = 0;
-        boolean isNormallyTurnedOff = false;
-        boolean hasWrongKey = false;
+        CellStyle commonCS = createCommonCellStyle(worksheet);
+        CellStyle dateCS = createDateCellStyle(worksheet.getWorkbook());
+
+
         for (Row row : worksheet) {
-            Cell counterCell = row.getCell(COUNTER_NUMBER_CELL_NUMBER);
-            String counterNumber = getCellStringValue(counterCell);
-            if (counterNumber != null) {
-                String key = counterNumber.trim();
-                if (dataMaps.get(DataType.IIK_STATUS).containsKey(key)) {
-                    Cell cell = row.createCell(IIK_STATUS_CELL_NUMBER);
-                    Cell connectionDatecell = row.createCell(CONNECTION_DATE_CELL_NUMBER);
-                    String iikStatusData = dataMaps.get(DataType.IIK_STATUS).get(key);
-                    if (!"_".equals(iikStatusData)) {
-                        String[] iikStatusValues = iikStatusData.split("_");
-                        String iikStatus = iikStatusValues[0].trim();
-                        cell.setCellValue(iikStatus);
+            String key = getCellStringValue(row.getCell(COUNTER_NUMBER_CELL_NUMBER));
+            if (key == null) continue;
+            key = key.trim();
+
+            boolean isNormallyTurnedOff = false;
+            boolean hasWrongKey = false;
+
+            if (dataMaps.get(DataType.IIK_STATUS).containsKey(key)) {
+                Cell cell = row.createCell(IIK_STATUS_CELL_NUMBER);
+                Cell connectionDatecell = row.createCell(CONNECTION_DATE_CELL_NUMBER);
+                String iikStatusData = dataMaps.get(DataType.IIK_STATUS).get(key);
+                if (!"_".equals(iikStatusData)) {
+                    String[] iikStatusValues = iikStatusData.split("_");
+                    String iikStatus = iikStatusValues[0].trim();
+                    cell.setCellValue(iikStatus);
+                    cell.setCellStyle(commonCS);
+                    connectionDatecell.setCellValue(iikStatusValues[1]);
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                    try {
+                        connectionDatecell.setCellValue(sdf.parse(iikStatusValues[1]));
+                    } catch (ParseException e) {
                         connectionDatecell.setCellValue(iikStatusValues[1]);
-                        hasWrongKey = iikStatus.equals("Неверный ключ аутентификации");
                     }
+                    connectionDatecell.setCellStyle(dateCS); // Устанавливаем стиль даты
+
+                    connectionDatecell.setCellStyle(dateCS);
+                    hasWrongKey = iikStatus.equals("Неверный ключ аутентификации");
                 }
-                if (dataMaps.get(DataType.NORMALLY_TURNED_OFF).containsKey(key)) {
-                    Cell cell = row.createCell(17);
-                    String normallyTurnedOff = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(key);
-                    cell.setCellValue(normallyTurnedOff);
-                    isNormallyTurnedOff = normallyTurnedOff.equals("Да");
-                }
-                if (dataMaps.get(DataType.DATA_CONTROL).containsKey(key)) {
-                    Cell cell = row.createCell(lastColumnNum);
-                    Cell taskCell = row.createCell(TASK_CELL_NUMBER);
-                    String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
-                    if ("Достоверные".equals(profile)) {
-                        taskCell.setCellValue("");
-                        enabledCount++;
-                    } else if (!isNormallyTurnedOff) taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
-                    if (hasWrongKey) taskCell.setCellValue("Выезд нужен - WrongKey");
-                    cell.setCellValue(profile);
-                }
+            }
+            if (dataMaps.get(DataType.NORMALLY_TURNED_OFF).containsKey(key)) {
+                Cell cell = row.createCell(NORMALLY_TURNED_OFF_CELL_NUMBER);
+                String normallyTurnedOff = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(key);
+                cell.setCellValue(normallyTurnedOff);
+                cell.setCellStyle(commonCS);
+                isNormallyTurnedOff = normallyTurnedOff.equals("Да");
+            }
+            if (dataMaps.get(DataType.DATA_CONTROL).containsKey(key)) {
+                Cell cell = row.createCell(lastColumnNum);
+                Cell taskCell = row.createCell(TASK_CELL_NUMBER);
+                String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
+                if ("Достоверные".equals(profile)) {
+                    taskCell.setCellValue("-");
+                    enabledCount++;
+                } else if (!isNormallyTurnedOff) taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
+                if (hasWrongKey) taskCell.setCellValue("Выезд нужен - WrongKey");
+                cell.setCellValue(profile);
+                taskCell.setCellStyle(commonCS);
             }
         }
         setTopRowProperties(firstRow, lastColumnNum, enabledCount);
@@ -292,6 +289,15 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         }
     }
 
+    private static CellStyle createDateCellStyle(Workbook resultWorkbook) {
+        CellStyle dateCellStyle = resultWorkbook.createCellStyle();
+        DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
+        dateCellStyle.setDataFormat(dateFormat.getFormat("dd.MM.YYYY"));
+        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
+        dateCellStyle.setBorderBottom(BorderStyle.THIN);
+        dateCellStyle.setFont(createCellFontStyle(resultWorkbook, "Calibri", (short) 10, false));
+        return dateCellStyle;
+    }
 
     private static String getCellStringValue(Cell cell) {
         if (cell != null) {
@@ -312,6 +318,27 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             }
         }
         return null;
+    }
+
+
+    static CellStyle createCommonCellStyle(Sheet resultSheet) {
+        CellStyle simpleCellStyle = resultSheet.getWorkbook().createCellStyle();
+        Font font = createCellFontStyle(resultSheet.getWorkbook(), "Arial", (short) 10, false);
+
+        simpleCellStyle.setBorderBottom(BorderStyle.THIN);
+        simpleCellStyle.setBorderLeft(BorderStyle.THIN);
+        simpleCellStyle.setBorderRight(BorderStyle.THIN);
+        simpleCellStyle.setBorderTop(BorderStyle.THIN);
+        simpleCellStyle.setFont(font);
+        return simpleCellStyle;
+    }
+
+    private static Font createCellFontStyle(Workbook workbook, String fontName, short fontSize, boolean isBold) {
+        Font font = workbook.createFont();
+        font.setFontName(fontName);
+        font.setFontHeightInPoints(fontSize);
+        font.setBold(isBold);
+        return font;
     }
 }
 
