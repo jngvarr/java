@@ -33,7 +33,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final LocalDate TODAY = LocalDate.now();
     private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
     //    private static final String RESERVE_FILE_DATE = TODAY.getMonth().getDisplayName(TextStyle.FULL, new Locale("ru")).toUpperCase() + " " + TODAY.getYear();
-    private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ  РРЭ\\Архив заданий на ОТО\\";
+    private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ РРЭ\\Архив заданий на ОТО\\";
     private static final int COUNTER_NUMBER_CELL_NUMBER = 13;
     private static final int IIK_STATUS_CELL_NUMBER = 19;
     private static final int NORMALLY_TURNED_OFF_CELL_NUMBER = 17;

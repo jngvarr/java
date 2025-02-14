@@ -32,7 +32,7 @@ public class EmailSenderMultipleRecipients {
 //        final String bccRecipients = "bcc@example.com";
 
         final String subject = "Контроль ПУ РРЭ (Задания на ОТО РРЭ) за " + TODAY;
-        final String bodyText = "Добрый день! Во вложении отчет за " + TODAY;
+        final String bodyText = "Добрый день! Во вложении файл за " + TODAY;
 
         final String filePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx"; // Файл для вложения
 

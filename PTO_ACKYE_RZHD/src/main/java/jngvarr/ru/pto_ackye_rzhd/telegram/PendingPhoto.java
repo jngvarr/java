@@ -1,4 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,13 @@ public class PendingPhoto {
     private final Path tempFilePath;
     private String scannedBarcode;
     private String meterReading;
+
+    public PendingPhoto(String type, Path tempFilePath, String scannedBarcode) {
+        this.type = type;
+        this.tempFilePath = tempFilePath;
+        this.scannedBarcode = scannedBarcode;
+    }
 }
-//    public PendingPhoto(String type, Path tempFilePath, String scannedBarcode) {
-//        this.type = type;
-//        this.tempFilePath = tempFilePath;
-//        this.scannedBarcode = scannedBarcode;
-//    }
 //
 ////    public String getType() {
 ////        return type;

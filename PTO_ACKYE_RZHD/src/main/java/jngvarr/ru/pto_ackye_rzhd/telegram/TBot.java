@@ -35,11 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
+import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.PHOTO_PATH;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 
@@ -67,8 +68,8 @@ public class TBot extends TelegramLongPollingBot {
 
     private Map<String, Map<String, String>> modes = Map.of(
             "pto", Map.of(
-                    "Проведение ПТО ИИК", "ptoIIK",
-                    "Проведение ПТО ИВКЭ", "ptoIVKE"),
+                    "Добавление фото счетчика", "ptoIIK",
+                    "Добавление фото ИВКЭ", "ptoIVKE"),
             "oto", Map.of(
                     "Проведение ОТО ИИК", "otoIIK",
                     "Проведение ОТО ИВКЭ", "otoIVKE"),
@@ -182,7 +183,7 @@ public class TBot extends TelegramLongPollingBot {
             String type = (currentState == UserState.WAITING_FOR_PTOIIK_PHOTO) ? "counter" : "concentrator";
 
             // 6. Создаём объект для хранения фото
-            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText, null);
+            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
 
             // 7. Проверяем, введены ли показания в подписи
             if (manualReading != null && !manualReading.isBlank()) {
@@ -340,30 +341,30 @@ public class TBot extends TelegramLongPollingBot {
 
     private void savePhotoWithBarcode(long chatId, PendingPhoto pending) {
         try {
-            String baseDir = "photos" + java.io.File.separator + chatId;
+            String baseDir = PHOTO_PATH + java.io.File.separator + chatId;
             Path userDir = Paths.get(baseDir);
             if (!Files.exists(userDir)) {
                 Files.createDirectories(userDir);
             }
 
-            String prefix;
-            if ("counter".equals(pending.getType())) {
-                prefix = "ИИК_";
-            } else if ("concentrator".equals(pending.getType())) {
-                prefix = "ИВКЭ_";
-            } else {
-                prefix = "unknown_";
-            }
+            String prefix = switch (pending.getType()) {
+                case "counter" -> "ИИК_";
+                case "concentrator" -> "ИВКЭ_";
+                default -> "unknown_";
+            };
 
-            String newFileName = prefix + pending.getScannedBarcode() + ".jpg";
+            String barcode = (pending.getScannedBarcode() != null) ? pending.getScannedBarcode() : "unknown";
+            String reading = (pending.getMeterReading() != null) ? "_" + pending.getMeterReading() : "";
+            String newFileName = prefix + barcode + reading + ".jpg";
             Path destination = userDir.resolve(newFileName);
 
+
             Files.move(pending.getTempFilePath(), destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            sendMessage(chatId, "Фото получено и сохранено!\nШтрихкод: " + pending.getScannedBarcode() + "\nПуть: " + destination.toString(), null);
-            // Удаляем данные из pendingPhotos
+            sendMessage(chatId, "Фото сохранено!\nФайл: " + newFileName, null);
+
             pendingPhotos.remove(chatId);
-            // Сбрасываем состояние ожидания, если оно ещё осталось
             userStates.remove(chatId);
+
         } catch (Exception e) {
             log.error("Ошибка сохранения фото: " + e.getMessage());
             sendMessage(chatId, "Произошла ошибка при сохранении фото.", null);
