@@ -202,7 +202,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 Cell taskCell = row.createCell(TASK_CELL_NUMBER);
                 String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
                 if ("Достоверные".equals(profile)) {
-                    taskCell.setCellValue("-");
+                    taskCell.setCellValue("");
                     enabledCount++;
                 } else if (!isNormallyTurnedOff) taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
                 if (hasWrongKey) taskCell.setCellValue("Выезд нужен - WrongKey");

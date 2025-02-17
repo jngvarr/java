@@ -13,7 +13,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -27,16 +26,12 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
@@ -58,8 +53,8 @@ public class TBot extends TelegramLongPollingBot {
     private List<Message> sendMessages = new ArrayList<>();
 
     public enum UserState {
-        WAITING_FOR_PTOIIK_PHOTO,
-        WAITING_FOR_PTOIVKE_PHOTO,
+        WAITING_FOR_METER_PHOTO,
+        WAITING_FOR_DC_PHOTO,
         WAITING_FOR_CORRECT_BARCODE,
         MANUAL_INSERT,
         WAITING_FOR_METER_READING, NONE
@@ -180,7 +175,7 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             // 5. Определяем тип фото (счётчик или концентратор)
-            String type = (currentState == UserState.WAITING_FOR_PTOIIK_PHOTO) ? "counter" : "concentrator";
+            String type = (currentState == UserState.WAITING_FOR_METER_PHOTO) ? "counter" : "concentrator";
 
             // 6. Создаём объект для хранения фото
             PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
@@ -281,11 +276,11 @@ public class TBot extends TelegramLongPollingBot {
             // Обработка выбора для счетчика и концентратора
             case "ptoIIK" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.", null);
-                userStates.put(chatId, UserState.WAITING_FOR_PTOIIK_PHOTO);
+                userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO);
             }
             case "ptoIVKE" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.", null);
-                userStates.put(chatId, UserState.WAITING_FOR_PTOIVKE_PHOTO);
+                userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
             }
             // Подтверждение считанного штрих-кода
             case "CONFIRM_BARCODE_YES" -> {
