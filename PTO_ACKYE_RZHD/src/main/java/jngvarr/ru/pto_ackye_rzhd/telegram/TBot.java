@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -92,12 +93,13 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
     public enum OtoIIK {
-        WK_DROP
+        WK_DROP,
+        METER_CHANGE
     }
 
     private int attempt = 0;
     private Map<String, String> otoIIKButtons = Map.of(
-            "Сброшена ошибка ключа (WK)", "WKDrop",
+            "Сброшена ошибка ключа (WK)", "wkDrop",
             "Замена счетчика", "meterChange",
             "Замена трансформаторов тока", "ttChange",
             "Восстановление питания ТУ", "powerSupplyRestoring",
@@ -110,6 +112,7 @@ public class TBot extends TelegramLongPollingBot {
             "Другие работы", "otherDC");
 
     private Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
+    private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
 
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
@@ -254,9 +257,17 @@ public class TBot extends TelegramLongPollingBot {
             String deviceNumber = update.getMessage().getText().trim();
             otoIIKLog.put(deviceNumber, "WK");
             log.info("ПУ № {}, попытка №: {}", deviceNumber, ++attempt);
-            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", Map.of("Закончить ввод", "LOADING_COMPLETE"), chatId );
+            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId);
             return;
         }
+
+//        if (otoIIKTypes.get(chatId) == OtoIIK.METER_CHANGE) {
+//            String deviceNumber = update.getMessage().getText().trim();
+//            otoIIKLog.put(deviceNumber, "WK");
+//            log.info("ПУ № {}, попытка №: {}", deviceNumber, ++attempt);
+//            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId);
+//            return;
+//        }
 
         // Обработка остальных текстовых сообщений
         switch (msgText) {
@@ -274,16 +285,13 @@ public class TBot extends TelegramLongPollingBot {
 
         switch (callbackData) {
             case "newTU" -> {
-                sendMessage(chatId, PtoTelegramBotContent.NEW_TU, null);
-                sendTextMessage("Выберити выд работ: ", modes.get("newTU"), chatId);
+                sendTextMessage(NEW_TU, modes.get("newTU"), chatId);
             }
             case "pto" -> {
-                sendMessage(chatId, PtoTelegramBotContent.PTO, null);
-                sendTextMessage("Выберити выд работ: ", modes.get("pto"), chatId);
+                sendTextMessage(PTO, modes.get("pto"), chatId);
             }
             case "oto" -> {
-                sendMessage(chatId, PtoTelegramBotContent.OTO, null);
-                sendTextMessage("Выберити выд работ: ", modes.get("oto"), chatId);
+                sendTextMessage(OTO, modes.get("oto"), chatId);
             }
             // Обработка выбора для счетчика и концентратора
             case "ptoIIK" -> {
@@ -307,9 +315,14 @@ public class TBot extends TelegramLongPollingBot {
                 operationLogFilling(otoIIKLog, true);
             }
 
-            case "WKDrop" -> {
+            case "wkDrop" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
                 otoIIKTypes.put(chatId, OtoIIK.WK_DROP);
+            }
+            case "meterChange" -> {
+                sendMessage(chatId, "Прикрепите фото демонтируемого прибора учета: ");
+                otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
+                userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
             }
 
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
@@ -354,9 +367,6 @@ public class TBot extends TelegramLongPollingBot {
             };
 
 
-            Map<String, String> saveButtons = Map.of("Завершить загрузку фото", "LOADING_COMPLETE",
-                    "Загрузить следующую фотографию", "counter".equals(pendingPhotoType) ? "ptoIIK" : "ptoIVKE");
-
             String barcode = (pending.getScannedBarcode() != null) ? pending.getScannedBarcode() : "unknown";
             String reading = (pending.getMeterReading() != null) ? "_" + pending.getMeterReading() : "";
             String newFileName = formattedCurrentDate + "_" + prefix + barcode + reading + ".jpg";
@@ -368,7 +378,8 @@ public class TBot extends TelegramLongPollingBot {
 
             pendingPhotos.remove(chatId);
 
-            sendTextMessage("Выбирете действие: ", saveButtons, chatId);
+            sendTextMessage("Заргрузите следующее фото или закончите загрузку.", CompleteButton, chatId);
+//            sendTextMessage("Выбирете действие: ", CompleteButton, chatId);
 //            userStates.remove(chatId);
 
         } catch (Exception e) {
@@ -552,10 +563,11 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void operationLogFilling(Map<String, String> opLog, boolean isIikLog) {
+        if (opLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
-             FileOutputStream fileOut = new FileOutputStream(PLAN_OTO_PATH)) {
-            int lastRowNumber = operationLog.getSheetAt(1).getLastRowNum();
+             FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH)) {
+            int lastRowNumber = operationLog.getSheetAt(0).getLastRowNum();
             Sheet workSheet = isIikLog ? planOTOWorkbook.getSheet("ИИК") : planOTOWorkbook.getSheet("ИВКЭ");
             int meterNumberColumnIndex = findColumnIndex(workSheet, "Номер счетчика");
             int lastColumnNumber = findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
@@ -563,13 +575,13 @@ public class TBot extends TelegramLongPollingBot {
 //            int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
 
             CellStyle commonCellStyle = createCommonCellStyle(operationLog);
-            CellStyle dateCellStyle = createDateCellStyle(operationLog);
-
+            CellStyle dateCellStyle = createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
+            int addRow = 0;
             for (Row row : workSheet) {
                 String meterNumber = getCellStringValue(row.getCell(meterNumberColumnIndex));
                 String logData = opLog.getOrDefault(meterNumber, "");
                 if (!logData.isEmpty()) {
-                    Row newRow = operationLog.getSheetAt(1).createRow(lastRowNumber);
+                    Row newRow = operationLog.getSheet("ОЖ").createRow(lastRowNumber + ++addRow);
                     copyRow(row, newRow, lastColumnNumber, commonCellStyle, dateCellStyle);
                     addOtoData(logData, newRow);
 //                    setRowStyle(commonCellStyle, dateCellStyle);
@@ -585,19 +597,36 @@ public class TBot extends TelegramLongPollingBot {
     private void addOtoData(String logData, Row newRow) {
         switch (logData) {
             case "WK" -> {
-                newRow.getCell(16).setCellValue(formattedCurrentDate);
+                Cell date = newRow.getCell(16);
+                setDateCellStyle(date);
                 newRow.getCell(17).setCellValue("Нет связи со счетчиком");
                 newRow.getCell(18).setCellValue("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)");
-                newRow.getCell(19).setCellValue("");
-                newRow.getCell(20).setCellValue("Исполнитель");
-                newRow.getCell(21).setCellValue(formattedCurrentDate + " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)");
+                newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
+                newRow.createCell(21).setCellValue(straightFormattedCurrentDate + " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)");
+//                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
             }
             case "meterChange" -> log.info("meterChange");
         }
     }
 
+    /**
+     * Метод преобразования значения ячейки в дату, так чтоб Excel понимал его именно как дату.
+     *
+     * @param date Cell, ячейка содержащая значеие даты.
+     */
+    private void setDateCellStyle(Cell date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
+        CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
+        try {
+            date.setCellValue(sdf.parse(straightFormattedCurrentDate));
+        } catch (ParseException e) {
+            date.setCellStyle(dateStyle);
+        }
+        date.setCellStyle(dateStyle);
+    }
+
     private static void copyRow(Row sourceRow, Row targetRow, int columnCount, CellStyle defaultCellStyle, CellStyle dateCellStyle) {
-        for (int i = 0; i < columnCount; i++) {
+        for (int i = 0; i <= columnCount; i++) {
             Cell sourceCell = sourceRow.getCell(i);
             Cell targetCell = targetRow.createCell(i);
 
@@ -728,13 +757,13 @@ public class TBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    private static CellStyle createDateCellStyle(Workbook resultWorkbook) {
+    private static CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
         CellStyle dateCellStyle = resultWorkbook.createCellStyle();
         DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
-        dateCellStyle.setDataFormat(dateFormat.getFormat("dd.MM.YYYY"));
+        dateCellStyle.setDataFormat(dateFormat.getFormat(format));
         dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
         dateCellStyle.setBorderBottom(BorderStyle.THIN);
-        dateCellStyle.setFont(createCellFontStyle(resultWorkbook, "Calibri", (short) 10, false));
+        dateCellStyle.setFont(createCellFontStyle(resultWorkbook, font, (short) 10, false));
         return dateCellStyle;
     }
 

@@ -15,7 +15,10 @@ public class FileManagement {
 
     private static final LocalDate TODAY = LocalDate.now();
     static final DateTimeFormatter YYYY_MM_DD = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    static final DateTimeFormatter DD_MM_YYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    static final DateTimeFormatter DD_MM_YY = DateTimeFormatter.ofPattern("dd.MM.yy");
     static String formattedCurrentDate = TODAY.format(YYYY_MM_DD);
+    static String straightFormattedCurrentDate = TODAY.format(DD_MM_YYYY);
 
     private static final String WORKING_FOLDER = "\\" + TODAY.getYear() + "\\" + TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     static final String PHOTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;

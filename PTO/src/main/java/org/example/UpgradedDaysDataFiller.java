@@ -78,7 +78,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-            EmailSenderMultipleRecipients.main(args);
+//            EmailSenderMultipleRecipients.main(args);
             createReserveCopy(planOTOWorkbook);
 
 
@@ -178,14 +178,13 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     cell.setCellStyle(commonCS);
                     connectionDatecell.setCellValue(iikStatusValues[1]);
 
+                    // Устанавливаем стиль даты
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                     try {
                         connectionDatecell.setCellValue(sdf.parse(iikStatusValues[1]));
                     } catch (ParseException e) {
                         connectionDatecell.setCellValue(iikStatusValues[1]);
                     }
-                    connectionDatecell.setCellStyle(dateCS); // Устанавливаем стиль даты
-
                     connectionDatecell.setCellStyle(dateCS);
                     hasWrongKey = iikStatus.equals("Неверный ключ аутентификации");
                 }
