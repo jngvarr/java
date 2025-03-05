@@ -275,7 +275,11 @@ public class TBot extends TelegramLongPollingBot {
             return;
         }
         OtoIIK otoIIKType = otoIIKTypes.get(chatId);
-        Map<OtoIIK, String> otoIIKStringMap = Map.of(OtoIIK.WK_DROP, "WK_", OtoIIK.SET_NOT, "NOT_", OtoIIK.TT_CHANGE, "TT_");
+        Map<OtoIIK, String> otoIIKStringMap = Map.of(
+                OtoIIK.WK_DROP, "WK_",
+                OtoIIK.SET_NOT, "NOT_",
+                OtoIIK.SUPPLY_RESTORING, "SUPPLY_");
+
         if (otoIIKType == OtoIIK.WK_DROP) {
             String deviceNumber = update.getMessage().getText().trim();
             otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
@@ -380,6 +384,11 @@ public class TBot extends TelegramLongPollingBot {
             case "ttChange" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
                 otoIIKTypes.put(chatId, OtoIIK.TT_CHANGE);
+            }
+
+            case "supplyRestoring" -> {
+                sendMessage(chatId, "Введите номер прибора учета: ");
+                otoIIKTypes.put(chatId, OtoIIK.SUPPLY_RESTORING);
             }
 
             case "meterChange" -> {
