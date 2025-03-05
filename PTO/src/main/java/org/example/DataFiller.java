@@ -17,7 +17,7 @@ public class DataFiller {
             .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
     private static final String ORDER_YEAR = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("yyyy", Locale.forLanguageTag("ru-RU")));
-    private static final String FOLDER_PATH = new StringBuilder().append("c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
+    private static final String FOLDER_PATH = new StringBuilder().append("d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
             .append(ORDER_YEAR)
             .append("\\")
             .append(ORDER_MONTH.toUpperCase())

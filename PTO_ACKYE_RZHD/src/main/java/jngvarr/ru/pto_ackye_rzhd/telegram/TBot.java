@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -44,7 +43,6 @@ import java.util.List;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
-import static org.openxmlformats.schemas.spreadsheetml.x2006.main.STTimePeriod.TODAY;
 
 
 @Data
@@ -69,6 +67,9 @@ public class TBot extends TelegramLongPollingBot {
         NONE
     }
 
+    public enum equipmentType {
+        COUNTER, DC, TT
+    }
 
     private Map<String, Map<String, String>> modes = Map.of(
             "pto", Map.of(
@@ -87,15 +88,22 @@ public class TBot extends TelegramLongPollingBot {
 
     private Map<Long, UserState> userStates = new HashMap<>();
     private Map<Long, OtoIIK> otoIIKTypes = new HashMap<>();
+    private Map<Long, equipmentType> workEquipment = new HashMap<>();
     private Map<String, String> otoIIKLog = new HashMap<>();
+    private List<String> deviceInfo = new ArrayList<>();
 
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
     public enum OtoIIK {
         WK_DROP,
-        METER_CHANGE
+        METER_CHANGE,
+        SET_NOT,
+        SUPPLY_RESTORING,
+        TT_CHANGE
     }
+
+    String chgePath;
 
     private int attempt = 0;
     private Map<String, String> otoIIKButtons = Map.of(
@@ -111,8 +119,13 @@ public class TBot extends TelegramLongPollingBot {
             "Восстановление питания", "powerSupplyRestoring",
             "Другие работы", "otherDC");
 
+    private Map<String, String> confirmMenu = Map.of(
+            "Подтвердить выполнение", "confirm",
+            "Отменить выполнение", "cancel");
+
     private Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
     private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
+    private int photoCounter;
 
     public TBot(BotConfig config, UserServiceImpl service) {
         super(config.getBotToken());
@@ -147,6 +160,15 @@ public class TBot extends TelegramLongPollingBot {
 
     private void handlePhotoMessage(Update update) {
         long chatId = update.getMessage().getChatId();
+        if (OtoIIK.METER_CHANGE.equals(otoIIKTypes.get(chatId)) && photoCounter >= 2) {
+
+            return;
+        }
+
+        if (OtoIIK.METER_CHANGE.equals(otoIIKTypes.get(chatId))) {
+            photoCounter++;
+        }
+
 
         // Проверяем, есть ли подпись к фото
         String manualReading = update.getMessage().getCaption();
@@ -200,7 +222,7 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             // 5. Определяем тип фото (счётчик или концентратор)
-            String type = (currentState == UserState.WAITING_FOR_COUNTER_PHOTO) ? "counter" : "concentrator";
+            String type = (currentState == UserState.WAITING_FOR_COUNTER_PHOTO || workEquipment.get(chatId) == equipmentType.COUNTER) ? "counter" : "concentrator";
 
             // 6. Создаём объект для хранения фото
             PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
@@ -252,22 +274,27 @@ public class TBot extends TelegramLongPollingBot {
             }
             return;
         }
-
-        if (otoIIKTypes.get(chatId) == OtoIIK.WK_DROP) {
+        OtoIIK otoIIKType = otoIIKTypes.get(chatId);
+        Map<OtoIIK, String> otoIIKStringMap = Map.of(OtoIIK.WK_DROP, "WK_", OtoIIK.SET_NOT, "NOT_", OtoIIK.TT_CHANGE, "TT_");
+        if (otoIIKType == OtoIIK.WK_DROP) {
             String deviceNumber = update.getMessage().getText().trim();
-            otoIIKLog.put(deviceNumber, "WK");
+            otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
             log.info("ПУ № {}, попытка №: {}", deviceNumber, ++attempt);
-            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId);
+            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
             return;
         }
 
-//        if (otoIIKTypes.get(chatId) == OtoIIK.METER_CHANGE) {
-//            String deviceNumber = update.getMessage().getText().trim();
-//            otoIIKLog.put(deviceNumber, "WK");
-//            log.info("ПУ № {}, попытка №: {}", deviceNumber, ++attempt);
-//            sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId);
-//            return;
-//        }
+        if (otoIIKType == OtoIIK.METER_CHANGE) {
+            deviceInfo.add(update.getMessage().getText());
+            ++attempt;
+            if (attempt < 2) {
+                sendMessage(chatId, "Введите номер и показания устанавливаемого ПУ.");
+            } else {
+                formingOtoIikLog(deviceInfo);
+                sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+            }
+            return;
+        }
 
         // Обработка остальных текстовых сообщений
         switch (msgText) {
@@ -278,6 +305,29 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
+    private void formingOtoIikLog(List<String> deviceInfo) {
+        String[] deviceNumber = deviceInfo.get(0).split("_");
+        otoIIKLog.put(deviceNumber[0], "meterChange_" + deviceNumber[1] + "_" + deviceInfo.get(1));
+    }
+
+    private String actionConfirmation(Map<String, String> otoIIKLog) {
+        StringBuilder resultStr = new StringBuilder("Выполняемое действие:\n");
+        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
+            String[] str = entry.getValue().split("_");
+            resultStr
+                    .append("Замена прибора учета № ")
+                    .append(entry.getKey())
+                    .append(" с показаниями: ")
+                    .append(str[1])
+                    .append("\n на  прибор учета № ")
+                    .append(str[2])
+                    .append(" с показаниями: ")
+                    .append(str[3])
+                    .append("\n");
+        }
+        return resultStr.toString();
+    }
+
 
     private void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
@@ -285,28 +335,30 @@ public class TBot extends TelegramLongPollingBot {
 
         switch (callbackData) {
             case "newTU" -> {
-                sendTextMessage(NEW_TU, modes.get("newTU"), chatId);
+                sendTextMessage(NEW_TU, modes.get("newTU"), chatId, 1);
             }
             case "pto" -> {
-                sendTextMessage(PTO, modes.get("pto"), chatId);
+                sendTextMessage(PTO, modes.get("pto"), chatId, 2);
             }
             case "oto" -> {
-                sendTextMessage(OTO, modes.get("oto"), chatId);
+                sendTextMessage(OTO, modes.get("oto"), chatId, 2);
             }
             // Обработка выбора для счетчика и концентратора
             case "ptoIIK" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.", null);
                 userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
+                workEquipment.put(chatId, equipmentType.COUNTER);
             }
             case "ptoIVKE" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.", null);
                 userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
             }
             case "otoIIK" -> {
-                sendTextMessage("Выбирете вид ОТО ИИК: ", otoIIKButtons, chatId);
+                sendTextMessage("Выбирете вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
+                workEquipment.put(chatId, equipmentType.COUNTER);
             }
             case "otoIVKE" -> {
-                sendTextMessage("Выбирете вид ОТО ИВКЭ: ", otoIVKEButtons, chatId);
+                sendTextMessage("Выбирете вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
             }
 
             case "LOADING_COMPLETE" -> {
@@ -319,10 +371,45 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, "Введите номер прибора учета: ");
                 otoIIKTypes.put(chatId, OtoIIK.WK_DROP);
             }
+
+            case "setNot" -> {
+                sendMessage(chatId, "Введите номер прибора учета: ");
+                otoIIKTypes.put(chatId, OtoIIK.SET_NOT);
+            }
+
+            case "ttChange" -> {
+                sendMessage(chatId, "Введите номер прибора учета: ");
+                otoIIKTypes.put(chatId, OtoIIK.TT_CHANGE);
+            }
+
             case "meterChange" -> {
+                sendTextMessage("Вид передачи данных: ",
+                        Map.of("С приложением фото.", "meterChangeWithPhoto",
+                                "Без приложения фото.", "meterChangeWithoutPhoto"), chatId, 2);
+            }
+
+            case "meterChangeWithPhoto" -> {
                 sendMessage(chatId, "Прикрепите фото демонтируемого прибора учета: ");
                 otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
                 userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
+            }
+
+            case "meterChangeWithoutPhoto" -> {
+                sendMessage(chatId, "Введите номер и показания демонтируемого прибора учета: \n" +
+                        "например: 7200123456_7890");
+                otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
+            }
+
+            case "confirm" -> {
+                sendTextMessage("Инфомация сохранена.", CompleteButton, chatId, 1);
+                otoIIKTypes.clear();
+            }
+
+            case "cancel" -> {
+                sendTextMessage("Информация не сохранилась. Закончите ввод и начните заново", CompleteButton, chatId, 1);
+                otoIIKTypes.clear();
+                otoIIKLog.clear();
+                attempt = 0;
             }
 
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
@@ -339,7 +426,7 @@ public class TBot extends TelegramLongPollingBot {
                 "ПТО", "pto",
                 "ОТО", "oto",
                 "Монтаж / демонтаж ТУ", "newTU"
-        ), chatId);
+        ), chatId, 1);
     }
 
     private BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
@@ -353,11 +440,15 @@ public class TBot extends TelegramLongPollingBot {
 
     private void savePhoto(long chatId, PendingPhoto pending) {
         try {
-            String baseDir = PHOTO_PATH + java.io.File.separator;
-            Path userDir = Paths.get(baseDir + savingPaths.get(pending.getScannedBarcode()));
-            if (!Files.exists(userDir)) {
-                Files.createDirectories(userDir);
-            }
+            String baseDir = PHOTO_PATH + File.separator;
+            if (otoIIKTypes.get(chatId).equals(OtoIIK.METER_CHANGE)) baseDir += "Замена ПУ" + File.separator;
+            String path = savingPaths.get(pending.getScannedBarcode());
+            String resultPath = !otoIIKTypes.get(chatId).equals(OtoIIK.METER_CHANGE) ? path.substring(0, path.lastIndexOf("\\")) : path;
+            if (photoCounter == 1) chgePath = resultPath;
+            if (photoCounter == 2) resultPath = chgePath;
+            Path userDir = Paths.get(baseDir + resultPath);
+            Files.createDirectories(userDir);
+
             String pendingPhotoType = pending.getType();
 
             String prefix = switch (pendingPhotoType) {
@@ -368,21 +459,38 @@ public class TBot extends TelegramLongPollingBot {
 
 
             String barcode = (pending.getScannedBarcode() != null) ? pending.getScannedBarcode() : "unknown";
-            String reading = (pending.getMeterReading() != null) ? "_" + pending.getMeterReading() : "";
-            String newFileName = formattedCurrentDate + "_" + prefix + barcode + reading + ".jpg";
-            Path destination = userDir.resolve(newFileName);
+            String indication = (pending.getMeterReading() != null) ? "_" + pending.getMeterReading() : "";
+            String newFileName;
+            deviceInfo.add(barcode + indication);
+            if (photoCounter == 1) {
+                newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_демонтирован.jpg";
+            } else if (photoCounter == 2) {
+                newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_установлен.jpg";
+                formingOtoIikLog(deviceInfo);
+            } else newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + ".jpg";
 
+            Path destination = userDir.resolve(newFileName);
 
             Files.move(pending.getTempFilePath(), destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             sendMessage(chatId, "Фото сохранено!\nФайл: " + newFileName, null);
 
             pendingPhotos.remove(chatId);
 
-            sendTextMessage("Заргрузите следующее фото или закончите загрузку.", CompleteButton, chatId);
-//            sendTextMessage("Выбирете действие: ", CompleteButton, chatId);
-//            userStates.remove(chatId);
+            if (photoCounter >= 2) {
+                otoIIKTypes.clear();
+                userStates.clear();
+                sendTextMessage("Фото сохранены, пожалуйста завершите загрузку.", CompleteButton, chatId, 1);
+                photoCounter = 0;
+                return;
+            }
 
-        } catch (Exception e) {
+            if (otoIIKTypes.containsKey(chatId)) {
+                sendMessage(chatId, "Прикрепите фото устанавливаемого прибора учета:\n", null);
+            } else
+                sendTextMessage("Заргрузите следующее фото или закончите загрузку.", CompleteButton, chatId, 1);
+
+        } catch (
+                Exception e) {
             log.error("Ошибка сохранения фото: " + e.getMessage());
             sendMessage(chatId, "Произошла ошибка при сохранении фото.", null);
         }
@@ -507,9 +615,9 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    public void sendTextMessage(String text, Map<String, String> buttons, Long chatId) {
+    public void sendTextMessage(String text, Map<String, String> buttons, Long chatId, int columns) {
         try {
-            SendMessage message = createMessage(text, buttons, chatId);
+            SendMessage message = createMessage(text, buttons, chatId, columns);
             var task = sendApiMethodAsync(message);
             this.sendMessages.add(task.get());
         } catch (Exception e) {
@@ -517,12 +625,13 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    public SendMessage createMessage(String text, Map<String, String> buttons, Long chatId) {
+    public SendMessage createMessage(String text, Map<String, String> buttons, Long chatId, int columns) {
         SendMessage message = createMessage(text, chatId);
         if (buttons != null && !buttons.isEmpty())
-            attachButtons(message, buttons);
+            attachButtons(message, buttons, columns);
         return message;
     }
+
 
     public SendMessage createMessage(String text, Long chatId) {
         SendMessage message = new SendMessage();
@@ -550,6 +659,31 @@ public class TBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markup);
     }
 
+    private void attachButtons(SendMessage message, Map<String, String> buttons, int columns) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+        Iterator<Map.Entry<String, String>> iterator = buttons.entrySet().iterator();
+        while (iterator.hasNext()) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+
+            // Добавляем до columns кнопок в текущий ряд
+            for (int i = 0; i < columns && iterator.hasNext(); i++) {
+                Map.Entry<String, String> entry = iterator.next();
+                String buttonName = entry.getKey();
+                String buttonValue = entry.getValue();
+
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText(new String(buttonName.getBytes(), StandardCharsets.UTF_8));
+                button.setCallbackData(buttonValue);
+                row.add(button); // Добавляем кнопку в ряд
+            }
+            keyboard.add(row);
+        }
+        markup.setKeyboard(keyboard);
+        message.setReplyMarkup(markup);
+    }
+
     public Long getCurrentChatId(Update update) {
         if (update.hasMessage()) {
             return update.getMessage().getFrom().getId();
@@ -566,46 +700,79 @@ public class TBot extends TelegramLongPollingBot {
         if (opLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
-             FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH)) {
-            int lastRowNumber = operationLog.getSheetAt(0).getLastRowNum();
+             FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
+             FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
+        ) {
             Sheet workSheet = isIikLog ? planOTOWorkbook.getSheet("ИИК") : planOTOWorkbook.getSheet("ИВКЭ");
+            Sheet operationLogSheet = operationLog.getSheet("ОЖ");
+            int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
             int meterNumberColumnIndex = findColumnIndex(workSheet, "Номер счетчика");
-            int lastColumnNumber = findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
-//            int stationColumnIndex = findColumnIndex(iikSheet, "Железнодорожная станция");
-//            int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
+            int orderColumnNumber = findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
 
             CellStyle commonCellStyle = createCommonCellStyle(operationLog);
             CellStyle dateCellStyle = createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
+
             int addRow = 0;
             for (Row row : workSheet) {
                 String meterNumber = getCellStringValue(row.getCell(meterNumberColumnIndex));
                 String logData = opLog.getOrDefault(meterNumber, "");
                 if (!logData.isEmpty()) {
-                    Row newRow = operationLog.getSheet("ОЖ").createRow(lastRowNumber + ++addRow);
-                    copyRow(row, newRow, lastColumnNumber, commonCellStyle, dateCellStyle);
-                    addOtoData(logData, newRow);
-//                    setRowStyle(commonCellStyle, dateCellStyle);
+                    Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
+                    copyRow(row, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
+                    addOtoData(logData, newRow, row, meterNumberColumnIndex, orderColumnNumber);
                 }
             }
             operationLog.write(fileOut);
+            planOTOWorkbook.write(fileOtoOut);
 
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
         }
     }
 
-    private void addOtoData(String logData, Row newRow) {
-        switch (logData) {
-            case "WK" -> {
+    private void addOtoData(String logData, Row newRow, Row otoRow, int meterNumColIndex, int orderColIndex) {
+        String data = logData.substring(0, logData.indexOf("_"));
+        switch (data) {
+            case "WK", "NOT", "SUPPLY" -> {
                 Cell date = newRow.getCell(16);
                 setDateCellStyle(date);
                 newRow.getCell(17).setCellValue("Нет связи со счетчиком");
                 newRow.getCell(18).setCellValue("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)");
                 newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
-                newRow.createCell(21).setCellValue(straightFormattedCurrentDate + " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)");
+                String taskOrder = straightFormattedCurrentDate + " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)";
+                newRow.createCell(21).setCellValue(taskOrder);
 //                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+
+                // Внесение данных в журнал "Контроль ПУ РРЭ"
+                otoRow.getCell(orderColIndex).setCellValue(taskOrder);
             }
-            case "meterChange" -> log.info("meterChange");
+            case "meterChange" -> {
+                String[] replacingData = logData.split("_");
+
+                Cell date = newRow.getCell(16);
+                setDateCellStyle(date);
+
+                newRow.getCell(17).setCellValue("Нет связи со счетчиком");
+                newRow.getCell(18).setCellValue("Неисправность счетчика (счетчик заменен)");
+                newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
+                String meterNumberStr = replacingData[2];
+
+                Object mountingMeterNumber = parseMeterNumber(meterNumberStr);
+
+                String taskOrder = straightFormattedCurrentDate + " - замена счетчика "
+                        + getCellStringValue(newRow.getCell(13)) + " (" + replacingData[1] + " кВт) на "
+                        + replacingData[2] + " (" + replacingData[3] + " кВт).";
+                newRow.createCell(21).setCellValue(taskOrder);
+//                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+
+                // Внесение данных в журнал "Контроль ПУ РРЭ"
+                if (mountingMeterNumber instanceof Long) {
+                    otoRow.getCell(meterNumColIndex).setCellValue((Long) mountingMeterNumber);
+                } else {
+                    otoRow.getCell(meterNumColIndex).setCellValue((String) mountingMeterNumber);
+                }
+                otoRow.getCell(orderColIndex).setCellValue(taskOrder);
+            }
         }
     }
 
@@ -683,19 +850,30 @@ public class TBot extends TelegramLongPollingBot {
             int eelColumnIndex = findColumnIndex(iikSheet, "ЭЭЛ");
             int stationColumnIndex = findColumnIndex(iikSheet, "Железнодорожная станция");
             int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
+            int meterPointIndex = findColumnIndex(iikSheet, "Точка Учета");
             for (Row row : iikSheet) {
                 String meterNum = getCellStringValue(row.getCell(meterNumberColumnIndex));
                 if (meterNum != null) {
                     paths.put(meterNum,
                             eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
                                     row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
-                                    row.getCell(substationColumnIndex).getStringCellValue());
+                                    row.getCell(substationColumnIndex).getStringCellValue() + "\\" +
+                                    row.getCell(meterPointIndex).getStringCellValue());
                 }
             }
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
         }
         return paths;
+    }
+
+    // Метод для проверки и преобразования номера счетчика
+    private Object parseMeterNumber(String meterNumberStr) {
+        try {
+            return Long.parseLong(meterNumberStr);
+        } catch (NumberFormatException e) {
+            return meterNumberStr;
+        }
     }
 
     private static String getCellStringValue(Cell cell) {

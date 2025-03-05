@@ -30,6 +30,4 @@ public class User {
     @Column(name = "registered_at")
     private LocalDateTime registeredAt;
 
-//    @Version
-//    private int version; // Добавлено для управления конфликтами
 }

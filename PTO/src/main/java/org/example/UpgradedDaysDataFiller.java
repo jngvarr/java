@@ -78,7 +78,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-//            EmailSenderMultipleRecipients.main(args);
+            EmailSenderMultipleRecipients.main(args);
             createReserveCopy(planOTOWorkbook);
 
 
@@ -138,8 +138,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 String key = getCellStringValue(row.getCell(meterColumn));
                 String value = getCellStringValue(row.getCell(neededDataColumn));
                 if (isStatusPUFile) {
-                    Cell statusCell = row.getCell(neededDataColumn + 1);
-                    value += "_" + (statusCell != null ? getCellStringValue(statusCell) : "");
+                    Cell statusDateCell = row.getCell(neededDataColumn + 1);
+                    value += "_" + (statusDateCell != null ? getCellStringValue(statusDateCell) : "");
                 }
                 if (key != null && value != null) {
                     workMap.put(key.trim(), value);
@@ -168,24 +168,24 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             boolean hasWrongKey = false;
 
             if (dataMaps.get(DataType.IIK_STATUS).containsKey(key)) {
-                Cell cell = row.createCell(IIK_STATUS_CELL_NUMBER);
-                Cell connectionDatecell = row.createCell(CONNECTION_DATE_CELL_NUMBER);
+                Cell iikStatusCell = row.createCell(IIK_STATUS_CELL_NUMBER);
+                Cell connectionDateCell = row.createCell(CONNECTION_DATE_CELL_NUMBER);
                 String iikStatusData = dataMaps.get(DataType.IIK_STATUS).get(key);
                 if (!"_".equals(iikStatusData)) {
                     String[] iikStatusValues = iikStatusData.split("_");
                     String iikStatus = iikStatusValues[0].trim();
-                    cell.setCellValue(iikStatus);
-                    cell.setCellStyle(commonCS);
-                    connectionDatecell.setCellValue(iikStatusValues[1]);
+                    iikStatusCell.setCellValue(iikStatus); // TODO : разобраться со статусами и выставлением заданий
+                    iikStatusCell.setCellStyle(commonCS);
+                    connectionDateCell.setCellValue(iikStatusValues[1]);
 
                     // Устанавливаем стиль даты
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                     try {
-                        connectionDatecell.setCellValue(sdf.parse(iikStatusValues[1]));
+                        connectionDateCell.setCellValue(sdf.parse(iikStatusValues[1]));
                     } catch (ParseException e) {
-                        connectionDatecell.setCellValue(iikStatusValues[1]);
+                        connectionDateCell.setCellValue(iikStatusValues[1]);
                     }
-                    connectionDatecell.setCellStyle(dateCS);
+                    connectionDateCell.setCellStyle(dateCS);
                     hasWrongKey = iikStatus.equals("Неверный ключ аутентификации");
                 }
             }
@@ -203,7 +203,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 if ("Достоверные".equals(profile)) {
                     taskCell.setCellValue("");
                     enabledCount++;
-                } else if (!isNormallyTurnedOff) taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
+                } else if (!isNormallyTurnedOff) {
+                    taskCell.setCellValue("Выезд нужен - счетчик не отдает показания");
+                }
                 if (hasWrongKey) taskCell.setCellValue("Выезд нужен - WrongKey");
                 cell.setCellValue(profile);
                 taskCell.setCellStyle(commonCS);
