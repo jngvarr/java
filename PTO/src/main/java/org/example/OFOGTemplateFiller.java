@@ -33,8 +33,7 @@ public class OFOGTemplateFiller {
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
-//        String dataPath = "c:\\Users\\admin\\YandexDiskUKSTS\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
-        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ 2024.xlsx";
+        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
         // Путь для сохранения нового файла
         String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
         String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
@@ -74,8 +73,9 @@ public class OFOGTemplateFiller {
 //                        int year = LocalDate.now().getYear();
 //                        int month = LocalDate.now().getMonthValue();
 
-                        int year = 2024;
-                        int month = 12;
+                        //Задаем месяц отчета в ручную
+                        int year = 2025;
+                        int month = 2;
 
                         int eventYear = localDate.getYear();
                         int eventMonth = localDate.getMonthValue();
@@ -108,8 +108,6 @@ public class OFOGTemplateFiller {
                 System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
 
 
-
-
 //                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
 //                PdfWriter pdfWriter2 = new PdfWriter(pdfFilePathIReport);
 //
@@ -127,9 +125,6 @@ public class OFOGTemplateFiller {
 //                document.add(table);
 
                 System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
-
-
-
 
 
                 templateWorkbook.close(); // Закрываем Workbook
