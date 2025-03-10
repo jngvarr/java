@@ -293,8 +293,8 @@ public class TBot extends TelegramLongPollingBot {
             if (sequenceNumber < 2) {
                 sendMessage(chatId, "Введите номер и показания устанавливаемого ПУ.");
             } else {
-                formingOtoIikLog(deviceInfo);
-                sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+                formingOtoIikLogWithMeterChange(deviceInfo);
+                sendTextMessage(meterChangeConfirmation(otoIIKLog), confirmMenu, chatId, 2);
             }
             return;
         }
@@ -308,12 +308,12 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void formingOtoIikLog(List<String> deviceInfo) {
+    private void formingOtoIikLogWithMeterChange(List<String> deviceInfo) {
         String[] deviceNumber = deviceInfo.get(0).split("_");
         otoIIKLog.put(deviceNumber[0], "meterChange_" + deviceNumber[1] + "_" + deviceInfo.get(1));
     }
 
-    private String actionConfirmation(Map<String, String> otoIIKLog) {
+    private String meterChangeConfirmation(Map<String, String> otoIIKLog) {
         StringBuilder resultStr = new StringBuilder("Выполняемое действие:\n");
         for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
             String[] str = entry.getValue().split("_");
@@ -474,7 +474,7 @@ public class TBot extends TelegramLongPollingBot {
                 newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_демонтирован.jpg";
             } else if (photoCounter == 2) {
                 newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_установлен.jpg";
-                formingOtoIikLog(deviceInfo);
+                formingOtoIikLogWithMeterChange(deviceInfo);
             } else newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + ".jpg";
 
             Path destination = userDir.resolve(newFileName);
@@ -732,6 +732,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             operationLog.write(fileOut);
             planOTOWorkbook.write(fileOtoOut);
+            otoIIKLog.clear();
 
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
@@ -742,19 +743,14 @@ public class TBot extends TelegramLongPollingBot {
         String data = logData.substring(0, logData.indexOf("_"));
         switch (data) {
             case "WK", "NOT", "SUPPLY" -> {
-                Map<String, List<String>> fillingData = Map.of(
-                        "WK", List.of("Нет связи со счетчиком",
-                                "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)",
-                                "- Сброшена ошибка ключа Вронгкей (счетчик не на связи)"),
-                        "NOT", List.of("Нет связи со счетчиком",
-                                "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " - НОТ."),
-                        "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", "Восстановление схемы подключения"));
+                String[] additionalData = logData.split("_");
+                List<String> columns = getStrings(data);
                 Cell date = newRow.getCell(16);
                 setDateCellStyle(date);
-                newRow.getCell(17).setCellValue("Нет связи со счетчиком");
-                newRow.getCell(18).setCellValue("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)");
+                newRow.getCell(17).setCellValue(columns.get(0));
+                newRow.getCell(18).setCellValue(columns.get(1));
                 newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
-                String taskOrder = straightFormattedCurrentDate + " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)";
+                String taskOrder = straightFormattedCurrentDate + columns.get(2) + (additionalData.length > 1 ? additionalData[1] : "");
                 newRow.createCell(21).setCellValue(taskOrder);
 //                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
 
@@ -789,6 +785,18 @@ public class TBot extends TelegramLongPollingBot {
                 otoRow.getCell(orderColIndex).setCellValue(taskOrder);
             }
         }
+    }
+
+    private static List<String> getStrings(String data) {
+        Map<String, List<String>> fillingData = Map.of(
+                "WK", List.of("Нет связи со счетчиком",
+                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)",
+                        "- Сброшена ошибка ключа Вронгкей (счетчик не на связи)"),
+                "NOT", List.of("Нет связи со счетчиком",
+                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " - НОТ."),
+                "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", "Восстановление схемы подключения"));
+
+        return fillingData.get(data);
     }
 
     /**
