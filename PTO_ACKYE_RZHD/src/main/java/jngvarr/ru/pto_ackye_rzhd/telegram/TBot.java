@@ -105,14 +105,13 @@ public class TBot extends TelegramLongPollingBot {
 
     String chgePath;
 
-    private int attempt = 0;
+    private int sequenceNumber = 0;
     private Map<String, String> otoIIKButtons = Map.of(
             "Сброшена ошибка ключа (WK)", "wkDrop",
             "Замена счетчика", "meterChange",
             "Замена трансформаторов тока", "ttChange",
             "Восстановление питания ТУ", "powerSupplyRestoring",
-            "Присвоение статуса НОТ", "NOT",
-            "Другие работы", "otherIIK");
+            "Присвоение статуса НОТ", "setNot");
     private Map<String, String> otoIVKEButtons = Map.of(
             "Замена концентратора", "dcChange",
             "Перезагрузка концентратора", "dcRestart",
@@ -280,18 +279,18 @@ public class TBot extends TelegramLongPollingBot {
                 OtoIIK.SET_NOT, "NOT_",
                 OtoIIK.SUPPLY_RESTORING, "SUPPLY_");
 
-        if (otoIIKType == OtoIIK.WK_DROP) {
+        if (otoIIKType == OtoIIK.WK_DROP || otoIIKType == OtoIIK.SET_NOT || otoIIKType == OtoIIK.SUPPLY_RESTORING) {
             String deviceNumber = update.getMessage().getText().trim();
             otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
-            log.info("ПУ № {}, попытка №: {}", deviceNumber, ++attempt);
+            log.info("{}. ПУ №: {}", ++sequenceNumber, deviceNumber);
             sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
             return;
         }
 
         if (otoIIKType == OtoIIK.METER_CHANGE) {
             deviceInfo.add(update.getMessage().getText());
-            ++attempt;
-            if (attempt < 2) {
+            ++sequenceNumber;
+            if (sequenceNumber < 2) {
                 sendMessage(chatId, "Введите номер и показания устанавливаемого ПУ.");
             } else {
                 formingOtoIikLog(deviceInfo);
@@ -358,11 +357,11 @@ public class TBot extends TelegramLongPollingBot {
                 userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
             }
             case "otoIIK" -> {
-                sendTextMessage("Выбирете вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
+                sendTextMessage("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
                 workEquipment.put(chatId, equipmentType.COUNTER);
             }
             case "otoIVKE" -> {
-                sendTextMessage("Выбирете вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
+                sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
             }
 
             case "LOADING_COMPLETE" -> {
@@ -386,7 +385,7 @@ public class TBot extends TelegramLongPollingBot {
                 otoIIKTypes.put(chatId, OtoIIK.TT_CHANGE);
             }
 
-            case "supplyRestoring" -> {
+            case "powerSupplyRestoring" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
                 otoIIKTypes.put(chatId, OtoIIK.SUPPLY_RESTORING);
             }
@@ -418,7 +417,7 @@ public class TBot extends TelegramLongPollingBot {
                 sendTextMessage("Информация не сохранилась. Закончите ввод и начните заново", CompleteButton, chatId, 1);
                 otoIIKTypes.clear();
                 otoIIKLog.clear();
-                attempt = 0;
+                sequenceNumber = 0;
             }
 
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
@@ -743,6 +742,13 @@ public class TBot extends TelegramLongPollingBot {
         String data = logData.substring(0, logData.indexOf("_"));
         switch (data) {
             case "WK", "NOT", "SUPPLY" -> {
+                Map<String, List<String>> fillingData = Map.of(
+                        "WK", List.of("Нет связи со счетчиком",
+                                "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)",
+                                "- Сброшена ошибка ключа Вронгкей (счетчик не на связи)"),
+                        "NOT", List.of("Нет связи со счетчиком",
+                                "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " - НОТ."),
+                        "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", "Восстановление схемы подключения"));
                 Cell date = newRow.getCell(16);
                 setDateCellStyle(date);
                 newRow.getCell(17).setCellValue("Нет связи со счетчиком");
