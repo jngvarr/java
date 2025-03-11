@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -201,7 +202,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
             try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, tempFilePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(in, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
             }
 
             // 3. Читаем изображение
@@ -281,7 +282,11 @@ public class TBot extends TelegramLongPollingBot {
 
         if (otoIIKType == OtoIIK.WK_DROP || otoIIKType == OtoIIK.SET_NOT || otoIIKType == OtoIIK.SUPPLY_RESTORING) {
             String deviceNumber = update.getMessage().getText().trim();
-            otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
+            if (deviceNumber.contains("_")) {
+                String[] deviceNumberData = deviceNumber.split("_");
+                deviceNumber = deviceNumberData[0];
+                otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType) + deviceNumberData[1]);
+            } else otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
             log.info("{}. ПУ №: {}", ++sequenceNumber, deviceNumber);
             sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
             return;
@@ -302,7 +307,7 @@ public class TBot extends TelegramLongPollingBot {
         // Обработка остальных текстовых сообщений
         switch (msgText) {
             case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
-            case "/help" -> sendMessage(chatId, PtoTelegramBotContent.HELP, null);
+            case "/help" -> sendMessage(chatId, HELP, null);
             case "/register" -> registerUser(chatId);
             default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.", null);
         }
@@ -325,8 +330,26 @@ public class TBot extends TelegramLongPollingBot {
                     .append("\n на  прибор учета № ")
                     .append(str[2])
                     .append(" с показаниями: ")
-                    .append(str[3])
+                    .append(str[3]) //TODO объединить
                     .append("\n");
+        }
+        return resultStr.toString();
+    }
+
+    private String actionConfirmation(Map<String, String> otoIIKLog) {
+        int lineCounter = 0;
+        StringBuilder resultStr = new StringBuilder("Выполнены следующие действия: ");
+        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
+            String[] str = entry.getValue().split("_");
+            String[] key = entry.getKey().split("_");
+            List<String> strings = getStrings(str[0]);
+            resultStr
+                    .append("\n")
+                    .append(++lineCounter)
+                    .append(". ПУ № ")
+                    .append(key[0])
+                    .append(strings.get(2));
+            if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
         }
         return resultStr.toString();
     }
@@ -362,12 +385,6 @@ public class TBot extends TelegramLongPollingBot {
             }
             case "otoIVKE" -> {
                 sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
-            }
-
-            case "LOADING_COMPLETE" -> {
-                userStates.clear();
-                sendMessage(chatId, "Загрузка окончена. Для продолжения снова нажмите /start", null);
-                operationLogFilling(otoIIKLog, true);
             }
 
             case "wkDrop" -> {
@@ -408,20 +425,33 @@ public class TBot extends TelegramLongPollingBot {
                 otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
             }
 
-            case "confirm" -> {
-                sendTextMessage("Инфомация сохранена.", CompleteButton, chatId, 1);
-                otoIIKTypes.clear();
+            case "LOADING_COMPLETE" -> {
+                sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
             }
 
-            case "cancel" -> {
-                sendTextMessage("Информация не сохранилась. Закончите ввод и начните заново", CompleteButton, chatId, 1);
-                otoIIKTypes.clear();
-                otoIIKLog.clear();
-                sequenceNumber = 0;
+            case "confirm", "cancel" -> {
+                String textToSend;
+                if ("confirm".equals(callbackData)) {
+                    textToSend = "Информация сохранена.";
+                    sendMessage(chatId, "Подождите, идёт загрузка данных...", null);
+                    operationLogFilling(otoIIKLog, true);
+                } else {
+                    textToSend = "Информация не сохранена.";
+                }
+                sendMessage(chatId, textToSend, null);
+                clearData();
+                sendMessage(chatId, "Для продолжения снова нажмите /start", null);
             }
 
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
         }
+    }
+
+    private void clearData() {
+        otoIIKLog.clear();
+        sequenceNumber = 0;
+        userStates.clear();
+        otoIIKTypes.clear();
     }
 
 
@@ -479,7 +509,7 @@ public class TBot extends TelegramLongPollingBot {
 
             Path destination = userDir.resolve(newFileName);
 
-            Files.move(pending.getTempFilePath(), destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.move(pending.getTempFilePath(), destination, StandardCopyOption.REPLACE_EXISTING);
             sendMessage(chatId, "Фото сохранено!\nФайл: " + newFileName, null);
 
             pendingPhotos.remove(chatId);
@@ -750,7 +780,7 @@ public class TBot extends TelegramLongPollingBot {
                 newRow.getCell(17).setCellValue(columns.get(0));
                 newRow.getCell(18).setCellValue(columns.get(1));
                 newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
-                String taskOrder = straightFormattedCurrentDate + columns.get(2) + (additionalData.length > 1 ? additionalData[1] : "");
+                String taskOrder = straightFormattedCurrentDate + columns.get(2) + (additionalData.length > 1 ? " " + additionalData[1] : "");
                 newRow.createCell(21).setCellValue(taskOrder);
 //                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
 
@@ -790,11 +820,11 @@ public class TBot extends TelegramLongPollingBot {
     private static List<String> getStrings(String data) {
         Map<String, List<String>> fillingData = Map.of(
                 "WK", List.of("Нет связи со счетчиком",
-                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)",
-                        "- Сброшена ошибка ключа Вронгкей (счетчик не на связи)"),
+                        "Ошибка ключа - Вронгкей (сделана прошивка счетчика)",
+                        " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)."),
                 "NOT", List.of("Нет связи со счетчиком",
                         "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " - НОТ."),
-                "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", "Восстановление схемы подключения"));
+                "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " - Восстановление схемы подключения."));
 
         return fillingData.get(data);
     }
