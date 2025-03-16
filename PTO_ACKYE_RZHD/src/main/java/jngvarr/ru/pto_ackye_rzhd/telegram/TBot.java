@@ -1,15 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
-import com.google.zxing.*;
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
-import com.google.zxing.common.HybridBinarizer;
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
 import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -27,7 +23,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -36,9 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -58,18 +50,16 @@ public class TBot extends TelegramLongPollingBot {
     static final String NO_BUTTON = "NO_BUTTON";
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
+    private final ExcelFileService excelFileService;
+    private final PreparingPhotoService preparingPhotoService;
 
     public enum UserState {
         WAITING_FOR_COUNTER_PHOTO,
         WAITING_FOR_DC_PHOTO,
-        WAITING_FOR_CORRECT_BARCODE,
+        WAITING_FOR_TT_PHOTO,
         MANUAL_INSERT,
         WAITING_FOR_METER_READING,
-        NONE
-    }
-
-    public enum equipmentType {
-        COUNTER, DC, TT
+        NONE;
     }
 
     private Map<String, Map<String, String>> modes = Map.of(
@@ -88,20 +78,26 @@ public class TBot extends TelegramLongPollingBot {
     // Карта для хранения состояния диалога по chatId
 
     private Map<Long, UserState> userStates = new HashMap<>();
-    private Map<Long, OtoIIK> otoIIKTypes = new HashMap<>();
-    private Map<Long, equipmentType> workEquipment = new HashMap<>();
+    private Map<Long, OtoIIKType> otoIIKTypeMap = new HashMap<>();
+    private Map<Long, OtoDC> otoDCMap = new HashMap<>();
     private Map<String, String> otoIIKLog = new HashMap<>();
     private List<String> deviceInfo = new ArrayList<>();
 
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
-    public enum OtoIIK {
+    public enum OtoIIKType {
         WK_DROP,
         METER_CHANGE,
         SET_NOT,
         SUPPLY_RESTORING,
         TT_CHANGE
+    }
+
+    public enum OtoDC {
+        DC_CHANGE,
+        SET_NOT,
+        SUPPLY_RESTORING
     }
 
     String chgePath;
@@ -126,11 +122,14 @@ public class TBot extends TelegramLongPollingBot {
     private Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
     private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
     private int photoCounter;
+    private String changeTTInfo = "";
 
-    public TBot(BotConfig config, UserServiceImpl service) {
+    public TBot(BotConfig config, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
         this.config = config;
         this.service = service;
+        this.excelFileService = excelFileService;
+        this.preparingPhotoService = preparingPhotoService;
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
@@ -160,18 +159,17 @@ public class TBot extends TelegramLongPollingBot {
 
     private void handlePhotoMessage(Update update) {
         long chatId = update.getMessage().getChatId();
-        if (OtoIIK.METER_CHANGE.equals(otoIIKTypes.get(chatId)) && photoCounter >= 2) {
-
+        if (OtoIIKType.METER_CHANGE.equals(otoIIKTypeMap.get(chatId)) && photoCounter >= 2 ||
+                OtoIIKType.TT_CHANGE.equals(otoIIKTypeMap.get(chatId)) && photoCounter >= 3) {
             return;
         }
 
-        if (OtoIIK.METER_CHANGE.equals(otoIIKTypes.get(chatId))) {
+        if (OtoIIKType.METER_CHANGE.equals(otoIIKTypeMap.get(chatId)) || OtoIIKType.TT_CHANGE.equals(otoIIKTypeMap.get(chatId))) {
             photoCounter++;
         }
 
-
         // Проверяем, есть ли подпись к фото
-        String manualReading = update.getMessage().getCaption();
+        String manualInput = update.getMessage().getCaption();
 
         // Если фото не запрашивалось
         if (!userStates.containsKey(chatId)) {
@@ -212,32 +210,54 @@ public class TBot extends TelegramLongPollingBot {
                 return;
             }
             // Files.deleteIfExists(tempFilePath);
-            // 4. Декодируем штрихкод
-            String barcodeText = decodeBarcode(bufferedImage);
-            if (barcodeText == null) {
-                barcodeText = decodeBarcode(resizeImage(bufferedImage, bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2));
-            }
-            if (barcodeText == null) {
-                barcodeText = decodeBarcode(convertToGrayscale(bufferedImage));
+            String barcodeText = "";
+            if (userStates.get(chatId).equals(UserState.WAITING_FOR_COUNTER_PHOTO)) {
+                // 4. Декодируем штрихкод
+                barcodeText = preparingPhotoService.decodeBarcode(bufferedImage);
+                if (barcodeText == null) {
+                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.resizeImage(bufferedImage,
+                            bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2));
+                }
+                if (barcodeText == null) {
+                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
+                }
+            } else if (userStates.get(chatId).equals(UserState.WAITING_FOR_TT_PHOTO)) {
+                barcodeText = changeTTInfo.substring(0, changeTTInfo.indexOf("_"));
             }
 
-            // 5. Определяем тип фото (счётчик или концентратор)
-            String type = (currentState == UserState.WAITING_FOR_COUNTER_PHOTO || workEquipment.get(chatId) == equipmentType.COUNTER) ? "counter" : "concentrator";
+            // 5. Определяем тип фото (счётчик, тт или концентратор)
+            String type = switch (userStates.get(chatId)) {
+                case WAITING_FOR_COUNTER_PHOTO -> "counter";
+                case WAITING_FOR_DC_PHOTO -> "concentrator";
+                case WAITING_FOR_TT_PHOTO -> "tt";
+                default -> throw new IllegalStateException("Неизвестный тип оборудования: " + userStates.get(chatId));
+            };
 
             // 6. Создаём объект для хранения фото
             PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
             pendingPhotos.put(chatId, pendingPhoto);
-            if (manualReading != null) pendingPhoto.setMeterReading(manualReading.trim());
+            if (type.equals("counter")) {
+                if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
 
-            // 7. Если штрихкод найден и есть показания – сразу сохраняем
-            if (barcodeText != null && pendingPhoto.getMeterReading() != null) {
-                savePhoto(chatId, pendingPhoto);
-            } else if (barcodeText == null) {
-                sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:", null);
-                userStates.put(chatId, UserState.MANUAL_INSERT);
-            } else {
-                sendMessage(chatId, "Введите показания счётчика:", null);
-                userStates.put(chatId, UserState.WAITING_FOR_METER_READING);
+                // 7. Если штрихкод найден и есть показания – сразу сохраняем
+                if (barcodeText != null && pendingPhoto.getAdditionalInfo() != null) {
+                    savePhoto(chatId, pendingPhoto);
+                } else if (barcodeText == null) {
+                    sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:", null);
+                    userStates.put(chatId, UserState.MANUAL_INSERT);
+                } else {
+                    sendMessage(chatId, "Введите показания счётчика:", null);
+                    userStates.put(chatId, UserState.WAITING_FOR_METER_READING);
+                }
+            } else if (type.equals("tt")) {
+                if (manualInput != null) {
+                    pendingPhoto.setAdditionalInfo(manualInput);
+                    savePhoto(chatId, pendingPhoto);
+                } else {
+                    photoCounter--;
+                    sequenceNumber--;
+                    sendMessage(chatId, "Номер трансформатора не найден. Повторите предыдущее действие.", null);
+                }
             }
         } catch (Exception e) {
             log.error("Ошибка обработки фото: " + e.getMessage());
@@ -254,7 +274,7 @@ public class TBot extends TelegramLongPollingBot {
             String deviceNumber = update.getMessage().getText().trim();
             PendingPhoto pending = pendingPhotos.get(chatId);
             if (pending != null) {
-                pending.setScannedBarcode(deviceNumber);
+                pending.setDeviceNumber(deviceNumber);
                 savePhoto(chatId, pending);
             } else {
                 sendMessage(chatId, "Ошибка: нет ожидающих фото для привязки данных.", null);
@@ -267,43 +287,75 @@ public class TBot extends TelegramLongPollingBot {
 
             PendingPhoto pending = pendingPhotos.get(chatId);
             if (pending != null) {
-                pending.setMeterReading(deviceIndication);
+                pending.setAdditionalInfo(deviceIndication);
                 savePhoto(chatId, pending);
             } else {
                 sendMessage(chatId, "Ошибка: нет ожидающих фото для привязки показаний.", null);
             }
             return;
         }
-        OtoIIK otoIIKType = otoIIKTypes.get(chatId);
-        Map<OtoIIK, String> otoIIKStringMap = Map.of(
-                OtoIIK.WK_DROP, "WK_",
-                OtoIIK.SET_NOT, "NOT_",
-                OtoIIK.SUPPLY_RESTORING, "SUPPLY_");
+        OtoIIKType currentOtoIIKType = otoIIKTypeMap.get(chatId);
+        Map<OtoIIKType, String> otoIIKStringMap = Map.of(
+                OtoIIKType.WK_DROP, "WK_",
+                OtoIIKType.SET_NOT, "NOT_",
+                OtoIIKType.TT_CHANGE, "TT_",
+                OtoIIKType.SUPPLY_RESTORING, "SUPPLY_");
 
-        if (otoIIKType == OtoIIK.WK_DROP || otoIIKType == OtoIIK.SET_NOT || otoIIKType == OtoIIK.SUPPLY_RESTORING) {
+        if (currentOtoIIKType == OtoIIKType.WK_DROP || currentOtoIIKType == OtoIIKType.SET_NOT || currentOtoIIKType == OtoIIKType.SUPPLY_RESTORING) {
             String deviceNumber = update.getMessage().getText().trim();
             if (deviceNumber.contains("_")) {
-                String[] deviceNumberData = deviceNumber.split("_");
-                deviceNumber = deviceNumberData[0];
-                otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType) + deviceNumberData[1]);
-            } else otoIIKLog.put(deviceNumber, otoIIKStringMap.get(otoIIKType));
+                String[] deviceData = deviceNumber.split("_");
+                deviceNumber = deviceData[0];
+                otoIIKLog.put(deviceNumber, otoIIKStringMap.get(currentOtoIIKType) + deviceData[1]);
+            } else otoIIKLog.put(deviceNumber, otoIIKStringMap.get(currentOtoIIKType));
             log.info("{}. ПУ №: {}", ++sequenceNumber, deviceNumber);
             sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
             return;
         }
 
-        if (otoIIKType == OtoIIK.METER_CHANGE) {
+        if (currentOtoIIKType == OtoIIKType.METER_CHANGE) {
             deviceInfo.add(update.getMessage().getText());
             ++sequenceNumber;
             if (sequenceNumber < 2) {
                 sendMessage(chatId, "Введите номер и показания устанавливаемого ПУ.");
             } else {
                 formingOtoIikLogWithMeterChange(deviceInfo);
-                sendTextMessage(meterChangeConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+                sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
             }
             return;
         }
 
+        if (currentOtoIIKType == OtoIIKType.TT_CHANGE) {
+            changeTTInfo += (update.getMessage().getText()) + "_";
+            sequenceNumber++;
+            switch (sequenceNumber) {
+                case 1 -> sendMessage(chatId, "Введите тип трансформаторов тока (пример: ТШП-0,66): ");
+                case 2 -> sendMessage(chatId, "Введите коэффициент трансформации (пример: 300/5): ");
+                case 3 -> sendMessage(chatId, "Введите класс точности (пример: 0,5 или 0,5S): ");
+                case 4 -> sendMessage(chatId, "Введите год выпуска трансформаторов (пример: 2025): ");
+                case 5 -> {
+                    if (!userStates.isEmpty()) {
+                        sendMessage(chatId, "Прикрепите фото ТТ ф.A и введите его номер: ");
+                    } else sendMessage(chatId, "Введите номер ТТ ф.A: ");
+                }
+                case 6 -> {
+                    if (!userStates.isEmpty()) {
+                        sendMessage(chatId, "Прикрепите фото ТТ ф.B и введите его номер: ");
+                    } else sendMessage(chatId, "Введите номер ТТ ф.B: ");
+                }
+                case 7 -> {
+                    if (!userStates.isEmpty()) {
+                        sendMessage(chatId, "Прикрепите фото ТТ ф.C и введите его номер: ");
+                    } else sendMessage(chatId, "Введите номер ТТ ф.C: ");
+                }
+                case 8 -> {
+                    String deviceNumber = changeTTInfo.substring(0, changeTTInfo.indexOf("_"));
+                    otoIIKLog.put(deviceNumber, "ttChange" + changeTTInfo.substring(changeTTInfo.indexOf("_")));
+                    sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+                }
+            }
+            return;
+        }
         // Обработка остальных текстовых сообщений
         switch (msgText) {
             case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
@@ -311,47 +363,6 @@ public class TBot extends TelegramLongPollingBot {
             case "/register" -> registerUser(chatId);
             default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.", null);
         }
-    }
-
-    private void formingOtoIikLogWithMeterChange(List<String> deviceInfo) {
-        String[] deviceNumber = deviceInfo.get(0).split("_");
-        otoIIKLog.put(deviceNumber[0], "meterChange_" + deviceNumber[1] + "_" + deviceInfo.get(1));
-    }
-
-    private String meterChangeConfirmation(Map<String, String> otoIIKLog) {
-        StringBuilder resultStr = new StringBuilder("Выполняемое действие:\n");
-        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
-            String[] str = entry.getValue().split("_");
-            resultStr
-                    .append("Замена прибора учета № ")
-                    .append(entry.getKey())
-                    .append(" с показаниями: ")
-                    .append(str[1])
-                    .append("\n на  прибор учета № ")
-                    .append(str[2])
-                    .append(" с показаниями: ")
-                    .append(str[3]) //TODO объединить
-                    .append("\n");
-        }
-        return resultStr.toString();
-    }
-
-    private String actionConfirmation(Map<String, String> otoIIKLog) {
-        int lineCounter = 0;
-        StringBuilder resultStr = new StringBuilder("Выполнены следующие действия: ");
-        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
-            String[] str = entry.getValue().split("_");
-            String[] key = entry.getKey().split("_");
-            List<String> strings = getStrings(str[0]);
-            resultStr
-                    .append("\n")
-                    .append(++lineCounter)
-                    .append(". ПУ № ")
-                    .append(key[0])
-                    .append(strings.get(2));
-            if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
-        }
-        return resultStr.toString();
     }
 
 
@@ -373,7 +384,6 @@ public class TBot extends TelegramLongPollingBot {
             case "ptoIIK" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.", null);
                 userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
-                workEquipment.put(chatId, equipmentType.COUNTER);
             }
             case "ptoIVKE" -> {
                 sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.", null);
@@ -381,7 +391,6 @@ public class TBot extends TelegramLongPollingBot {
             }
             case "otoIIK" -> {
                 sendTextMessage("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
-                workEquipment.put(chatId, equipmentType.COUNTER);
             }
             case "otoIVKE" -> {
                 sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
@@ -389,40 +398,57 @@ public class TBot extends TelegramLongPollingBot {
 
             case "wkDrop" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIK.WK_DROP);
+                otoIIKTypeMap.put(chatId, OtoIIKType.WK_DROP);
             }
 
             case "setNot" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIK.SET_NOT);
-            }
-
-            case "ttChange" -> {
-                sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIK.TT_CHANGE);
+                otoIIKTypeMap.put(chatId, OtoIIKType.SET_NOT);
             }
 
             case "powerSupplyRestoring" -> {
                 sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIK.SUPPLY_RESTORING);
+                otoIIKTypeMap.put(chatId, OtoIIKType.SUPPLY_RESTORING);
             }
 
-            case "meterChange" -> {
+            case "meterChange", "ttChange" -> {
+                String value1 = "";
+                String value2 = "";
+                if (callbackData.equals("meterChange")) {
+                    value1 = "meterChangeWithPhoto";
+                    value2 = "meterChangeWithoutPhoto";
+                } else {
+                    value1 = "ttChangeWithPhoto";
+                    value2 = "ttChangeWithOutPhoto";
+                }
                 sendTextMessage("Вид передачи данных: ",
-                        Map.of("С приложением фото.", "meterChangeWithPhoto",
-                                "Без приложения фото.", "meterChangeWithoutPhoto"), chatId, 2);
+                        Map.of("С приложением фото.", value1,
+                                "Без приложения фото.", value2), chatId, 2);
             }
 
-            case "meterChangeWithPhoto" -> {
-                sendMessage(chatId, "Прикрепите фото демонтируемого прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
-                userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
+            case "ttChangeWithPhoto", "ttChangeWithOutPhoto" -> {
+                if ("ttChangeWithPhoto".equals(callbackData))
+                    userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
+                sendMessage(chatId, "Введите номер прибора учета: ");
+                otoIIKTypeMap.put(chatId, OtoIIKType.TT_CHANGE);
             }
 
-            case "meterChangeWithoutPhoto" -> {
-                sendMessage(chatId, "Введите номер и показания демонтируемого прибора учета: \n" +
-                        "например: 7200123456_7890");
-                otoIIKTypes.put(chatId, OtoIIK.METER_CHANGE);
+            case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
+                if ("dcChangeWithOutPhoto".equals(callbackData))
+                    userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
+                sendMessage(chatId, "Введите номер концентратора: ");
+                otoDCMap.put(chatId, OtoDC.DC_CHANGE);
+            }
+
+            case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
+                String textToSend = "";
+                otoIIKTypeMap.put(chatId, OtoIIKType.METER_CHANGE);
+                if ("meterChangeWithPhoto".equals(callbackData)) {
+                    textToSend = "Прикрепите фото демонтируемого прибора учета: ";
+                    userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
+                } else textToSend = "Введите номер и показания демонтируемого прибора учета: \n" +
+                        "например: 7200123456_7890";
+                sendMessage(chatId, textToSend);
             }
 
             case "LOADING_COMPLETE" -> {
@@ -442,7 +468,6 @@ public class TBot extends TelegramLongPollingBot {
                 clearData();
                 sendMessage(chatId, "Для продолжения снова нажмите /start", null);
             }
-
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.", null);
         }
     }
@@ -451,7 +476,8 @@ public class TBot extends TelegramLongPollingBot {
         otoIIKLog.clear();
         sequenceNumber = 0;
         userStates.clear();
-        otoIIKTypes.clear();
+        otoIIKTypeMap.clear();
+        photoCounter = 0;
     }
 
 
@@ -467,45 +493,41 @@ public class TBot extends TelegramLongPollingBot {
         ), chatId, 1);
     }
 
-    private BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
-        BufferedImage resizedImage = new BufferedImage(width, height, originalImage.getType());
-        Graphics2D g2d = resizedImage.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.drawImage(originalImage, 0, 0, width, height, null);
-        g2d.dispose();
-        return resizedImage;
-    }
+    private static final Map<OtoIIKType, String> PHOTO_SUBDIRS_NAME = Map.of(
+            OtoIIKType.METER_CHANGE, "Замена ПУ",
+            OtoIIKType.TT_CHANGE, "Замена ТТ"
+    );
 
     private void savePhoto(long chatId, PendingPhoto pending) {
         try {
             String baseDir = PHOTO_PATH + File.separator;
-            if (otoIIKTypes.get(chatId).equals(OtoIIK.METER_CHANGE)) baseDir += "Замена ПУ" + File.separator;
-            String path = savingPaths.get(pending.getScannedBarcode());
-            String resultPath = !otoIIKTypes.get(chatId).equals(OtoIIK.METER_CHANGE) ? path.substring(0, path.lastIndexOf("\\")) : path;
+            OtoIIKType operationType = otoIIKTypeMap.get(chatId);
+
+            if (operationType != null && PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
+                baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
+            }
+
+            String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
+            String resultPath = !otoIIKTypeMap.get(chatId).equals(OtoIIKType.METER_CHANGE) ? path.substring(0, path.lastIndexOf("\\")) : path;
             if (photoCounter == 1) chgePath = resultPath;
             if (photoCounter == 2) resultPath = chgePath;
             Path userDir = Paths.get(baseDir + resultPath);
             Files.createDirectories(userDir);
 
-            String pendingPhotoType = pending.getType();
+            String prefix = getSavingPhotoPrefix(pending.getType());
 
-            String prefix = switch (pendingPhotoType) {
-                case "counter" -> "ИИК_";
-                case "concentrator" -> "ИВКЭ_";
-                default -> "unknown_";
-            };
+            String deviceNumber = (pending.getDeviceNumber() != null) ? pending.getDeviceNumber() : "unknown";
+            String indication = (pending.getAdditionalInfo() != null) ? "_" + pending.getAdditionalInfo() : "";
+            deviceInfo.add(deviceNumber + indication);
 
+            String newFileName = formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + deviceNumber + indication;
 
-            String barcode = (pending.getScannedBarcode() != null) ? pending.getScannedBarcode() : "unknown";
-            String indication = (pending.getMeterReading() != null) ? "_" + pending.getMeterReading() : "";
-            String newFileName;
-            deviceInfo.add(barcode + indication);
             if (photoCounter == 1) {
-                newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_демонтирован.jpg";
+                newFileName += "_демонтирован.jpg";
             } else if (photoCounter == 2) {
-                newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + "_установлен.jpg";
+                newFileName += "_установлен.jpg";
                 formingOtoIikLogWithMeterChange(deviceInfo);
-            } else newFileName = formattedCurrentDate + "_" + prefix + barcode + indication + ".jpg";
+            } else newFileName += ".jpg";
 
             Path destination = userDir.resolve(newFileName);
 
@@ -515,14 +537,11 @@ public class TBot extends TelegramLongPollingBot {
             pendingPhotos.remove(chatId);
 
             if (photoCounter >= 2) {
-                otoIIKTypes.clear();
-                userStates.clear();
                 sendTextMessage("Фото сохранены, пожалуйста завершите загрузку.", CompleteButton, chatId, 1);
-                photoCounter = 0;
                 return;
             }
 
-            if (otoIIKTypes.containsKey(chatId)) {
+            if (otoIIKTypeMap.containsKey(chatId)) {
                 sendMessage(chatId, "Прикрепите фото устанавливаемого прибора учета:\n", null);
             } else
                 sendTextMessage("Заргрузите следующее фото или закончите загрузку.", CompleteButton, chatId, 1);
@@ -534,68 +553,13 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    /**
-     * Метод декодирования штрихкода с изображения с помощью ZXing.
-     *
-     * @param image BufferedImage, считанное из файла.
-     * @return текст штрихкода или null, если декодирование не удалось.
-     */
-    private String decodeBarcode(BufferedImage image) {
-        try {
-            LuminanceSource source = new BufferedImageLuminanceSource(image);
-            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-            Result result = new MultiFormatReader().decode(bitmap);
-            return result.getText();
-        } catch (NotFoundException e) {
-            log.warn("Штрихкод не найден при первой попытке: {}", e.getMessage());
-            // Попытка декодирования при повороте изображения
-            for (int angle = 90; angle < 360; angle += 30) {
-                BufferedImage rotated = rotateImage(image, angle);
-                try {
-                    LuminanceSource rotatedSource = new BufferedImageLuminanceSource(rotated);
-                    BinaryBitmap rotatedBitmap = new BinaryBitmap(new HybridBinarizer(rotatedSource));
-                    Result rotatedResult = new MultiFormatReader().decode(rotatedBitmap);
-                    return rotatedResult.getText();
-                } catch (NotFoundException ignored) {
-                    // Продолжаем, если штрихкод не найден
-                }
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Метод разворота изображения с помощью.
-     *
-     * @param src   BufferedImage, считанное из файла,
-     * @param angle int, угол поворота изображения
-     *              * @return BufferedImage повернутое на заданный угол исходное изображение
-     */
-    private BufferedImage rotateImage(BufferedImage src, int angle) {
-        double rads = Math.toRadians(angle);
-        double sin = Math.abs(Math.sin(rads));
-        double cos = Math.abs(Math.cos(rads));
-        int w = src.getWidth();
-        int h = src.getHeight();
-        int newWidth = (int) Math.floor(w * cos + h * sin);
-        int newHeight = (int) Math.floor(h * cos + w * sin);
-
-        BufferedImage rotated = new BufferedImage(newWidth, newHeight, src.getType());
-        Graphics2D g2d = rotated.createGraphics();
-        g2d.translate((newWidth - w) / 2, (newHeight - h) / 2);
-        g2d.rotate(rads, w / 2, h / 2);
-        g2d.drawRenderedImage(src, null);
-        g2d.dispose();
-        return rotated;
-    }
-
-    // Преобразование цветного изображение в оттенки серого
-    private BufferedImage convertToGrayscale(BufferedImage src) {
-        BufferedImage gray = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        Graphics g = gray.getGraphics();
-        g.drawImage(src, 0, 0, null);
-        g.dispose();
-        return gray;
+    private String getSavingPhotoPrefix(String type) {
+        return switch (type) {
+            case "counter" -> "ИИК_";
+            case "concentrator" -> "ИВКЭ_";
+            case "tt" -> "ТТ_";
+            default -> "unknown_";
+        };
     }
 
 
@@ -604,7 +568,6 @@ public class TBot extends TelegramLongPollingBot {
                 "Yes", YES_BUTTON,
                 "No", NO_BUTTON
         ));
-
         sendMessage(chatId, "Do you really want to register?", keyboardMarkup);
     }
 
@@ -744,19 +707,19 @@ public class TBot extends TelegramLongPollingBot {
             Sheet workSheet = isIikLog ? planOTOWorkbook.getSheet("ИИК") : planOTOWorkbook.getSheet("ИВКЭ");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
             int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
-            int meterNumberColumnIndex = findColumnIndex(workSheet, "Номер счетчика");
-            int orderColumnNumber = findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
+            int meterNumberColumnIndex = excelFileService.findColumnIndex(workSheet, "Номер счетчика");
+            int orderColumnNumber = excelFileService.findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
 
-            CellStyle commonCellStyle = createCommonCellStyle(operationLog);
-            CellStyle dateCellStyle = createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
+            CellStyle commonCellStyle = excelFileService.createCommonCellStyle(operationLog);
+            CellStyle dateCellStyle = excelFileService.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
 
             int addRow = 0;
             for (Row row : workSheet) {
-                String meterNumber = getCellStringValue(row.getCell(meterNumberColumnIndex));
+                String meterNumber = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
                 String logData = opLog.getOrDefault(meterNumber, "");
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
-                    copyRow(row, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
+                    excelFileService.copyRow(row, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
                     addOtoData(logData, newRow, row, meterNumberColumnIndex, orderColumnNumber);
                 }
             }
@@ -771,117 +734,92 @@ public class TBot extends TelegramLongPollingBot {
 
     private void addOtoData(String logData, Row newRow, Row otoRow, int meterNumColIndex, int orderColIndex) {
         String data = logData.substring(0, logData.indexOf("_"));
-        switch (data) {
-            case "WK", "NOT", "SUPPLY" -> {
-                String[] additionalData = logData.split("_");
-                List<String> columns = getStrings(data);
-                Cell date = newRow.getCell(16);
-                setDateCellStyle(date);
-                newRow.getCell(17).setCellValue(columns.get(0));
-                newRow.getCell(18).setCellValue(columns.get(1));
-                newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
-                String taskOrder = straightFormattedCurrentDate + columns.get(2) + (additionalData.length > 1 ? " " + additionalData[1] : "");
-                newRow.createCell(21).setCellValue(taskOrder);
-//                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+        String[] additionalData = logData.split("_");
+        List<String> columns = getStrings(data);
 
-                // Внесение данных в журнал "Контроль ПУ РРЭ"
-                otoRow.getCell(orderColIndex).setCellValue(taskOrder);
-            }
+        Cell date = newRow.getCell(16);
+        excelFileService.setDateCellStyle(date);
+
+        newRow.getCell(17).setCellValue(columns.get(0));
+        newRow.getCell(18).setCellValue(columns.get(1));
+        newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
+
+        String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
+            case "WK", "NOT", "SUPPLY" -> (additionalData.length > 1 ? " " + additionalData[1] : "");
+
             case "meterChange" -> {
-                String[] replacingData = logData.split("_");
-
-                Cell date = newRow.getCell(16);
-                setDateCellStyle(date);
-
-                newRow.getCell(17).setCellValue("Нет связи со счетчиком");
-                newRow.getCell(18).setCellValue("Неисправность счетчика (счетчик заменен)");
-                newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из бд по chatId
-                String meterNumberStr = replacingData[2];
-
-                Object mountingMeterNumber = parseMeterNumber(meterNumberStr);
-
-                String taskOrder = straightFormattedCurrentDate + " - замена счетчика "
-                        + getCellStringValue(newRow.getCell(13)) + " (" + replacingData[1] + " кВт) на "
-                        + replacingData[2] + " (" + replacingData[3] + " кВт).";
-                newRow.createCell(21).setCellValue(taskOrder);
-//                newRow.createCell(22).setCellValue("Выполнено");//TODO: добавить после реализации внесения корректировок в Горизонт либо БД
-
-                // Внесение данных в журнал "Контроль ПУ РРЭ"
+                Object mountingMeterNumber = parseMeterNumber(additionalData[2]);
+                // Внесение номера счётчика в журнал "Контроль ПУ РРЭ"
                 if (mountingMeterNumber instanceof Long) {
                     otoRow.getCell(meterNumColIndex).setCellValue((Long) mountingMeterNumber);
                 } else {
                     otoRow.getCell(meterNumColIndex).setCellValue((String) mountingMeterNumber);
                 }
-                otoRow.getCell(orderColIndex).setCellValue(taskOrder);
+                yield excelFileService.getCellStringValue(newRow.getCell(13)) + " (" + additionalData[1]
+                        + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт).";
             }
-        }
+            case "ttChange" -> String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
+                    additionalData[1], additionalData[2], additionalData[3], additionalData[4],
+                    additionalData[5], additionalData[6], additionalData[7]);
+            default -> null;
+        };
+
+        newRow.createCell(21).setCellValue(taskOrder);
+        otoRow.getCell(orderColIndex).setCellValue(taskOrder);
+
+//      newRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
 
     private static List<String> getStrings(String data) {
         Map<String, List<String>> fillingData = Map.of(
                 "WK", List.of("Нет связи со счетчиком",
                         "Ошибка ключа - Вронгкей (сделана прошивка счетчика)",
-                        " - Сброшена ошибка ключа Вронгкей (счетчик не на связи)."),
+                        " Сброшена ошибка ключа Вронгкей (счетчик не на связи)."),
                 "NOT", List.of("Нет связи со счетчиком",
-                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " - НОТ."),
-                "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " - Восстановление схемы подключения."));
-
+                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " НОТ."),
+                "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " Восстановление схемы подключения."),
+                "meterChange", List.of("Нет связи со счетчиком", "Неисправность счетчика (счетчик заменен)", " Замена прибора учета № "),
+                "ttChange", List.of("Повреждение ТТ\n", " - Повреждение ТТ (ТТ заменили)",
+                        " Замена трансформаторов тока. Установлены трансформаторы "));
         return fillingData.get(data);
     }
 
-    /**
-     * Метод преобразования значения ячейки в дату, так чтоб Excel понимал его именно как дату.
-     *
-     * @param date Cell, ячейка содержащая значеие даты.
-     */
-    private void setDateCellStyle(Cell date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
-        CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
-        try {
-            date.setCellValue(sdf.parse(straightFormattedCurrentDate));
-        } catch (ParseException e) {
-            date.setCellStyle(dateStyle);
-        }
-        date.setCellStyle(dateStyle);
-    }
+    private String actionConfirmation(Map<String, String> otoIIKLog) {
+        StringBuilder resultStr = new StringBuilder("Выполнены следующие действия:\n");
+        int lineCounter = 0;
 
-    private static void copyRow(Row sourceRow, Row targetRow, int columnCount, CellStyle defaultCellStyle, CellStyle dateCellStyle) {
-        for (int i = 0; i <= columnCount; i++) {
-            Cell sourceCell = sourceRow.getCell(i);
-            Cell targetCell = targetRow.createCell(i);
+        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
+            String[] str = entry.getValue().split("_");
+            String actionType = str[0];
+            String[] key = entry.getKey().split("_");
+            List<String> strings = getStrings(actionType);
 
-            if (sourceCell != null) {
-                switch (sourceCell.getCellType()) {
-                    case STRING:
-                        targetCell.setCellValue(sourceCell.getStringCellValue());
-                        targetCell.setCellStyle(defaultCellStyle);
-                        break;
-                    case NUMERIC:
-                        if (DateUtil.isCellDateFormatted(sourceCell)) {
-                            targetCell.setCellValue(sourceCell.getDateCellValue()); // Копируем дату
-                            targetCell.setCellStyle(dateCellStyle); // Применяем стиль для даты
-                        } else {
-                            targetCell.setCellValue(sourceCell.getNumericCellValue()); // Копируем число
-                            targetCell.setCellStyle(defaultCellStyle);
-                        }
-                        break;
-                    case BOOLEAN:
-                        targetCell.setCellValue(sourceCell.getBooleanCellValue());
-                        targetCell.setCellStyle(defaultCellStyle);
-                        break;
-                    case FORMULA:
-                        targetCell.setCellFormula(sourceCell.getCellFormula());
-                        targetCell.setCellStyle(defaultCellStyle);
-                        break;
-                    default:
-                        targetCell.setCellStyle(defaultCellStyle);
-                        break;
+            resultStr.append(++lineCounter).append(". ").append(strings.get(2));
+            switch (actionType) {
+
+                case "meterChange" -> resultStr.append(String.format(
+                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s", key[0], str[1], str[2], str[3]));
+                case "ttChange" -> resultStr.append(String.format(
+                        "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
+                        str[1], str[2], str[3], str[4], str[5], str[6], str[7]));
+                default -> {
+                    resultStr.append(String.format(" ПУ № %s.", key[0]));
+                    if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
                 }
             }
+            resultStr.append("\n");
         }
+        return resultStr.toString();
+    }
+
+    private void formingOtoIikLogWithMeterChange(List<String> deviceInfo) {
+        String[] deviceNumber = deviceInfo.get(0).split("_");
+        otoIIKLog.put(deviceNumber[0], "meterChange_" + deviceNumber[1] + "_" + deviceInfo.get(1));
     }
 
     private Map<String, String> getPhotoSavingPathFromExcel() {
+
+        ExcelFileService excelFileService = new ExcelFileService();
 
         Map<String, String> eelToNtel = Map.of(
                 "ЭЭЛ-1", "НТЭЛ-1",
@@ -899,13 +837,13 @@ public class TBot extends TelegramLongPollingBot {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))) {
             paths = new HashMap<>();
             Sheet iikSheet = planOTOWorkbook.getSheet("ИИК");
-            int meterNumberColumnIndex = findColumnIndex(iikSheet, "Номер счетчика");
-            int eelColumnIndex = findColumnIndex(iikSheet, "ЭЭЛ");
-            int stationColumnIndex = findColumnIndex(iikSheet, "Железнодорожная станция");
-            int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
-            int meterPointIndex = findColumnIndex(iikSheet, "Точка Учета");
+            int meterNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер счетчика");
+            int eelColumnIndex = excelFileService.findColumnIndex(iikSheet, "ЭЭЛ");
+            int stationColumnIndex = excelFileService.findColumnIndex(iikSheet, "Железнодорожная станция");
+            int substationColumnIndex = excelFileService.findColumnIndex(iikSheet, "ТП/КТП");
+            int meterPointIndex = excelFileService.findColumnIndex(iikSheet, "Точка Учета");
             for (Row row : iikSheet) {
-                String meterNum = getCellStringValue(row.getCell(meterNumberColumnIndex));
+                String meterNum = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
                 if (meterNum != null) {
                     paths.put(meterNum,
                             eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
@@ -929,39 +867,6 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private static String getCellStringValue(Cell cell) {
-        if (cell != null) {
-            switch (cell.getCellType()) {
-                case STRING:
-                    return cell.getStringCellValue();
-                case NUMERIC:
-                    if (DateUtil.isCellDateFormatted(cell)) {
-                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
-                    } else {
-                        return new DecimalFormat("0").format(cell.getNumericCellValue());
-                    }
-                case FORMULA:
-                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
-                    return evaluator.evaluate(cell).getStringValue();
-                default:
-                    return null;
-            }
-        }
-        return null;
-    }
-
-    private static int findColumnIndex(Sheet sheet, String columnName) {
-        Row headerRow = sheet.getRow(0); // Заголовок на первой строке
-        if (headerRow == null) return -1;
-
-        for (int i = 0; i < headerRow.getLastCellNum(); i++) {
-            Cell cell = headerRow.getCell(i);
-            if (cell != null && columnName.equalsIgnoreCase(cell.getStringCellValue())) {
-                return i;
-            }
-        }
-        return -1;
-    }
 
     private void register(long chatId) {
         SendMessage message = new SendMessage();
@@ -988,36 +893,6 @@ public class TBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    private static CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
-        CellStyle dateCellStyle = resultWorkbook.createCellStyle();
-        DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
-        dateCellStyle.setDataFormat(dateFormat.getFormat(format));
-        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
-        dateCellStyle.setBorderBottom(BorderStyle.THIN);
-        dateCellStyle.setFont(createCellFontStyle(resultWorkbook, font, (short) 10, false));
-        return dateCellStyle;
-    }
-
-
-    static CellStyle createCommonCellStyle(Workbook resultWorkbook) {
-        CellStyle simpleCellStyle = resultWorkbook.createCellStyle();
-        Font font = createCellFontStyle(resultWorkbook, "Arial", (short) 10, false);
-
-        simpleCellStyle.setBorderBottom(BorderStyle.THIN);
-        simpleCellStyle.setBorderLeft(BorderStyle.THIN);
-        simpleCellStyle.setBorderRight(BorderStyle.THIN);
-        simpleCellStyle.setBorderTop(BorderStyle.THIN);
-        simpleCellStyle.setFont(font);
-        return simpleCellStyle;
-    }
-
-    private static Font createCellFontStyle(Workbook workbook, String fontName, short fontSize, boolean isBold) {
-        Font font = workbook.createFont();
-        font.setFontName(fontName);
-        font.setFontHeightInPoints(fontSize);
-        font.setBold(isBold);
-        return font;
-    }
 
     @Override
     public void onUpdatesReceived(List<Update> updates) {

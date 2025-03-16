@@ -14,13 +14,13 @@ import java.nio.file.Path;
 public class PendingPhoto {
     private final String type; // "counter" или "concentrator"
     private final Path tempFilePath;
-    private String scannedBarcode;
-    private String meterReading;
+    private String deviceNumber;
+    private String additionalInfo;
 
-    public PendingPhoto(String type, Path tempFilePath, String scannedBarcode) {
+    public PendingPhoto(String type, Path tempFilePath, String deviceNumber) {
         this.type = type;
         this.tempFilePath = tempFilePath;
-        this.scannedBarcode = scannedBarcode;
+        this.deviceNumber = deviceNumber;
     }
 }
 //
