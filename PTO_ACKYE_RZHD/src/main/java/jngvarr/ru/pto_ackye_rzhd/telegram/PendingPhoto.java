@@ -15,7 +15,7 @@ public class PendingPhoto {
     private final String type; // "counter" или "concentrator"
     private final Path tempFilePath;
     private String deviceNumber;
-    private String additionalInfo;
+    private String additionalInfo; //показания счетчика или номер трансформатора тока
 
     public PendingPhoto(String type, Path tempFilePath, String deviceNumber) {
         this.type = type;
