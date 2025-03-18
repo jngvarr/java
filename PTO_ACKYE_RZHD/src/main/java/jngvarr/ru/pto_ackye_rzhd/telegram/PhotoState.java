@@ -28,16 +28,15 @@ public class PhotoState {
 
     public boolean isComplete(TBot.OtoIIKType operationType) {
         return operationType == TBot.OtoIIKType.TT_CHANGE
-                ? uploadedPhotos.containsAll(TT_PHASES)
-                : uploadedPhotos.containsAll(Set.of("демонтирован", "установлен"));
+                ? uploadedPhotos.containsAll(TT_PHASES) : uploadedPhotos.containsAll(Set.of("демонтирован", "установлен"));
     }
 
     public String getNextPhotoType(TBot.OtoIIKType operationType) {
-        if (operationType == TBot.OtoIIKType.TT_CHANGE) {
+        if (operationType == TBot.OtoIIKType.TT_CHANGE)
             for (String phase : TT_PHASES) {
                 if (!uploadedPhotos.contains(phase)) return phase;
             }
-        } else {
+        else {
             if (!uploadedPhotos.contains("демонтирован")) return "демонтирован";
             if (!uploadedPhotos.contains("установлен")) return "установлен";
         }
