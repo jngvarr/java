@@ -78,7 +78,7 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, OtoIIKType> otoIIKTypes = new HashMap<>();
     private Map<Long, OtoDC> otoDCMap = new HashMap<>();
     private Map<String, String> otoIIKLog = new HashMap<>();
-    private List<String> deviceInfo = new ArrayList<>();
+    private List<String> meterChangeInfo = new ArrayList<>();
     private final Map<Long, PhotoState> photoStates = new HashMap<>();
     private static final Map<OtoIIKType, String> PHOTO_SUBDIRS_NAME = Map.of(
             OtoIIKType.METER_CHANGE, "Замена ПУ",
@@ -125,7 +125,7 @@ public class TBot extends TelegramLongPollingBot {
     private Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
     private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
     private int photoCounter;
-    private String changeTTInfo = "";
+    private String ttChangeInfo = "";
 
     public TBot(BotConfig config, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
@@ -214,7 +214,7 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             String barcodeText = "";
-            if (userStates.get(chatId).equals(UserState.WAITING_FOR_COUNTER_PHOTO)) {
+            if (currentState.equals(UserState.WAITING_FOR_COUNTER_PHOTO)) {
                 // 4. Декодируем штрихкод
                 barcodeText = preparingPhotoService.decodeBarcode(bufferedImage);
                 if (barcodeText == null) {
@@ -224,16 +224,16 @@ public class TBot extends TelegramLongPollingBot {
                 if (barcodeText == null) {
                     barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
                 }
-            } else if (userStates.get(chatId).equals(UserState.WAITING_FOR_TT_PHOTO)) {
-                barcodeText = changeTTInfo.substring(0, changeTTInfo.indexOf("_"));
+            } else if (currentState.equals(UserState.WAITING_FOR_TT_PHOTO)) {
+                barcodeText = ttChangeInfo.substring(0, ttChangeInfo.indexOf("_"));
             }
 
             // 5. Определяем тип фото (счётчик, тт или концентратор)
-            String type = switch (userStates.get(chatId)) {
+            String type = switch (currentState) {
                 case WAITING_FOR_COUNTER_PHOTO -> "counter";
                 case WAITING_FOR_DC_PHOTO -> "concentrator";
                 case WAITING_FOR_TT_PHOTO -> "tt";
-                default -> throw new IllegalStateException("Неизвестный тип оборудования: " + userStates.get(chatId));
+                default -> throw new IllegalStateException("Неизвестный тип оборудования: " + currentState);
             };
 
             // 6. Создаём объект для хранения фото
@@ -241,9 +241,8 @@ public class TBot extends TelegramLongPollingBot {
             pendingPhotos.put(chatId, pendingPhoto);
             if (type.equals("counter")) {
                 if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
-
                 // 7. Если штрихкод найден и есть показания – сразу сохраняем
-                if (barcodeText != null && pendingPhoto.getAdditionalInfo() != null) {
+                if (barcodeText != null) {
                     savePhoto(chatId, pendingPhoto);
                 } else if (barcodeText == null) {
                     sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:");
@@ -255,7 +254,7 @@ public class TBot extends TelegramLongPollingBot {
             } else if (type.equals("tt")) {
                 if (manualInput != null) {
                     pendingPhoto.setAdditionalInfo(manualInput);
-                    changeTTInfo += manualInput + "_";
+                    ttChangeInfo += manualInput + "_";
                     savePhoto(chatId, pendingPhoto);
                 } else {
 //                    photoCounter--;
@@ -263,6 +262,7 @@ public class TBot extends TelegramLongPollingBot {
 //                    savePhoto(chatId, pendingPhoto);
                     PhotoState photoState = photoStates.get(chatId);
                     OtoIIKType otoIIKType = otoIIKTypes.get(chatId);
+                    sendMessage(chatId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
                     sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(otoIIKType));
 //                    sendMessage(chatId, "Номер трансформатора не найден. Повторите ввод вручную: ");
                 }
@@ -340,7 +340,7 @@ public class TBot extends TelegramLongPollingBot {
 
 
     private void handleTTChange(long chatId, String msgText) {
-        changeTTInfo += msgText + "_";
+        ttChangeInfo += msgText + "_";
         sequenceNumber++;
         switch (sequenceNumber) {
             case 1 -> sendMessage(chatId, "Введите тип трансформаторов тока (пример: ТШП-0,66): ");
@@ -351,7 +351,7 @@ public class TBot extends TelegramLongPollingBot {
                 if (!userStates.isEmpty()) {
                     OtoIIKType otoIIKType = otoIIKTypes.get(chatId);
                     PhotoState photoState = photoStates.computeIfAbsent(chatId, key ->
-                            new PhotoState(changeTTInfo.substring(0, changeTTInfo.indexOf("_"))));
+                            new PhotoState(ttChangeInfo.substring(0, ttChangeInfo.indexOf("_"))));
                     sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(otoIIKType));
                 } else switch (sequenceNumber) {
                     case 5 -> sendMessage(chatId, "Введите номер ТТ ф.A: ");
@@ -366,20 +366,29 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void concludeTTChange(long chatId) {
-        String deviceNumber = changeTTInfo.substring(0, changeTTInfo.indexOf("_"));
-        otoIIKLog.put(deviceNumber, "ttChange" + changeTTInfo.substring(changeTTInfo.indexOf("_")));
+        formingOtoIikLogWithTtChange(ttChangeInfo);
+        sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+    }
+
+
+    private void concludeMeterChange(long chatId) {
+        formingOtoIikLogWithMeterChange(meterChangeInfo);
         sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
     }
 
     private void handleMeterChange(long chatId, String deviceNumber) {
-        deviceInfo.add(deviceNumber);
-        ++sequenceNumber;
-        if (sequenceNumber < 2) {
-            sendMessage(chatId, "Введите номер и показания устанавливаемого ПУ.");
-        } else {
-            formingOtoIikLogWithMeterChange(deviceInfo);
-            sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
-        }
+        if (deviceNumber.contains("_")) {
+            meterChangeInfo.add(deviceNumber);
+            switch (++sequenceNumber) {
+                case 1 -> sendMessage(chatId, "Введите номер и показания устанавливаемого прибора учета.\n" +
+                        "например: 7200123456_7890");
+                default -> {
+                    formingOtoIikLogWithMeterChange(meterChangeInfo);
+                    sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+                }
+            }
+        } else
+            sendTextMessage("Неправильный формат ввода данных. Завершите ввод и начните заново.", CompleteButton, chatId, 1);
     }
 
     private void handleMeterReading(long chatId, String msgText) {
@@ -482,8 +491,9 @@ public class TBot extends TelegramLongPollingBot {
             case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
                 String textToSend = "";
                 otoIIKTypes.put(chatId, OtoIIKType.METER_CHANGE);
+
                 if ("meterChangeWithPhoto".equals(callbackData)) {
-                    textToSend = "Прикрепите фото демонтируемого прибора учета: ";
+                    textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
                     userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
                 } else textToSend = "Введите номер и показания демонтируемого прибора учета: \n" +
                         "например: 7200123456_7890";
@@ -516,7 +526,8 @@ public class TBot extends TelegramLongPollingBot {
         sequenceNumber = 0;
         userStates.clear();
         otoIIKTypes.clear();
-        photoCounter = 0;
+//        photoCounter = 0;
+        ttChangeInfo = "";
     }
 
 
@@ -571,7 +582,11 @@ public class TBot extends TelegramLongPollingBot {
         // Проверка необходимости продолжения загрузки фото
         if (photoState.isComplete(operationType)) {
             sendMessage(chatId, "✅ Все фото загружены!");
-            concludeTTChange(chatId);
+            if (operationType.equals(OtoIIKType.METER_CHANGE)) {
+                concludeMeterChange(chatId);
+            } else {
+                concludeTTChange(chatId);
+            }
 //            formingOtoIikLogWithMeterChange(Collections.singletonList(deviceNumber));
             photoStates.remove(chatId);
         } else {
@@ -579,7 +594,6 @@ public class TBot extends TelegramLongPollingBot {
             sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(operationType));
         }
     }
-
 
     private void doSave(long chatId, PendingPhoto pending) {
         OtoIIKType operationType = otoIIKTypes.get(chatId);
@@ -604,8 +618,8 @@ public class TBot extends TelegramLongPollingBot {
         if (nextPhotoType == null) return;
 
         String message = switch (nextPhotoType) {
-            case "демонтирован" -> "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора.";
-            case "установлен" -> "📸 Теперь загрузите фото **УСТАНОВЛЕННОГО** прибора.";
+            case "демонтирован" -> "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
+            case "установлен" -> "📸 Теперь загрузите фото **УСТАНОВЛЕННОГО** прибора и введите показания.";
             case "Фаза_A" -> "📸 Прикрепите фото **ТТ фазы A** и введите его номер:";
             case "Фаза_B" -> "📸 Прикрепите фото **ТТ фазы B** и введите его номер:";
             case "Фаза_C" -> "📸 Прикрепите фото **ТТ фазы C** и введите его номер:";
@@ -641,8 +655,8 @@ public class TBot extends TelegramLongPollingBot {
         } : "";
 
         if (operationType != null && operationType.equals(OtoIIKType.METER_CHANGE)) {
-            deviceInfo.add(deviceNumber + meterIndicationOrTtNumber);
-            formingOtoIikLogWithMeterChange(deviceInfo);
+            meterChangeInfo.add(deviceNumber + meterIndicationOrTtNumber);
+//            formingOtoIikLogWithMeterChange(deviceInfo);
         }
 
         return formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + deviceNumber +
@@ -906,10 +920,16 @@ public class TBot extends TelegramLongPollingBot {
         return resultStr.toString();
     }
 
-    private void formingOtoIikLogWithMeterChange(List<String> deviceInfo) {
+    private void formingOtoIikLogWithMeterChange(List<String> deviceInfo) throws ArrayIndexOutOfBoundsException {
         String[] deviceNumber = deviceInfo.get(0).split("_");
         otoIIKLog.put(deviceNumber[0], "meterChange_" + deviceNumber[1] + "_" + deviceInfo.get(1));
     }
+//TODO объединить методы
+    private void formingOtoIikLogWithTtChange(String ttChangeInfo) {
+        String deviceNumber = ttChangeInfo.substring(0, ttChangeInfo.indexOf("_"));
+        otoIIKLog.put(deviceNumber, "ttChange" + ttChangeInfo.substring(ttChangeInfo.indexOf("_")));
+    }
+
 
     private Map<String, String> getPhotoSavingPathFromExcel() {
 
