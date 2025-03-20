@@ -12,7 +12,7 @@ import java.nio.file.Path;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class PendingPhoto {
-    private final String type; // "counter" или "concentrator"
+    private final String type; // "counter" или "concentrator"  или "tt"
     private final Path tempFilePath;
     private String deviceNumber;
     private String additionalInfo; //показания счетчика или номер трансформатора тока
