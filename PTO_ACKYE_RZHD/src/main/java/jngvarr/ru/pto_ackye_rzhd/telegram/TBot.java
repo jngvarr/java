@@ -49,6 +49,8 @@ public class TBot extends TelegramLongPollingBot {
     private List<Message> sendMessages = new ArrayList<>();
     private final ExcelFileService excelFileService;
     private final PreparingPhotoService preparingPhotoService;
+    // Карта для хранения информации о фото, ожидающих подтверждения
+    private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
     public enum UserState {
         WAITING_FOR_COUNTER_PHOTO,
@@ -58,6 +60,16 @@ public class TBot extends TelegramLongPollingBot {
         MANUAL_INSERT_METER_INDICATION,
         NONE;
     }
+
+    private void handleStartCommand(long chatId, String firstName) {
+        sendTextMessage(MAIN_MENU, startMenuButtons, chatId, 1);
+    }
+
+    private Map<String, String> startMenuButtons = Map.of(
+            "ПТО", "pto",
+            "ОТО", "oto",
+            "Монтаж / демонтаж ТУ", "newTU"
+    );
 
     private Map<String, Map<String, String>> modes = Map.of(
             "pto", Map.of(
@@ -70,23 +82,19 @@ public class TBot extends TelegramLongPollingBot {
                     "Монтаж новой точки учёта", "addIIK",
                     "Демонтаж точки учёта", "delIIK",
                     "Монтаж концентратора", "dcMount",
-                    "Демонтаж концентратора", "dcRemove"));
+                    "Демонтаж концентратора", "dcRemove")
+    );
 
     // Карта для хранения состояния диалога по chatId
-
     private Map<Long, UserState> userStates = new HashMap<>();
     private Map<Long, OtoIIKType> otoIIKTypes = new HashMap<>();
     private Map<Long, OtoDC> otoDCMap = new HashMap<>();
     private Map<String, String> otoIIKLog = new HashMap<>();
-    private final Map<Long, PhotoState> photoStates = new HashMap<>();
-    private static final Map<OtoIIKType, String> PHOTO_SUBDIRS_NAME = Map.of(
+    private Map<Long, PhotoState> photoStates = new HashMap<>();
+    private Map<OtoIIKType, String> PHOTO_SUBDIRS_NAME = Map.of(
             OtoIIKType.METER_CHANGE, "Замена ПУ",
             OtoIIKType.TT_CHANGE, "Замена ТТ"
     );
-
-
-    // Карта для хранения информации о фото, ожидающих подтверждения
-    private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
 
     public enum OtoIIKType {
         WK_DROP,
@@ -111,11 +119,11 @@ public class TBot extends TelegramLongPollingBot {
             "Замена трансформаторов тока", "ttChange",
             "Восстановление питания ТУ", "powerSupplyRestoring",
             "Присвоение статуса НОТ", "setNot");
+
     private Map<String, String> otoIVKEButtons = Map.of(
             "Замена концентратора", "dcChange",
             "Перезагрузка концентратора", "dcRestart",
-            "Восстановление питания", "powerSupplyRestoring",
-            "Другие работы", "otherDC");
+            "Восстановление питания", "powerSupplyRestoring");
 
     private Map<String, String> confirmMenu = Map.of(
             "Подтвердить выполнение", "confirm",
@@ -161,14 +169,6 @@ public class TBot extends TelegramLongPollingBot {
 
     private void handlePhotoMessage(Update update) {
         long chatId = update.getMessage().getChatId();
-//        if (OtoIIKType.METER_CHANGE.equals(otoIIKTypeMap.get(chatId)) && photoCounter >= 2 ||
-//                OtoIIKType.TT_CHANGE.equals(otoIIKTypeMap.get(chatId)) && photoCounter >= 3) {
-//            return;
-//        }
-
-//        if (OtoIIKType.METER_CHANGE.equals(otoIIKTypeMap.get(chatId)) || OtoIIKType.TT_CHANGE.equals(otoIIKTypeMap.get(chatId))) {
-//            photoCounter++;
-//        }
 
         // Проверяем, есть ли подпись к фото
         String manualInput = update.getMessage().getCaption();
@@ -259,18 +259,12 @@ public class TBot extends TelegramLongPollingBot {
             } else if (type.equals("tt")) {
                 if (manualInput != null) {
                     pendingPhoto.setAdditionalInfo(manualInput);
-//                    deviceChangeInfo += manualInput + "_";
-//                    editChangingInfo(pendingPhoto);
                     savePhoto(chatId, pendingPhoto);
                 } else {
-//                    photoCounter--;
-//                    sequenceNumber--;
-//                    savePhoto(chatId, pendingPhoto);
                     PhotoState photoState = photoStates.get(chatId);
                     OtoIIKType otoIIKType = otoIIKTypes.get(chatId);
                     sendMessage(chatId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
                     sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(otoIIKType));
-//                    sendMessage(chatId, "Номер трансформатора не найден. Повторите ввод вручную: ");
                 }
             }
         } catch (Exception e) {
@@ -339,7 +333,6 @@ public class TBot extends TelegramLongPollingBot {
         } else {
             otoIIKLog.put(deviceNumber, otoIIKStringMap.get(currentOtoIIKType));
         }
-
         log.info("{}. ПУ №: {}", ++sequenceNumber, deviceNumber);
         sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
     }
@@ -384,13 +377,12 @@ public class TBot extends TelegramLongPollingBot {
             sendTextMessage("Неправильный формат ввода данных. Завершите ввод и начните заново.", CompleteButton, chatId, 1);
     }
 
-    private void handleManualInsertMeterIndication(long chatId, String msgText) {
-        String deviceIndication = msgText.trim();
+    private void handleManualInsertMeterIndication(long chatId, String deviceNumber) {
+        String deviceIndication = deviceNumber.trim();
         PendingPhoto pending = pendingPhotos.get(chatId);
 
         if (pending != null) {
             pending.setAdditionalInfo(deviceIndication);
-//            savePhoto(chatId, pending);
 
             // Если показания введены, проверяем, нужно ли запрашивать номер прибора
             if (pending.getDeviceNumber() == null) {
@@ -412,7 +404,6 @@ public class TBot extends TelegramLongPollingBot {
 
         if (pending != null) {
             pending.setDeviceNumber(deviceNumber);
-//            savePhoto(chatId, pending);
 
             // Если номер прибора введен, проверяем, нужно ли запрашивать показания
             if (pending.getAdditionalInfo() == null) {
@@ -434,44 +425,54 @@ public class TBot extends TelegramLongPollingBot {
 
         switch (callbackData) {
             case "newTU" -> {
-                sendTextMessage(NEW_TU, modes.get("newTU"), chatId, 1);
+                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
             }
             case "pto" -> {
-                sendTextMessage(PTO, modes.get("pto"), chatId, 2);
+                sendTextMessage(PTO, modes.get(callbackData), chatId, 2);
             }
             case "oto" -> {
-                sendTextMessage(OTO, modes.get("oto"), chatId, 2);
-            }
-            // Обработка выбора для счетчика и концентратора
-            case "ptoIIK" -> {
-                sendMessage(chatId, "Пожалуйста, загрузите фото счетчика.");
-                userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
-            }
-            case "ptoIVKE" -> {
-                sendMessage(chatId, "Пожалуйста, загрузите фото концентратора.");
-                userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
-            }
-            case "otoIIK" -> {
-                sendTextMessage("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
-            }
-            case "otoIVKE" -> {
-                sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
+                sendTextMessage(OTO, modes.get(callbackData), chatId, 2);
             }
 
-            case "wkDrop" -> {
-                sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIKType.WK_DROP);
+            // Обработка выбора для ПТО счетчика и концентратора
+            case "ptoIIK", "ptoIVKE" -> {
+                String textToSend;
+                if ("ptoIIK".equals(callbackData)) {
+                    textToSend = "Пожалуйста, загрузите фото счетчика.";
+                    userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
+                } else {
+                    textToSend = "Пожалуйста, загрузите фото концентратора.";
+                    userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
+                }
+                sendMessage(chatId, textToSend);
             }
 
-            case "setNot" -> {
-                sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIKType.SET_NOT);
+            case "otoIIK", "otoIVKE" -> {
+                if (callbackData.equals("otoIIK")) {
+                    sendTextMessage("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
+                } else {
+                    sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
+                }
             }
 
-            case "powerSupplyRestoring" -> {
-                sendMessage(chatId, "Введите номер прибора учета: ");
-                otoIIKTypes.put(chatId, OtoIIKType.SUPPLY_RESTORING);
+
+            case "wkDrop", "setNot", "powerSupplyRestoring" -> {
+                switch (callbackData) {
+                    case "wkDrop" -> {
+                        sendMessage(chatId, "Введите номер прибора учета: ");
+                        otoIIKTypes.put(chatId, OtoIIKType.WK_DROP);
+                    }
+                    case "setNot" -> {
+                        sendMessage(chatId, "Введите номер прибора учета: ");
+                        otoIIKTypes.put(chatId, OtoIIKType.SET_NOT);
+                    }
+                    default -> {
+                        sendMessage(chatId, "Введите номер прибора учета: ");
+                        otoIIKTypes.put(chatId, OtoIIKType.SUPPLY_RESTORING);
+                    }
+                }
             }
+
 
             case "meterChange", "ttChange" -> {
                 String value1 = "";
@@ -545,17 +546,7 @@ public class TBot extends TelegramLongPollingBot {
         sequenceNumber = 0;
         userStates.clear();
         otoIIKTypes.clear();
-//        photoCounter = 0;
         deviceChangeInfo = "";
-    }
-
-
-    private void handleStartCommand(long chatId, String firstName) {
-        sendTextMessage(MAIN_MENU, Map.of(
-                "ПТО", "pto",
-                "ОТО", "oto",
-                "Монтаж / демонтаж ТУ", "newTU"
-        ), chatId, 1);
     }
 
     private void savePhoto(long chatId, PendingPhoto pending) {
@@ -614,12 +605,13 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void setUserState(OtoIIKType operationType, long chatId) {
-        switch (operationType){
+        switch (operationType) {
             case METER_CHANGE -> userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
-            case TT_CHANGE ->  userStates.put(chatId,UserState.WAITING_FOR_TT_PHOTO);
+            case TT_CHANGE -> userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
             default -> {
             }
-        };
+        }
+        ;
     }
 
 
