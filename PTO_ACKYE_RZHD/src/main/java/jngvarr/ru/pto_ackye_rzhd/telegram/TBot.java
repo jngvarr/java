@@ -87,7 +87,7 @@ public class TBot extends TelegramLongPollingBot {
     // Карта для хранения состояния диалога по chatId
     private Map<Long, UserState> userStates = new HashMap<>();
     private Map<Long, OtoType> otoTypes = new HashMap<>();
-    private Map<String, String> otoIIKLog = new HashMap<>();
+    private Map<String, String> otoLog = new HashMap<>();
     private Map<Long, PhotoState> photoStates = new HashMap<>();
     private Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
             TBot.OtoType.METER_CHANGE, "Замена ПУ",
@@ -309,9 +309,9 @@ public class TBot extends TelegramLongPollingBot {
         if (deviceNumber.contains("_")) {
             String[] deviceData = deviceNumber.split("_");
             deviceNumber = deviceData[0];
-            otoIIKLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType) + deviceData[1]);
+            otoLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType) + deviceData[1]);
         } else {
-            otoIIKLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType));
+            otoLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType));
         }
         sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
     }
@@ -321,30 +321,31 @@ public class TBot extends TelegramLongPollingBot {
         Map<Integer, String> replacedEquipmentData = getReplacedEquipmentData().get(otoType);
         if (msgText != null && !msgText.trim().isEmpty()) {
             deviceChangeInfo += msgText + "_";
+        }
+        if (sequenceNumber < replacedEquipmentData.size()) {
+            sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
             sequenceNumber++;
-        }
-        if (sequenceNumber <= replacedEquipmentData.size()) {
-            sendMessage(chatId,replacedEquipmentData.get(sequenceNumber));
-        }
-        concludeDeviceChange(chatId, otoType);
+        } else concludeDeviceChange(chatId, otoType);
     }
-
 
     Map<OtoType, Map<Integer, String>> replacedEquipmentData = Map.of(
             OtoType.TT_CHANGE, Map.of(
-                    1, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",
-                    2, "Введите коэффициент трансформации (пример: 300/5): ",
-                    3, "Введите класс точности (пример: 0,5 или 0,5S): ",
-                    4, "Введите год выпуска трансформаторов (пример: 2025): ",
-                    5, "Введите номер ТТ ф.A: ",
-                    6, "Введите номер ТТ ф.B: ",
-                    7, "Введите номер ТТ ф.C: "),
+                    0, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",
+                    1, "Введите коэффициент трансформации (пример: 300/5): ",
+                    2, "Введите класс точности (пример: 0,5 или 0,5S): ",
+                    3, "Введите год выпуска трансформаторов (пример: 2025): ",
+                    4, "Введите номер ТТ ф.A: ",
+                    5, "Введите номер ТТ ф.B: ",
+                    6, "Введите номер ТТ ф.C: ",
+                    7, "Опишите причину замены: "),
             OtoType.METER_CHANGE, Map.of(
-                    1, "Введите показания демонтируемого прибора учета.",
-                    2, "Введите номер устанавливаемого прибора учета.",
-                    3, "Введите номер и показания устанавливаемого прибора учета."),
+                    0, "Введите показания демонтируемого прибора учета:",
+                    1, "Введите номер устанавливаемого прибора учета:",
+                    2, "Введите номер и показания устанавливаемого прибора учета:",
+                    3, "Опишите причину замены: "),
             OtoType.DC_CHANGE, Map.of(
-                    1, "Введите номер устанавливаемого концентратора.")
+                    0, "Введите номер устанавливаемого концентратора.",
+                    1, "Опишите причину замены: ")
     );
 
     private void handleManualInsert(long chatId, String deviceNumber) {
@@ -461,13 +462,12 @@ public class TBot extends TelegramLongPollingBot {
                 if ("meterChangeWithPhoto".equals(callbackData)) {
                     textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
                     userStates.put(chatId, UserState.WAITING_FOR_COUNTER_PHOTO);
-                } else textToSend = "Введите номер и показания демонтируемого прибора учета: \n" +
-                        "например: 7200123456_7890";
+                } else textToSend = "Введите номер демонтируемого прибора учета: ";
                 sendMessage(chatId, textToSend);
             }
 
             case "LOADING_COMPLETE" -> {
-                sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+                sendTextMessage(actionConfirmation(), confirmMenu, chatId, 2);
             }
 
             case "confirm", "cancel" -> {
@@ -475,7 +475,7 @@ public class TBot extends TelegramLongPollingBot {
                 if ("confirm".equals(callbackData)) {
                     textToSend = "Информация сохранена.";
                     sendMessage(chatId, "Подождите, идёт загрузка данных...");
-                    operationLogFilling(otoIIKLog, true);
+                    operationLogFilling();
                 } else {
                     textToSend = "Информация не сохранена.";
                 }
@@ -489,11 +489,11 @@ public class TBot extends TelegramLongPollingBot {
 
     private void concludeDeviceChange(long chatId, OtoType changeType) {
         formingOtoLogWithDeviceChange(deviceChangeInfo, changeType);
-        sendTextMessage(actionConfirmation(otoIIKLog), confirmMenu, chatId, 2);
+        sendTextMessage(actionConfirmation(), confirmMenu, chatId, 2);
     }
 
     private void clearData() {
-        otoIIKLog.clear();
+        otoLog.clear();
         sequenceNumber = 0;
         userStates.clear();
         otoTypes.clear();
@@ -755,14 +755,19 @@ public class TBot extends TelegramLongPollingBot {
         return null;
     }
 
-    private void operationLogFilling(Map<String, String> opLog, boolean isIikLog) {
-        if (opLog.isEmpty()) return;
+    private void operationLogFilling() {
+        if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
              FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
-            Sheet workSheet = isIikLog ? planOTOWorkbook.getSheet("ИИК") : planOTOWorkbook.getSheet("ИВКЭ");
+            Sheet workSheet = planOTOWorkbook.getSheet("ИИК");
+            if (otoLog.values().stream().anyMatch(value -> value.contains("dcChange"))){
+                Sheet dcWorkSheet = planOTOWorkbook.getSheet("ИВКЭ");
+                dcWorkSheet
+            }
+
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
             int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
             int meterNumberColumnIndex = excelFileService.findColumnIndex(workSheet, "Номер счетчика");
@@ -774,7 +779,7 @@ public class TBot extends TelegramLongPollingBot {
             int addRow = 0;
             for (Row row : workSheet) {
                 String meterNumber = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
-                String logData = opLog.getOrDefault(meterNumber, "");
+                String logData = otoLog.getOrDefault(meterNumber, "");
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(row, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
@@ -783,7 +788,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             operationLog.write(fileOut);
             planOTOWorkbook.write(fileOtoOut);
-            otoIIKLog.clear();
+            otoLog.clear();
 
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
@@ -800,6 +805,7 @@ public class TBot extends TelegramLongPollingBot {
 
         newRow.getCell(17).setCellValue(columns.get(0));
         newRow.getCell(18).setCellValue(columns.get(1));
+        newRow.getCell(18).setCellValue("");
         newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
 
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
@@ -838,15 +844,18 @@ public class TBot extends TelegramLongPollingBot {
                 "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " Восстановление схемы подключения."),
                 "meterChange", List.of("Нет связи со счетчиком", "Неисправность счетчика (счетчик заменен)", " Замена прибора учета № "),
                 "ttChange", List.of("Повреждение ТТ\n", " - Повреждение ТТ (ТТ заменили)",
-                        " Замена трансформаторов тока. Установлены трансформаторы "));
+                        " Замена трансформаторов тока. Установлены трансформаторы "),
+                "dcChange", List.of("Нет связи со всеми счетчиками\n", " - Повреждение концентратора (Концентратор заменили)",
+                        " Замена концентратора № "
+                ));
         return fillingData.get(data);
     }
 
-    private String actionConfirmation(Map<String, String> otoIIKLog) {
+    private String actionConfirmation() {
         StringBuilder resultStr = new StringBuilder("Выполнены следующие действия:\n");
         int lineCounter = 0;
 
-        for (Map.Entry<String, String> entry : otoIIKLog.entrySet()) {
+        for (Map.Entry<String, String> entry : otoLog.entrySet()) {
             String[] str = entry.getValue().split("_");
             String actionType = str[0];
             String key = entry.getKey();
@@ -860,7 +869,7 @@ public class TBot extends TelegramLongPollingBot {
                         "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
                         str[1], str[2], str[3], str[4], str[5], str[6], str[7]));
                 case "dcChange" -> resultStr.append(String.format(
-                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s", key, str[1], str[2], str[3]));
+                        "%s на концентрпатор № %s.", key, str[1]));
                 default -> {
                     resultStr.append(String.format(" ПУ № %s.", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
@@ -874,7 +883,7 @@ public class TBot extends TelegramLongPollingBot {
     private void formingOtoLogWithDeviceChange(String deviceInfo, OtoType otoType) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
         String changeType = otoType.equals(TBot.OtoType.METER_CHANGE) ? "meterChange" : "ttChange";
-        otoIIKLog.put(deviceNumber, changeType + deviceInfo.substring(deviceInfo.indexOf("_")));
+        otoLog.put(deviceNumber, changeType + deviceInfo.substring(deviceInfo.indexOf("_")));
     }
 
     private Map<String, String> getPhotoSavingPathFromExcel() {
