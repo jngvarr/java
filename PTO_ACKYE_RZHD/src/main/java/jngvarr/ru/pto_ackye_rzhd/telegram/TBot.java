@@ -278,7 +278,7 @@ public class TBot extends TelegramLongPollingBot {
         }
         if (otoType != null) {
             switch (otoType) {
-                case TT_CHANGE, METER_CHANGE -> {
+                case TT_CHANGE, METER_CHANGE, DC_CHANGE -> {
                     handleEquipmentChange(chatId, msgText, otoType);
                     return;
                 }
@@ -426,15 +426,18 @@ public class TBot extends TelegramLongPollingBot {
             }
 
 
-            case "meterChange", "ttChange" -> {
+            case "meterChange", "ttChange", "dcChange" -> {
                 String value1 = "";
                 String value2 = "";
                 if (callbackData.equals("meterChange")) {
                     value1 = "meterChangeWithPhoto";
                     value2 = "meterChangeWithoutPhoto";
-                } else {
+                } else if ("ttChange".equals(callbackData)) {
                     value1 = "ttChangeWithPhoto";
                     value2 = "ttChangeWithOutPhoto";
+                } else {
+                    value1 = "dcChangeWithPhoto";
+                    value2 = "dcChangeWithOutPhoto";
                 }
                 sendTextMessage("Вид передачи данных: ",
                         Map.of("С приложением фото.", value1,
@@ -450,7 +453,7 @@ public class TBot extends TelegramLongPollingBot {
 
             case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
                 if ("dcChangeWithOutPhoto".equals(callbackData))
-                    userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
+                    userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
                 sendMessage(chatId, "Введите номер концентратора: ");
                 otoTypes.put(chatId, OtoType.DC_CHANGE);
             }
@@ -762,28 +765,40 @@ public class TBot extends TelegramLongPollingBot {
              FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
-            Sheet workSheet = planOTOWorkbook.getSheet("ИИК");
-            if (otoLog.values().stream().anyMatch(value -> value.contains("dcChange"))){
-                Sheet dcWorkSheet = planOTOWorkbook.getSheet("ИВКЭ");
-                dcWorkSheet
-            }
 
+            Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
             int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
-            int meterNumberColumnIndex = excelFileService.findColumnIndex(workSheet, "Номер счетчика");
-            int orderColumnNumber = excelFileService.findColumnIndex(workSheet, "Отчет бригады о выполнении ОТО");
+            int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
+            int deviceNumberColumnIndex;
+            String[] columnNamesToCleanData = null;
+
+            if (otoLog.values().stream().anyMatch(value -> value.contains("dcChange"))) {
+                deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер УСПД");
+                columnNamesToCleanData = new String[]{"Точка Учета", "Адрес установки", "Марка счётчика", "Номер счетчика"};
+            } else deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер счетчика");
+
 
             CellStyle commonCellStyle = excelFileService.createCommonCellStyle(operationLog);
             CellStyle dateCellStyle = excelFileService.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
 
+
+            Row sourceRow = getSourceRow(meterWorkSheet, deviceNumberColumnIndex);
+
+
+
+
+
             int addRow = 0;
-            for (Row row : workSheet) {
-                String meterNumber = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
-                String logData = otoLog.getOrDefault(meterNumber, "");
+            for (Row otoRow : meterWorkSheet) {
+                Cell otoDeviceNumberCell = otoRow.getCell(deviceNumberColumnIndex);
+                Cell otoOrderCell = otoRow.getCell(orderColumnNumber);
+                String deviceNumber = excelFileService.getCellStringValue(otoDeviceNumberCell);
+                String logData = otoLog.getOrDefault(deviceNumber, "");
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
-                    excelFileService.copyRow(row, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
-                    addOtoData(logData, newRow, row, meterNumberColumnIndex, orderColumnNumber);
+                    excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
+                    addOtoData(logData, newRow, otoDeviceNumberCell, otoOrderCell, columnNamesToCleanData);
                 }
             }
             operationLog.write(fileOut);
@@ -795,43 +810,55 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void addOtoData(String logData, Row newRow, Row otoRow, int meterNumColIndex, int orderColIndex) {
+    private Row getSourceRow(Sheet meterWorkSheet, int columnIndex) {
+        for (Row otoRow : meterWorkSheet) {
+            String deviceNumber = excelFileService.getCellStringValue(columnIndex);
+            String logData = otoLog.getOrDefault(deviceNumber, "");
+            if (!logData.isEmpty()) return otoRow;
+        }
+        return null;
+    }
+
+    private void addOtoData(String logData, Row newLogRow, Cell deviceNumberCell, Cell otoOrderCell, Cell dcNumberCell, Cell dcOrderCell, String[] columnNamesToCleanData) {
         String data = logData.substring(0, logData.indexOf("_"));
         String[] additionalData = logData.split("_");
         List<String> columns = getStrings(data);
 
-        Cell date = newRow.getCell(16);
+        Cell date = newLogRow.getCell(16);
         excelFileService.setDateCellStyle(date);
 
-        newRow.getCell(17).setCellValue(columns.get(0));
-        newRow.getCell(18).setCellValue(columns.get(1));
-        newRow.getCell(18).setCellValue("");
-        newRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
+        newLogRow.getCell(17).setCellValue(columns.get(0));
+        newLogRow.getCell(18).setCellValue(columns.get(1));
+        newLogRow.getCell(18).setCellValue("");
+        newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
 
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
             case "WK", "NOT", "SUPPLY" -> (additionalData.length > 1 ? " " + additionalData[1] : "");
 
             case "meterChange" -> {
-                Object mountingMeterNumber = parseMeterNumber(additionalData[2]);
-                // Внесение номера счётчика в журнал "Контроль ПУ РРЭ"
-                if (mountingMeterNumber instanceof Long) {
-                    otoRow.getCell(meterNumColIndex).setCellValue((Long) mountingMeterNumber);
+                Object mountingDeviceNumber = parseMeterNumber(additionalData[2]);
+                // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
+                if (mountingDeviceNumber instanceof Long) {
+                    deviceNumberCell.setCellValue((Long) mountingDeviceNumber);
                 } else {
-                    otoRow.getCell(meterNumColIndex).setCellValue((String) mountingMeterNumber);
+                    deviceNumberCell.setCellValue((String) mountingDeviceNumber);
                 }
-                yield excelFileService.getCellStringValue(newRow.getCell(13)) + " (" + additionalData[1]
+                yield excelFileService.getCellStringValue(newLogRow.getCell(13)) + " (" + additionalData[1]
                         + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт).";
             }
             case "ttChange" -> String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
                     additionalData[1], additionalData[2], additionalData[3], additionalData[4],
                     additionalData[5], additionalData[6], additionalData[7]);
+            case "dcChange" -> String.format("%s на концентратор № %s.", additionalData[1], additionalData[2]);
+
             default -> null;
         };
 
-        newRow.createCell(21).setCellValue(taskOrder);
-        otoRow.getCell(orderColIndex).setCellValue(taskOrder);
+        newLogRow.createCell(21).setCellValue(taskOrder);
+        otoOrderCell.setCellValue(taskOrder);
 
-//      newRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+
+//      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
 
     private static List<String> getStrings(String data) {
