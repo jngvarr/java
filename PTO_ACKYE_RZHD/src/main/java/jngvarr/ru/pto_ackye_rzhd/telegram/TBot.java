@@ -90,8 +90,8 @@ public class TBot extends TelegramLongPollingBot {
     private Map<String, String> otoLog = new HashMap<>();
     private Map<Long, PhotoState> photoStates = new HashMap<>();
     private Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
-            TBot.OtoType.METER_CHANGE, "Замена ПУ",
-            TBot.OtoType.TT_CHANGE, "Замена ТТ"
+            OtoType.METER_CHANGE, "Замена ПУ",
+            OtoType.TT_CHANGE, "Замена ТТ"
     );
 
     public enum OtoType {
@@ -302,9 +302,9 @@ public class TBot extends TelegramLongPollingBot {
         OtoType currentOtoType = otoTypes.get(chatId);
         deviceNumber = deviceNumber.trim();
         Map<OtoType, String> otoIIKStringMap = Map.of(
-                TBot.OtoType.WK_DROP, "WK_",
-                TBot.OtoType.SET_NOT, "NOT_",
-                TBot.OtoType.SUPPLY_RESTORING, "SUPPLY_");
+                OtoType.WK_DROP, "WK_",
+                OtoType.SET_NOT, "NOT_",
+                OtoType.SUPPLY_RESTORING, "SUPPLY_");
 
         if (deviceNumber.contains("_")) {
             String[] deviceData = deviceNumber.split("_");
@@ -412,15 +412,15 @@ public class TBot extends TelegramLongPollingBot {
                 switch (callbackData) {
                     case "wkDrop" -> {
                         sendMessage(chatId, "Введите номер прибора учета: ");
-                        otoTypes.put(chatId, TBot.OtoType.WK_DROP);
+                        otoTypes.put(chatId, OtoType.WK_DROP);
                     }
                     case "setNot" -> {
                         sendMessage(chatId, "Введите номер прибора учета: ");
-                        otoTypes.put(chatId, TBot.OtoType.SET_NOT);
+                        otoTypes.put(chatId, OtoType.SET_NOT);
                     }
                     default -> {
                         sendMessage(chatId, "Введите номер прибора учета: ");
-                        otoTypes.put(chatId, TBot.OtoType.SUPPLY_RESTORING);
+                        otoTypes.put(chatId, OtoType.SUPPLY_RESTORING);
                     }
                 }
             }
@@ -448,7 +448,7 @@ public class TBot extends TelegramLongPollingBot {
                 if ("ttChangeWithPhoto".equals(callbackData))
                     userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
                 sendMessage(chatId, "Введите номер прибора учета: ");
-                otoTypes.put(chatId, TBot.OtoType.TT_CHANGE);
+                otoTypes.put(chatId, OtoType.TT_CHANGE);
             }
 
             case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
@@ -460,7 +460,7 @@ public class TBot extends TelegramLongPollingBot {
 
             case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
                 String textToSend = "";
-                otoTypes.put(chatId, TBot.OtoType.METER_CHANGE);
+                otoTypes.put(chatId, OtoType.METER_CHANGE);
 
                 if ("meterChangeWithPhoto".equals(callbackData)) {
                     textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
@@ -633,7 +633,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private String getSavingPhotoSuffix(OtoType operationType) {
-        if (operationType != null && operationType.equals(TBot.OtoType.METER_CHANGE)) return switch (photoCounter) {
+        if (operationType != null && operationType.equals(OtoType.METER_CHANGE)) return switch (photoCounter) {
             case 1 -> "_демонтирован.jpg";
             case 2 -> "_установлен.jpg";
             default -> "";
@@ -759,6 +759,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void operationLogFilling() {
+        boolean isDcChange = otoLog.values().stream().anyMatch(value -> value.contains("dcChange"));
         if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
@@ -772,33 +773,46 @@ public class TBot extends TelegramLongPollingBot {
             int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
             int deviceNumberColumnIndex;
             String[] columnNamesToCleanData = null;
+            String taskorder = "";
 
-            if (otoLog.values().stream().anyMatch(value -> value.contains("dcChange"))) {
+            if (isDcChange) {
                 deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер УСПД");
                 columnNamesToCleanData = new String[]{"Точка Учета", "Адрес установки", "Марка счётчика", "Номер счетчика"};
-            } else deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер счетчика");
+            } else {
+                deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер счетчика");
+            }
 
 
             CellStyle commonCellStyle = excelFileService.createCommonCellStyle(operationLog);
             CellStyle dateCellStyle = excelFileService.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
 
 
-            Row sourceRow = getSourceRow(meterWorkSheet, deviceNumberColumnIndex);
-
-
-
-
-
             int addRow = 0;
+
             for (Row otoRow : meterWorkSheet) {
-                Cell otoDeviceNumberCell = otoRow.getCell(deviceNumberColumnIndex);
-                Cell otoOrderCell = otoRow.getCell(orderColumnNumber);
-                String deviceNumber = excelFileService.getCellStringValue(otoDeviceNumberCell);
+                String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
+                Cell otoRowOrderCell = otoRow.getCell(orderColumnNumber);
                 String logData = otoLog.getOrDefault(deviceNumber, "");
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
-                    addOtoData(logData, newRow, otoDeviceNumberCell, otoOrderCell, columnNamesToCleanData);
+                    taskorder = addOtoData(logData, newRow, otoRowOrderCell, orderColumnNumber, columnNamesToCleanData);
+                }
+            }
+
+            if (isDcChange) {
+                Sheet dcWorkSheet = planOTOWorkbook.getSheet("ИВКЭ");
+                int orderDcSheetColumnNumber = excelFileService.findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
+                int dcCurrentState = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
+                for (Row otoRow : dcWorkSheet) {
+                    String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(orderDcSheetColumnNumber));
+                    Cell otoRowDcStateCell = otoRow.getCell(dcCurrentState);
+                    Cell dcNumberCell = otoRow.getCell(orderDcSheetColumnNumber);
+                    String logData = otoLog.getOrDefault(deviceNumber, "");
+                    if (!logData.isEmpty()) {
+                        otoRowDcStateCell.setCellValue(taskorder);
+                        dcNumberCell.setCellValue(logData.split("_")[1]);
+                    }
                 }
             }
             operationLog.write(fileOut);
@@ -810,16 +824,7 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private Row getSourceRow(Sheet meterWorkSheet, int columnIndex) {
-        for (Row otoRow : meterWorkSheet) {
-            String deviceNumber = excelFileService.getCellStringValue(columnIndex);
-            String logData = otoLog.getOrDefault(deviceNumber, "");
-            if (!logData.isEmpty()) return otoRow;
-        }
-        return null;
-    }
-
-    private void addOtoData(String logData, Row newLogRow, Cell deviceNumberCell, Cell otoOrderCell, Cell dcNumberCell, Cell dcOrderCell, String[] columnNamesToCleanData) {
+    private String addOtoData(String logData, Row newLogRow, Cell otoRowOrderCell, int dcNumberCellNumber, String[] columnNamesToCleanData) {
         String data = logData.substring(0, logData.indexOf("_"));
         String[] additionalData = logData.split("_");
         List<String> columns = getStrings(data);
@@ -839,9 +844,9 @@ public class TBot extends TelegramLongPollingBot {
                 Object mountingDeviceNumber = parseMeterNumber(additionalData[2]);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
                 if (mountingDeviceNumber instanceof Long) {
-                    deviceNumberCell.setCellValue((Long) mountingDeviceNumber);
+                    newLogRow.getCell(dcNumberCellNumber).setCellValue((Long) mountingDeviceNumber);
                 } else {
-                    deviceNumberCell.setCellValue((String) mountingDeviceNumber);
+                    newLogRow.getCell(dcNumberCellNumber).setCellValue((String) mountingDeviceNumber);
                 }
                 yield excelFileService.getCellStringValue(newLogRow.getCell(13)) + " (" + additionalData[1]
                         + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт).";
@@ -855,8 +860,8 @@ public class TBot extends TelegramLongPollingBot {
         };
 
         newLogRow.createCell(21).setCellValue(taskOrder);
-        otoOrderCell.setCellValue(taskOrder);
-
+        otoRowOrderCell.setCellValue(taskOrder);
+        return taskOrder;
 
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
@@ -909,7 +914,7 @@ public class TBot extends TelegramLongPollingBot {
 
     private void formingOtoLogWithDeviceChange(String deviceInfo, OtoType otoType) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String changeType = otoType.equals(TBot.OtoType.METER_CHANGE) ? "meterChange" : "ttChange";
+        String changeType = otoType.equals(OtoType.METER_CHANGE) ? "meterChange" : "ttChange";
         otoLog.put(deviceNumber, changeType + deviceInfo.substring(deviceInfo.indexOf("_")));
     }
 
