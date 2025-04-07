@@ -454,7 +454,7 @@ public class TBot extends TelegramLongPollingBot {
             case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
                 if ("dcChangeWithOutPhoto".equals(callbackData))
                     userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
-                sendMessage(chatId, "Введите номер концентратора: ");
+                sendMessage(chatId, "Введите номер демонтируемого концентратора: ");
                 otoTypes.put(chatId, OtoType.DC_CHANGE);
             }
 
@@ -796,6 +796,7 @@ public class TBot extends TelegramLongPollingBot {
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
+                    if (isDcChange) clearCellData(columnNamesToCleanData, newRow);
                     taskorder = addOtoData(logData, newRow, otoRowOrderCell, orderColumnNumber, columnNamesToCleanData);
                 }
             }
@@ -821,6 +822,12 @@ public class TBot extends TelegramLongPollingBot {
 
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
+        }
+    }
+
+    private void clearCellData(String[] columnNamesToCleanData, Row row) {
+        for (String data : columnNamesToCleanData) {
+            excelFileService.findColumnIndex(row, data);
         }
     }
 
@@ -914,7 +921,12 @@ public class TBot extends TelegramLongPollingBot {
 
     private void formingOtoLogWithDeviceChange(String deviceInfo, OtoType otoType) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String changeType = otoType.equals(OtoType.METER_CHANGE) ? "meterChange" : "ttChange";
+        String changeType = switch (otoType) {
+            case METER_CHANGE -> "meterChange";
+            case TT_CHANGE -> "ttChange";
+            case DC_CHANGE -> "dcChange";
+            default -> "unknown";
+        };
         otoLog.put(deviceNumber, changeType + deviceInfo.substring(deviceInfo.indexOf("_")));
     }
 
