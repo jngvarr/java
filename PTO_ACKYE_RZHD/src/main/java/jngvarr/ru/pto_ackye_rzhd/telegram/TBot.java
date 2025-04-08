@@ -298,10 +298,10 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleOtherOtoIIKTypes(long chatId, String deviceNumber) {
+    private void handleOtherOtoIIKTypes(long chatId, String msgText) {
         OtoType currentOtoType = otoTypes.get(chatId);
-        deviceNumber = deviceNumber.trim();
-        Map<OtoType, String> otoIIKStringMap = Map.of(
+        String deviceNumber = msgText.trim();
+        Map<OtoType, String> otoStringMap = Map.of(
                 OtoType.WK_DROP, "WK_",
                 OtoType.SET_NOT, "NOT_",
                 OtoType.SUPPLY_RESTORING, "SUPPLY_");
@@ -309,9 +309,9 @@ public class TBot extends TelegramLongPollingBot {
         if (deviceNumber.contains("_")) {
             String[] deviceData = deviceNumber.split("_");
             deviceNumber = deviceData[0];
-            otoLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType) + deviceData[1]);
+            otoLog.put(deviceNumber, otoStringMap.get(currentOtoType) + deviceData[1]);
         } else {
-            otoLog.put(deviceNumber, otoIIKStringMap.get(currentOtoType));
+            otoLog.put(deviceNumber, otoStringMap.get(currentOtoType));
         }
         sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
     }
@@ -341,7 +341,7 @@ public class TBot extends TelegramLongPollingBot {
             OtoType.METER_CHANGE, Map.of(
                     0, "Введите показания демонтируемого прибора учета:",
                     1, "Введите номер устанавливаемого прибора учета:",
-                    2, "Введите номер и показания устанавливаемого прибора учета:",
+                    2, "Введите показания устанавливаемого прибора учета:",
                     3, "Опишите причину замены: "),
             OtoType.DC_CHANGE, Map.of(
                     0, "Введите номер устанавливаемого концентратора.",
@@ -772,12 +772,22 @@ public class TBot extends TelegramLongPollingBot {
             int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
             int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
             int deviceNumberColumnIndex;
-            String[] columnNamesToCleanData = null;
             String taskorder = "";
+            int[] columnIndexes = null;
 
             if (isDcChange) {
-                deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер УСПД");
-                columnNamesToCleanData = new String[]{"Точка Учета", "Адрес установки", "Марка счётчика", "Номер счетчика"};
+                columnIndexes = Arrays.stream(new String[]{
+                                "Номер УСПД",
+                                "Точка Учета",
+                                "Адрес установки",
+                                "Марка счётчика",
+                                "Номер счетчика"
+                        })
+                        .mapToInt(name -> excelFileService.findColumnIndex(meterWorkSheet, name))
+                        .filter(index -> index >= 0)
+                        .toArray();
+
+                deviceNumberColumnIndex = columnIndexes[0];
             } else {
                 deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер счетчика");
             }
@@ -796,8 +806,8 @@ public class TBot extends TelegramLongPollingBot {
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
-                    if (isDcChange) clearCellData(columnNamesToCleanData, newRow);
-                    taskorder = addOtoData(logData, newRow, otoRowOrderCell, orderColumnNumber, columnNamesToCleanData);
+                    if (isDcChange) clearCellData(columnIndexes, newRow);
+                    taskorder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, orderColumnNumber);
                 }
             }
 
@@ -807,7 +817,7 @@ public class TBot extends TelegramLongPollingBot {
                 int dcCurrentState = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
                 for (Row otoRow : dcWorkSheet) {
                     String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(orderDcSheetColumnNumber));
-                    Cell otoRowDcStateCell = otoRow.getCell(dcCurrentState);
+                    Cell otoRowDcStateCell = otoRow.createCell(dcCurrentState);
                     Cell dcNumberCell = otoRow.getCell(orderDcSheetColumnNumber);
                     String logData = otoLog.getOrDefault(deviceNumber, "");
                     if (!logData.isEmpty()) {
@@ -825,13 +835,13 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void clearCellData(String[] columnNamesToCleanData, Row row) {
-        for (String data : columnNamesToCleanData) {
-            excelFileService.findColumnIndex(row, data);
+    private void clearCellData(int[] ints, Row row) {
+        for (int i = 1; i < ints.length; i++) {
+            row.getCell(i).setCellValue("");
         }
     }
 
-    private String addOtoData(String logData, Row newLogRow, Cell otoRowOrderCell, int dcNumberCellNumber, String[] columnNamesToCleanData) {
+    private String addOtoData(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, int orderCellNumber) {
         String data = logData.substring(0, logData.indexOf("_"));
         String[] additionalData = logData.split("_");
         List<String> columns = getStrings(data);
@@ -851,23 +861,24 @@ public class TBot extends TelegramLongPollingBot {
                 Object mountingDeviceNumber = parseMeterNumber(additionalData[2]);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
                 if (mountingDeviceNumber instanceof Long) {
-                    newLogRow.getCell(dcNumberCellNumber).setCellValue((Long) mountingDeviceNumber);
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
                 } else {
-                    newLogRow.getCell(dcNumberCellNumber).setCellValue((String) mountingDeviceNumber);
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
                 }
-                yield excelFileService.getCellStringValue(newLogRow.getCell(13)) + " (" + additionalData[1]
-                        + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт).";
+                yield deviceNumber + " (" + additionalData[1]
+                        + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт). Причина замены: " + additionalData[4] + ".";
             }
-            case "ttChange" -> String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
+            case "ttChange" -> String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
                     additionalData[1], additionalData[2], additionalData[3], additionalData[4],
-                    additionalData[5], additionalData[6], additionalData[7]);
-            case "dcChange" -> String.format("%s на концентратор № %s.", additionalData[1], additionalData[2]);
+                    additionalData[5], additionalData[6], additionalData[7], additionalData[8]);
+            case "dcChange" ->
+                    String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, additionalData[1], additionalData[2]);
 
             default -> null;
         };
 
         newLogRow.createCell(21).setCellValue(taskOrder);
-        otoRowOrderCell.setCellValue(taskOrder);
+        otoRow.getCell(orderCellNumber).setCellValue(taskOrder);
         return taskOrder;
 
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
@@ -881,11 +892,11 @@ public class TBot extends TelegramLongPollingBot {
                 "NOT", List.of("Нет связи со счетчиком",
                         "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " НОТ."),
                 "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " Восстановление схемы подключения."),
-                "meterChange", List.of("Нет связи со счетчиком", "Неисправность счетчика (счетчик заменен)", " Замена прибора учета № "),
+                "meterChange", List.of("Нет связи со счетчиком", "Неисправность счетчика (счетчик заменен)", " Замена прибора учета №"),
                 "ttChange", List.of("Повреждение ТТ\n", " - Повреждение ТТ (ТТ заменили)",
                         " Замена трансформаторов тока. Установлены трансформаторы "),
                 "dcChange", List.of("Нет связи со всеми счетчиками\n", " - Повреждение концентратора (Концентратор заменили)",
-                        " Замена концентратора № "
+                        " Замена концентратора №"
                 ));
         return fillingData.get(data);
     }
@@ -895,20 +906,20 @@ public class TBot extends TelegramLongPollingBot {
         int lineCounter = 0;
 
         for (Map.Entry<String, String> entry : otoLog.entrySet()) {
+            String key = entry.getKey();
             String[] str = entry.getValue().split("_");
             String actionType = str[0];
-            String key = entry.getKey();
             List<String> strings = getStrings(actionType);
 
             resultStr.append(++lineCounter).append(". ").append(strings.get(2));
             switch (actionType) {
                 case "meterChange" -> resultStr.append(String.format(
-                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s", key, str[1], str[2], str[3]));
+                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s. Причина: %s.", key, str[1], str[2], str[3], str[4]));
                 case "ttChange" -> resultStr.append(String.format(
                         "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
                         str[1], str[2], str[3], str[4], str[5], str[6], str[7]));
                 case "dcChange" -> resultStr.append(String.format(
-                        "%s на концентрпатор № %s.", key, str[1]));
+                        "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 default -> {
                     resultStr.append(String.format(" ПУ № %s.", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
