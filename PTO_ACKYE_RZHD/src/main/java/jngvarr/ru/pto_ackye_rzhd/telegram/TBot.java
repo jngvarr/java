@@ -778,8 +778,10 @@ public class TBot extends TelegramLongPollingBot {
             if (isDcChange) {
                 columnIndexes = Arrays.stream(new String[]{
                                 "Номер УСПД",
+                                "Присоединение",
                                 "Точка Учета",
-                                "Адрес установки",
+                                "Место установки счетчика (Размещение счетчика)",
+                                "Адрес",
                                 "Марка счётчика",
                                 "Номер счетчика"
                         })
@@ -806,21 +808,21 @@ public class TBot extends TelegramLongPollingBot {
                 if (!logData.isEmpty()) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
-                    if (isDcChange) clearCellData(columnIndexes, newRow);
                     taskorder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, orderColumnNumber);
+                    if (isDcChange) clearCellData(columnIndexes, newRow);
                 }
             }
 
             if (isDcChange) {
                 Sheet dcWorkSheet = planOTOWorkbook.getSheet("ИВКЭ");
                 int orderDcSheetColumnNumber = excelFileService.findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
-                int dcCurrentState = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
                 for (Row otoRow : dcWorkSheet) {
                     String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(orderDcSheetColumnNumber));
-                    Cell otoRowDcStateCell = otoRow.createCell(dcCurrentState);
-                    Cell dcNumberCell = otoRow.getCell(orderDcSheetColumnNumber);
                     String logData = otoLog.getOrDefault(deviceNumber, "");
                     if (!logData.isEmpty()) {
+                        int dcCurrentState = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
+                        Cell otoRowDcStateCell = otoRow.createCell(dcCurrentState);
+                        Cell dcNumberCell = otoRow.getCell(orderDcSheetColumnNumber);
                         otoRowDcStateCell.setCellValue(taskorder);
                         dcNumberCell.setCellValue(logData.split("_")[1]);
                     }
@@ -851,7 +853,7 @@ public class TBot extends TelegramLongPollingBot {
 
         newLogRow.getCell(17).setCellValue(columns.get(0));
         newLogRow.getCell(18).setCellValue(columns.get(1));
-        newLogRow.getCell(18).setCellValue("");
+        newLogRow.getCell(19).setCellValue("");
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
 
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
@@ -868,12 +870,14 @@ public class TBot extends TelegramLongPollingBot {
                 yield deviceNumber + " (" + additionalData[1]
                         + " кВт) на " + additionalData[2] + " (" + additionalData[3] + " кВт). Причина замены: " + additionalData[4] + ".";
             }
-            case "ttChange" -> String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
-                    additionalData[1], additionalData[2], additionalData[3], additionalData[4],
-                    additionalData[5], additionalData[6], additionalData[7], additionalData[8]);
-            case "dcChange" ->
-                    String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, additionalData[1], additionalData[2]);
-
+            case "ttChange" ->
+                    String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
+                            additionalData[1], additionalData[2], additionalData[3], additionalData[4],
+                            additionalData[5], additionalData[6], additionalData[7], additionalData[8]);
+            case "dcChange" -> {
+                otoRow.getCell(deviceNumberColumnIndex).setCellValue(deviceNumber);
+                yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, additionalData[1], additionalData[2]);
+            }
             default -> null;
         };
 

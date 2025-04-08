@@ -331,7 +331,7 @@ public class ExcelMerger { // Объединение нескольких ана
                 for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                     Row sourceRow = sheet.getRow(i);
 //                    if (sourceRow == null || isRowEmpty(sourceRow)) continue; // Пропуск пустых строк
-                    if (sourceRow == null || isCellEmpty(sourceRow.getCell(0)))
+                    if (sourceRow == null || isCellEmpty(sourceRow.getCell(1)))
                         continue; // Пропуск строки если пуста первая ячейка
 
                     Row targetRow = resultSheet.createRow(rowCount++);
