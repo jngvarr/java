@@ -51,6 +51,7 @@ public class TBot extends TelegramLongPollingBot {
     private final PreparingPhotoService preparingPhotoService;
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
+    private Map<String, String> savingPaths = null;
 
     public enum UserState {
         WAITING_FOR_COUNTER_PHOTO,
@@ -119,7 +120,6 @@ public class TBot extends TelegramLongPollingBot {
             "Подтвердить выполнение", "confirm",
             "Отменить выполнение", "cancel");
 
-    private Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
     private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
     private int photoCounter;
     private String deviceChangeInfo = "";
@@ -316,7 +316,7 @@ public class TBot extends TelegramLongPollingBot {
             otoLog.put(deviceNumber, otoStringMap.get(currentOtoType));
         }
         String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
-        sendTextMessage("Введите номер следующего "+ device + " или закончите ввод.", CompleteButton, chatId, 1);
+        sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
     }
 
 
@@ -614,6 +614,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private String createSavingPath(OtoType operationType, PendingPhoto pending) {
+        Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
         String baseDir = PHOTO_PATH + File.separator;
 
         if (operationType != null && PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
@@ -767,7 +768,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void operationLogFilling() {
-
+        boolean isDcOto = otoLog.keySet().stream().anyMatch(key -> key.contains())
         boolean isDcChange = otoLog.values().stream().anyMatch(value -> value.contains("dcChange"));
         if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
@@ -933,7 +934,7 @@ public class TBot extends TelegramLongPollingBot {
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 default -> {
-                    String device = userStates.get(chatId).equals(UserState.IIK_OTO)? "ПУ" : "концентратора";
+                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
                     resultStr.append(String.format(device + " № %s.", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
                 }
