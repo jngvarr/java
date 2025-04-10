@@ -768,8 +768,6 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void operationLogFilling() {
-        boolean isDcOto = otoLog.keySet().stream().anyMatch(key -> key.contains())
-        boolean isDcChange = otoLog.values().stream().anyMatch(value -> value.contains("dcChange"));
         if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
@@ -777,33 +775,18 @@ public class TBot extends TelegramLongPollingBot {
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
 
+            boolean isDcOto = otoLog.values().stream().anyMatch(value -> value.contains("LW") || value.contains("LJ"));
+            boolean isDcChange = otoLog.values().stream().anyMatch(value -> value.contains("dcChange"));
             Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
             int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
             int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
             int deviceNumberColumnIndex;
             String taskorder = "";
-            int[] columnIndexes = null;
 
-            if (isDcChange) {
-                columnIndexes = Arrays.stream(new String[]{
-                                "Номер УСПД",
-                                "Присоединение",
-                                "Точка учёта",
-                                "Место установки счетчика (Размещение счетчика)",
-                                "Адрес установки",
-                                "Марка счётчика",
-                                "Номер счетчика"
-                        })
-                        .mapToInt(name -> excelFileService.findColumnIndex(operationLogSheet, name))
-                        .filter(index -> index >= 0)
-                        .toArray();
 
-                deviceNumberColumnIndex = columnIndexes[0];
-            } else {
-                deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, "Номер счетчика");
-            }
-
+            String deviceColumnName = isDcOto ? "Номер УСПД" : "Номер счетчика";
+            deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, deviceColumnName);
 
             CellStyle commonCellStyle = excelFileService.createCommonCellStyle(operationLog);
             CellStyle dateCellStyle = excelFileService.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
@@ -818,7 +801,9 @@ public class TBot extends TelegramLongPollingBot {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addRow);
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
                     taskorder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, orderColumnNumber);
-                    if (isDcChange) clearCellData(columnIndexes, newRow);
+                    if (isDcOto) {
+                        clearCellData(getIndexesOfCleaningCells(operationLogSheet), newRow); //удаление данных из ненужных ячеек
+                    }
                 }
             }
 
@@ -846,9 +831,23 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
+    private int[] getIndexesOfCleaningCells(Sheet operationLogSheet) {
+        return Arrays.stream(new String[]{
+                        "Присоединение",
+                        "Точка учёта",
+                        "Место установки счетчика (Размещение счетчика)",
+                        "Адрес установки",
+                        "Марка счётчика",
+                        "Номер счетчика"
+                })
+                .mapToInt(name -> excelFileService.findColumnIndex(operationLogSheet, name))
+                .filter(index -> index >= 0)
+                .toArray();
+    }
+
     private void clearCellData(int[] ints, Row row) {
-        for (int i = 1; i < ints.length; i++) {
-            row.getCell(ints[i]).setCellValue("");
+        for (int anInt : ints) {
+            row.getCell(anInt).setCellValue("");
         }
     }
 
