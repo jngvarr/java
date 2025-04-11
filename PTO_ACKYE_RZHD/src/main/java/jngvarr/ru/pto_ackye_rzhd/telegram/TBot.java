@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
@@ -122,7 +123,7 @@ public class TBot extends TelegramLongPollingBot {
 
     private Map<String, String> CompleteButton = Map.of("Завершить загрузку данных", "LOADING_COMPLETE");
     private int photoCounter;
-    private String deviceChangeInfo = "";
+    private String processInfo = "";
 
     public TBot(BotConfig config, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
@@ -214,7 +215,7 @@ public class TBot extends TelegramLongPollingBot {
                     barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
                 }
             } else if (currentState.equals(UserState.WAITING_FOR_TT_PHOTO)) {
-                barcodeText = deviceChangeInfo.substring(0, deviceChangeInfo.indexOf("_"));
+                barcodeText = processInfo.substring(0, processInfo.indexOf("_"));
             }
 
             // 5. Определяем тип фото (счётчик, тт или концентратор)
@@ -284,8 +285,8 @@ public class TBot extends TelegramLongPollingBot {
                     handleEquipmentChange(chatId, msgText, otoType);
                     return;
                 }
-                case WK_DROP, SET_NOT, SUPPLY_RESTORING -> {
-                    handleOtherOtoIIKTypes(chatId, msgText);
+                case WK_DROP, SET_NOT, SUPPLY_RESTORING, DC_RESTART -> {
+                    handleOtherOtoTypes(chatId, msgText);
                     return;
                 }
             }
@@ -300,30 +301,48 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleOtherOtoIIKTypes(long chatId, String msgText) {
+    private void handleOtherOtoTypes(long chatId, String msgText) {
         OtoType currentOtoType = otoTypes.get(chatId);
-        String deviceNumber = msgText.trim();
-        Map<OtoType, String> otoStringMap = Map.of(
-                OtoType.WK_DROP, "WK_",
-                OtoType.SET_NOT, "NOT_",
-                OtoType.SUPPLY_RESTORING, "SUPPLY_");
+        String messageText = msgText.trim();
 
-        if (deviceNumber.contains("_")) {
-            String[] deviceData = deviceNumber.split("_");
-            deviceNumber = deviceData[0];
-            otoLog.put(deviceNumber, otoStringMap.get(currentOtoType) + deviceData[1]);
-        } else {
-            otoLog.put(deviceNumber, otoStringMap.get(currentOtoType));
+        switch (currentOtoType) {
+            case WK_DROP -> {
+                otoLog.put(messageText, "WK_");
+                sendTextMessage("Введите номер следующего прибора учета или закончите ввод.", CompleteButton, chatId, 1);
+            }
+            case SET_NOT -> {
+                processInfo += msgText + "_";
+                if (sequenceNumber == 0) {
+                    sendMessage(chatId, "Введите причину отключения: ");
+                    sequenceNumber++;
+                    return;
+                } else {
+                    formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                }
+                String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
+                sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
+            }
+            case SUPPLY_RESTORING, DC_RESTART -> {
+                if (currentOtoType.equals(OtoType.SUPPLY_RESTORING)) {
+                    processInfo += msgText + "_";
+                    if (sequenceNumber == 0) {
+                        sendMessage(chatId, "Опишите причину неисправности: ");
+                        sequenceNumber++;
+                        return;
+                    } else {
+                        formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                    }
+                } else otoLog.put(messageText, "dcRestart");
+                sendTextMessage("Закончите ввод.", CompleteButton, chatId, 1);
+            }
         }
-        String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
-        sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
     }
 
 
     private void handleEquipmentChange(long chatId, String msgText, OtoType otoType) {
         Map<Integer, String> replacedEquipmentData = getReplacedEquipmentData().get(otoType);
         if (msgText != null && !msgText.trim().isEmpty()) {
-            deviceChangeInfo += msgText + "_";
+            processInfo += msgText + "_";
         }
         if (sequenceNumber < replacedEquipmentData.size()) {
             sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
@@ -499,7 +518,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private void concludeDeviceChange(long chatId, OtoType changeType) {
-        formingOtoLogWithDeviceChange(deviceChangeInfo, changeType);
+        formingOtoLogWithOtoAction(processInfo, changeType);
         sendTextMessage(actionConfirmation(null), confirmMenu, chatId, 2);
     }
 
@@ -508,7 +527,7 @@ public class TBot extends TelegramLongPollingBot {
         sequenceNumber = 0;
         userStates.clear();
         otoTypes.clear();
-        deviceChangeInfo = "";
+        processInfo = "";
     }
 
     private void savePhoto(long chatId, PendingPhoto pending) {
@@ -573,7 +592,6 @@ public class TBot extends TelegramLongPollingBot {
             default -> {
             }
         }
-        ;
     }
 
 
@@ -614,7 +632,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private String createSavingPath(OtoType operationType, PendingPhoto pending) {
-        Map<String, String> savingPaths = getPhotoSavingPathFromExcel();
+        Map<String, String> savingPaths = getPhotoSavingPathFromExcel(); //TODO переместить
         String baseDir = PHOTO_PATH + File.separator;
 
         if (operationType != null && PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
@@ -661,8 +679,8 @@ public class TBot extends TelegramLongPollingBot {
 
     private void editChangingInfo(PendingPhoto pending) {
         if (pending.getType().equals("counter")) {
-            deviceChangeInfo += pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_";
-        } else deviceChangeInfo += pending.getAdditionalInfo() + "_";
+            processInfo += pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_";
+        } else processInfo += pending.getAdditionalInfo() + "_";
     }
 
     private void registerUser(long chatId) {
@@ -775,7 +793,8 @@ public class TBot extends TelegramLongPollingBot {
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
 
-            boolean isDcOto = otoLog.values().stream().anyMatch(value -> value.contains("LW") || value.contains("LJ"));
+            boolean isDcOto = Stream.concat(otoLog.keySet().stream(), otoLog.values().stream())
+                    .anyMatch(value -> value.contains("LW") || value.contains("LJ"));
             boolean isDcChange = otoLog.values().stream().anyMatch(value -> value.contains("dcChange"));
             Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
@@ -807,7 +826,7 @@ public class TBot extends TelegramLongPollingBot {
                 }
             }
 
-            if (isDcChange) {
+            if (isDcChange) {// заполнение данных на вкладке "ИВКЭ"
                 Sheet dcWorkSheet = planOTOWorkbook.getSheet("ИВКЭ");
                 int orderDcSheetColumnNumber = excelFileService.findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
                 for (Row otoRow : dcWorkSheet) {
@@ -943,15 +962,16 @@ public class TBot extends TelegramLongPollingBot {
         return resultStr.toString();
     }
 
-    private void formingOtoLogWithDeviceChange(String deviceInfo, OtoType otoType) {
+    private void formingOtoLogWithOtoAction(String deviceInfo, OtoType otoType) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String changeType = switch (otoType) {
+        String workType = switch (otoType) {
             case METER_CHANGE -> "meterChange";
             case TT_CHANGE -> "ttChange";
             case DC_CHANGE -> "dcChange";
+            case SET_NOT -> "NOT";
             default -> "unknown";
         };
-        otoLog.put(deviceNumber, changeType + deviceInfo.substring(deviceInfo.indexOf("_")));
+        otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
     }
 
     private Map<String, String> getPhotoSavingPathFromExcel() {
