@@ -115,6 +115,7 @@ public class TBot extends TelegramLongPollingBot {
     private Map<String, String> otoIVKEButtons = Map.of(
             "Замена концентратора", "dcChange",
             "Перезагрузка концентратора", "dcRestart",
+            "Концентратор отключен (без питания)", "setNot",
             "Восстановление питания", "powerSupplyRestoring");
 
     private Map<String, String> confirmMenu = Map.of(
@@ -321,9 +322,10 @@ public class TBot extends TelegramLongPollingBot {
                     sequenceNumber++;
                 } else {
                     formingOtoLogWithOtoAction(processInfo, currentOtoType);
-                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
-                    sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
-                    sequenceNumber = 0;
+                    sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
+//                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
+//                    sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
+//                    sequenceNumber = 0;
                 }
             }
             case SUPPLY_RESTORING, DC_RESTART -> {
@@ -348,14 +350,13 @@ public class TBot extends TelegramLongPollingBot {
         sendTextMessage("Выберите причину отключения: ",
                 Map.of(
                         "Потребитель отключен.", "NOT",
-                        "Сезонный потребитель.", "NOT",
+                        "Сезонный потребитель.", "seasonNOT",
                         "Низкий уровень PLC сигнала", "lowPLC",
-                        "Прибор учета демонтирован (НОТ3)","NOT3",
-                        "Прибор учета сгорел","NOT2",
-                        "Местонахождения ПУ неизвестно (НОТ1 украден?)","NOT1"),
+                        "Прибор учета демонтирован (НОТ3)", "NOT3",
+                        "Прибор учета сгорел (НОТ2)", "NOT2",
+                        "Местонахождения ПУ неизвестно (НОТ1 украден?)", "NOT1"),
                 chatId, 1);
     }
-
 
     private void handleEquipmentChange(long chatId, String msgText, OtoType otoType) {
         Map<Integer, String> replacedEquipmentData = getReplacedEquipmentData().get(otoType);
@@ -534,6 +535,19 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, textToSend);
                 clearData();
                 sendMessage(chatId, "Для продолжения снова нажмите /start");
+            }
+
+            case "NOT", "lowPLC", "NOT3", "NOT2", "seasonNOT", "NOT1" -> {
+                processInfo += Map.of(
+                        "NOT", "НОТ. Потребитель отключен.",
+                        "seasonNOT", "НОТ. Сезонный потребитель.",
+                        "lowPLC", "НОТ. Низкий уровень PLC сигнала",
+                        "NOT3", "Прибор учета демонтирован (НОТ3)",
+                        "NOT2", "Прибор учета сгорел (НОТ2)",
+                        "NOT1", "Местонахождения ПУ неизвестно (НОТ1 украден?)").get(callbackData);
+                formingOtoLogWithOtoAction(processInfo, OtoType.SET_NOT);
+                sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
+//                sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
             }
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.");
         }
@@ -888,7 +902,7 @@ public class TBot extends TelegramLongPollingBot {
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
 
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
-            case "WK", "NOT", "SUPPLY", "dcRestart" -> (additionalData.length > 1 ? " " + additionalData[1] : "");
+            case "WK", "NOT", "SUPPLY", "dcRestart" -> (additionalData.length > 1 ? " - " + additionalData[1] : "");
 
             case "meterChange" -> {
                 Object mountingDeviceNumber = parseMeterNumber(additionalData[2]);
@@ -925,7 +939,7 @@ public class TBot extends TelegramLongPollingBot {
                         "Ошибка ключа - WrongKey (сделана прошивка счетчика)",
                         " Сброшена ошибка ключа WrongKey (счетчик не на связи). "),
                 "NOT", List.of("Нет связи со счетчиком",
-                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " НОТ."),
+                        "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " "),
                 "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " Восстановление схемы подключения. "),
                 "meterChange", List.of("Нет связи со счетчиком", "Неисправность счетчика (счетчик заменен)", " Замена прибора учета №"),
                 "ttChange", List.of("Повреждение ТТ\n", "Повреждение ТТ (ТТ заменили)",
@@ -959,8 +973,8 @@ public class TBot extends TelegramLongPollingBot {
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 default -> {
-                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "Концентратор";
-                    resultStr.append(String.format(device + " № %s.", key));
+                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? " ПУ" : "Концентратор";
+                    resultStr.append(String.format(device + " № %s - ", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
                 }
             }
@@ -976,10 +990,12 @@ public class TBot extends TelegramLongPollingBot {
             case TT_CHANGE -> "ttChange";
             case DC_CHANGE -> "dcChange";
             case SET_NOT -> "NOT";
-            case SUPPLY_RESTORING -> "supply";
+            case SUPPLY_RESTORING -> deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "supply" : "SUPPLY";
             default -> "unknown";
         };
         otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
+        processInfo = "";
+        sequenceNumber = 0;
     }
 
     private Map<String, String> getPhotoSavingPathFromExcel() {
