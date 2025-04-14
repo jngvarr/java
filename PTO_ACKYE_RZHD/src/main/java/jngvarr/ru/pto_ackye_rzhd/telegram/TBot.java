@@ -315,12 +315,12 @@ public class TBot extends TelegramLongPollingBot {
                 if (sequenceNumber == 0) {
                     sendMessage(chatId, "Введите причину отключения: ");
                     sequenceNumber++;
-                    return;
                 } else {
                     formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
+                    sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
+                    sequenceNumber = 0;
                 }
-                String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
-                sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
             }
             case SUPPLY_RESTORING, DC_RESTART -> {
                 if (currentOtoType.equals(OtoType.SUPPLY_RESTORING)) {
@@ -328,12 +328,14 @@ public class TBot extends TelegramLongPollingBot {
                     if (sequenceNumber == 0) {
                         sendMessage(chatId, "Опишите причину неисправности: ");
                         sequenceNumber++;
-                        return;
                     } else {
                         formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                        sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
                     }
-                } else otoLog.put(messageText, "dcRestart");
-                sendTextMessage("Закончите ввод.", CompleteButton, chatId, 1);
+                } else {
+                    otoLog.put(messageText, "dcRestart");
+                    sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
+                }
             }
         }
     }
@@ -431,11 +433,15 @@ public class TBot extends TelegramLongPollingBot {
                 }
             }
 
-            case "wkDrop", "setNot", "powerSupplyRestoring" -> {
+            case "wkDrop", "setNot", "powerSupplyRestoring", "dcRestart" -> {
                 switch (callbackData) {
                     case "wkDrop" -> {
                         sendMessage(chatId, "Введите номер прибора учета: ");
                         otoTypes.put(chatId, OtoType.WK_DROP);
+                    }
+                    case "dcRestart" -> {
+                        sendMessage(chatId, "Введите номер концентратора: ");
+                        otoTypes.put(chatId, OtoType.DC_RESTART);
                     }
                     case "setNot" -> {
                         String textToSend = userStates.get(chatId).equals(UserState.IIK_OTO) ?
@@ -730,24 +736,6 @@ public class TBot extends TelegramLongPollingBot {
         return message;
     }
 
-    private void attachButtons(SendMessage message, Map<String, String> buttons) {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        for (String buttonName : buttons.keySet()) {
-            String buttonValue = buttons.get(buttonName);
-
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText(new String(buttonName.getBytes(), StandardCharsets.UTF_8));
-            button.setCallbackData(buttonValue);
-
-            keyboard.add(List.of(button));
-        }
-
-        markup.setKeyboard(keyboard);
-        message.setReplyMarkup(markup);
-    }
-
     private void attachButtons(SendMessage message, Map<String, String> buttons, int columns) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
@@ -927,8 +915,10 @@ public class TBot extends TelegramLongPollingBot {
                 "ttChange", List.of("Повреждение ТТ\n", "Повреждение ТТ (ТТ заменили)",
                         " Замена трансформаторов тока. Установлены трансформаторы "),
                 "dcChange", List.of("Нет связи со всеми счетчиками\n", "Повреждение концентратора (Концентратор заменён)",
-                        " Замена концентратора №"
-                ));
+                        " Замена концентратора №"),
+                "dcRestart", List.of("Нет связи со всеми счетчиками\n", "Сбой ПО устройства (сделан рестарт по питанию)",
+                        " Перезагрузка ")
+        );
         return fillingData.get(data);
     }
 
@@ -969,6 +959,7 @@ public class TBot extends TelegramLongPollingBot {
             case TT_CHANGE -> "ttChange";
             case DC_CHANGE -> "dcChange";
             case SET_NOT -> "NOT";
+            case SUPPLY_RESTORING -> "supply";
             default -> "unknown";
         };
         otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
