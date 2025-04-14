@@ -313,7 +313,11 @@ public class TBot extends TelegramLongPollingBot {
             case SET_NOT -> {
                 processInfo += msgText + "_";
                 if (sequenceNumber == 0) {
-                    sendMessage(chatId, "Введите причину отключения: ");
+                    if (UserState.DC_OTO.equals(userStates.get(chatId))) {
+                        sendMessage(chatId, "Введите причину отключения: ");
+                    } else {
+                        chooseNotType(chatId);
+                    }
                     sequenceNumber++;
                 } else {
                     formingOtoLogWithOtoAction(processInfo, currentOtoType);
@@ -333,11 +337,23 @@ public class TBot extends TelegramLongPollingBot {
                         sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
                     }
                 } else {
-                    otoLog.put(messageText, "dcRestart");
+                    otoLog.put(messageText, "dcRestart_");
                     sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
                 }
             }
         }
+    }
+
+    private void chooseNotType(Long chatId) {
+        sendTextMessage("Выберите причину отключения: ",
+                Map.of(
+                        "Потребитель отключен.", "NOT",
+                        "Сезонный потребитель.", "NOT",
+                        "Низкий уровень PLC сигнала", "lowPLC",
+                        "Прибор учета демонтирован (НОТ3)","NOT3",
+                        "Прибор учета сгорел","NOT2",
+                        "Местонахождения ПУ неизвестно (НОТ1 украден?)","NOT1"),
+                chatId, 1);
     }
 
 
@@ -872,7 +888,7 @@ public class TBot extends TelegramLongPollingBot {
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
 
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (data) {
-            case "WK", "NOT", "SUPPLY" -> (additionalData.length > 1 ? " " + additionalData[1] : "");
+            case "WK", "NOT", "SUPPLY", "dcRestart" -> (additionalData.length > 1 ? " " + additionalData[1] : "");
 
             case "meterChange" -> {
                 Object mountingDeviceNumber = parseMeterNumber(additionalData[2]);
@@ -907,7 +923,7 @@ public class TBot extends TelegramLongPollingBot {
         Map<String, List<String>> fillingData = Map.of(
                 "WK", List.of("Нет связи со счетчиком",
                         "Ошибка ключа - WrongKey (сделана прошивка счетчика)",
-                        " Сброшена ошибка ключа WrongKey (счетчик не на связи)."),
+                        " Сброшена ошибка ключа WrongKey (счетчик не на связи). "),
                 "NOT", List.of("Нет связи со счетчиком",
                         "Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)", " НОТ."),
                 "SUPPLY", List.of("Нет связи со счетчиком", "Восстановление схемы.", " Восстановление схемы подключения. "),
@@ -917,7 +933,8 @@ public class TBot extends TelegramLongPollingBot {
                 "dcChange", List.of("Нет связи со всеми счетчиками\n", "Повреждение концентратора (Концентратор заменён)",
                         " Замена концентратора №"),
                 "dcRestart", List.of("Нет связи со всеми счетчиками\n", "Сбой ПО устройства (сделан рестарт по питанию)",
-                        " Перезагрузка ")
+                        " Перезагрузка концентратора. "),
+                "supply", List.of("Нет связи со всеми счетчиками\n", "Восстановление схемы.", " Восстановление схемы подключения.")
         );
         return fillingData.get(data);
     }
@@ -942,7 +959,7 @@ public class TBot extends TelegramLongPollingBot {
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 default -> {
-                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
+                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "Концентратор";
                     resultStr.append(String.format(device + " № %s.", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
                 }
