@@ -95,7 +95,8 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, PhotoState> photoStates = new HashMap<>();
     private Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
             OtoType.METER_CHANGE, "Замена ПУ",
-            OtoType.TT_CHANGE, "Замена ТТ"
+            OtoType.TT_CHANGE, "Замена ТТ",
+            OtoType.DC_CHANGE, "Замена концентратора"
     );
 
     public enum OtoType {
