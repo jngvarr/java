@@ -126,7 +126,7 @@ public class ExcelFileService {
 
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
             Cell cell = headerRow.getCell(i);
-            if (cell != null && columnName.equalsIgnoreCase(cell.getStringCellValue())) {
+            if (cell != null && cell.getStringCellValue().toLowerCase().startsWith(columnName.toLowerCase())) {
                 return i;
             }
         }
