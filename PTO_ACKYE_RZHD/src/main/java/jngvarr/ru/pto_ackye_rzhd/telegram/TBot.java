@@ -43,6 +43,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
+    private final TBotService tBotService;
     private final UserServiceImpl service;
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
@@ -127,9 +128,10 @@ public class TBot extends TelegramLongPollingBot {
     private int photoCounter;
     private String processInfo = "";
 
-    public TBot(BotConfig config, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
+    public TBot(BotConfig config, TBotService tBotService, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
         this.config = config;
+        this.tBotService = tBotService;
         this.service = service;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
@@ -147,161 +149,18 @@ public class TBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
-            // Если сообщение содержит текст
             if (update.getMessage().hasText()) {
-                handleTextMessage(update);
+                tBotService.handleTextMessage(update);
             }
-            // Если сообщение содержит фото
             else if (update.getMessage().hasPhoto()) {
-                handlePhotoMessage(update);
+                tBotService.handlePhotoMessage(update);
             }
         } else if (update.hasCallbackQuery()) {
-            handleCallbackQuery(update);
-        }
-    }
-
-    private void handlePhotoMessage(Update update) {
-        long chatId = update.getMessage().getChatId();
-
-        // Проверяем, есть ли подпись к фото
-        String manualInput = update.getMessage().getCaption();
-
-        // Если фото не запрашивалось
-        if (!userStates.containsKey(chatId)) {
-            sendMessage(chatId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
-            return;
-        }
-        sendMessage(chatId, "Подождите, идёт обработка фото....");
-        UserState currentState = userStates.get(chatId);
-        // Получаем самое большое фото
-        var photos = update.getMessage().getPhoto();
-        var photo = photos.get(photos.size() - 1);
-        String fileId = photo.getFileId();
-
-        try {
-            // Скачивание файла с сервера Telegram
-            GetFile getFileMethod = new GetFile();
-            getFileMethod.setFileId(fileId);
-            org.telegram.telegrambots.meta.api.objects.File telegramFile = execute(getFileMethod);
-            String filePath = telegramFile.getFilePath();
-            String fileUrl = "https://api.telegram.org/file/bot" + config.getBotToken() + "/" + filePath;
-
-            // 2. Сохраняем фото в папку пользователя
-            Path userDir = Paths.get("photos", String.valueOf(chatId));
-            if (!Files.exists(userDir)) {
-                Files.createDirectories(userDir);
-
-                // Сохраняем файл во временное хранилище
-            }
-            Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
-            try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            // 3. Читаем изображение
-            BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
-            if (bufferedImage == null) {
-                sendMessage(chatId, "Не удалось обработать изображение.");
-                return;
-            }
-
-            String barcodeText = "";
-            if (currentState.equals(UserState.WAITING_FOR_COUNTER_PHOTO)) {
-                // 4. Декодируем штрихкод
-                barcodeText = preparingPhotoService.decodeBarcode(bufferedImage);
-                if (barcodeText == null) {
-                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.resizeImage(bufferedImage,
-                            bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2));
-                }
-                if (barcodeText == null) {
-                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
-                }
-            } else if (currentState.equals(UserState.WAITING_FOR_TT_PHOTO)) {
-                barcodeText = processInfo.substring(0, processInfo.indexOf("_"));
-            }
-
-            // 5. Определяем тип фото (счётчик, тт или концентратор)
-            String type = switch (currentState) {
-                case WAITING_FOR_COUNTER_PHOTO -> "counter";
-                case WAITING_FOR_DC_PHOTO -> "concentrator";
-                case WAITING_FOR_TT_PHOTO -> "tt";
-                default -> throw new IllegalStateException("Неизвестный тип оборудования: " + currentState);
-            };
-
-            // 6. Создаём объект для хранения фото
-            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
-            pendingPhotos.put(chatId, pendingPhoto);
-            if (type.equals("counter")) {
-                if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
-
-                // 7. Если штрихкод найден и есть показания – сразу сохраняем
-                if (barcodeText != null && pendingPhoto.getAdditionalInfo() != null) {
-                    savePhoto(chatId, pendingPhoto);
-                    return;
-                }
-                if (barcodeText == null) {
-                    sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:");
-                    userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
-                    return;
-                }
-                if (manualInput == null) {
-                    sendMessage(chatId, "Показания счетчика не введены. Введите показания счётчика:");
-                    userStates.put(chatId, UserState.MANUAL_INSERT_METER_INDICATION);
-                }
-
-            } else if (type.equals("tt")) {
-                if (manualInput != null) {
-                    pendingPhoto.setAdditionalInfo(manualInput);
-                    savePhoto(chatId, pendingPhoto);
-                } else {
-                    PhotoState photoState = photoStates.get(chatId);
-                    OtoType otoType = otoTypes.get(chatId);
-                    sendMessage(chatId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
-                    sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(otoType));
-                }
-            }
-        } catch (Exception e) {
-            log.error("Ошибка обработки фото: " + e.getMessage());
-            sendMessage(chatId, "Произошла ошибка при обработке фото.");
+            tBotService.handleCallbackQuery(update);
         }
     }
 
 
-    private void handleTextMessage(Update update) {
-        String msgText = update.getMessage().getText();
-        long chatId = update.getMessage().getChatId();
-        UserState userState = userStates.get(chatId);
-        OtoType otoType = otoTypes.get(chatId);
-
-        if (userState != null) {
-            switch (userState) {
-                case MANUAL_INSERT_METER_NUMBER, MANUAL_INSERT_METER_INDICATION -> {
-                    handleManualInsert(chatId, msgText);
-                    return;
-                }
-            }
-        }
-        if (otoType != null) {
-            switch (otoType) {
-                case TT_CHANGE, METER_CHANGE, DC_CHANGE -> {
-                    handleEquipmentChange(chatId, msgText, otoType);
-                    return;
-                }
-                case WK_DROP, SET_NOT, SUPPLY_RESTORING, DC_RESTART -> {
-                    handleOtherOtoTypes(chatId, msgText);
-                    return;
-                }
-            }
-        }
-
-        // Обработка остальных текстовых сообщений
-        switch (msgText) {
-            case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
-            case "/help" -> sendMessage(chatId, HELP);
-            case "/register" -> registerUser(chatId);
-            default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.");
-        }
-    }
 
     private void handleOtherOtoTypes(long chatId, String msgText) {
         OtoType currentOtoType = otoTypes.get(chatId);
