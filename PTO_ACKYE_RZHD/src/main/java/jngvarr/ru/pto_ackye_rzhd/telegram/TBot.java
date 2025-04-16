@@ -699,7 +699,7 @@ public class TBot extends TelegramLongPollingBot {
             baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
         }
         String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
-        String resultPath = !PHOTO_SUBDIRS_NAME.containsKey(operationType) || !userStates.get(chatId).equals(UserState.WAITING_FOR_DC_PHOTO) ? path.substring(0, path.lastIndexOf("\\")) : path;
+        String resultPath = !userStates.get(chatId).equals(UserState.WAITING_FOR_DC_PHOTO) || !PHOTO_SUBDIRS_NAME.containsKey(operationType)   ? path.substring(0, path.lastIndexOf("\\")) : path;
 
         if (photoStates.get(chatId).getUploadedPhotos().isEmpty()) chgePath = resultPath;//TODO заменить на PhotoState
         if (photoStates.get(chatId).getUploadedPhotos().size() < 2) resultPath = chgePath;
