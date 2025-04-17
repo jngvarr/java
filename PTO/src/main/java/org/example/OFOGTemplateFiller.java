@@ -75,7 +75,7 @@ public class OFOGTemplateFiller {
 
                         //Задаем месяц отчета в ручную
                         int year = 2025;
-                        int month = 2;
+                        int month = 3;
 
                         int eventYear = localDate.getYear();
                         int eventMonth = localDate.getMonthValue();
@@ -212,6 +212,7 @@ public class OFOGTemplateFiller {
                 restorationDate.format(DATE_FORMATTER_DDMMYYYY),
                 generateRandomTime(9, 17),
                 getCellStringValue(sourceRow.getCell(18)),
+                sourceRow.getCell(20).getStringCellValue().contains("ЭЛ")? getCellStringValue(sourceRow.getCell(20)):
                 getCellStringValue(sourceRow.getCell(20)) + ", инженер ООО \"УК СТС\""
         };
     }

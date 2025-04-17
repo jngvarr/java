@@ -104,6 +104,7 @@ public class TBot extends TelegramLongPollingBot {
         WK_DROP, METER_CHANGE, SET_NOT, SUPPLY_RESTORING, TT_CHANGE, DC_CHANGE, DC_RESTART
     }
 
+    private boolean isPTO;
     String chgePath;
     private int sequenceNumber = 0;
 
@@ -413,7 +414,7 @@ public class TBot extends TelegramLongPollingBot {
             boolean isDataFull = pending.getDeviceNumber() != null && pending.getAdditionalInfo() != null;
             if (isDataFull) {
                 savePhoto(chatId, pending);
-                userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO); //TODO переделать, нах!!!
+//                userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO); //TODO переделать, нах!!!
             } else if (pending.getDeviceNumber() == null) {
                 sendMessage(chatId, "Заводской номер не найден. Введите номер вручную:");
                 userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
@@ -435,6 +436,7 @@ public class TBot extends TelegramLongPollingBot {
                 sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
             }
             case "pto" -> {
+                isPTO = true;
                 sendTextMessage(PTO, modes.get(callbackData), chatId, 2);
             }
             case "oto" -> {
@@ -448,7 +450,7 @@ public class TBot extends TelegramLongPollingBot {
                     textToSend = "Пожалуйста, загрузите фото счетчика и введите показания.";
                     userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO);
                 } else {
-                    textToSend = "Пожалуйста, загрузите фото концентратора.";
+                    textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
                     userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
                 }
                 sendMessage(chatId, textToSend);
@@ -537,7 +539,12 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             case "LOADING_COMPLETE" -> {
-                sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
+                if (isPTO) {
+                    clearData();
+                    sendMessage(chatId, "Для продолжения снова нажмите /start");
+                } else {
+                    sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
+                }
             }
 
             case "confirm", "cancel" -> {
@@ -581,19 +588,21 @@ public class TBot extends TelegramLongPollingBot {
         userStates.clear();
         otoTypes.clear();
         processInfo = "";
+        isPTO = false;
     }
 
     private void savePhoto(long chatId, PendingPhoto pending) {
         OtoType operationType = otoTypes.get(chatId);
         String deviceNumber = pending.getDeviceNumber();
-        String str = userStates.get(chatId).toString();
-        if (str.contains("WAITING") || !PHOTO_SUBDIRS_NAME.containsKey(operationType)) { // Только фото ПТО
+//        String str = userStates.get(chatId).toString();
+        // Получаем состояние загрузки фото (если нет, создаем новое)
+        PhotoState photoState = photoStates.computeIfAbsent(chatId, key -> new PhotoState(deviceNumber));
+        if (isPTO || !PHOTO_SUBDIRS_NAME.containsKey(operationType)) { // Только фото ПТО
             handleUncontrolledPhoto(chatId, pending);
             return;
         }
 
-        // Получаем состояние загрузки фото (если нет, создаем новое)
-        PhotoState photoState = photoStates.computeIfAbsent(chatId, key -> new PhotoState(deviceNumber));
+//        PhotoState photoState = photoStates.computeIfAbsent(chatId, key -> new PhotoState(deviceNumber));
 
         handleChangingEquipmentPhoto(chatId, pending, operationType, deviceNumber, photoState);
     }
@@ -655,13 +664,13 @@ public class TBot extends TelegramLongPollingBot {
 
 
     private void doSave(long chatId, PendingPhoto pending) {
-        OtoType operationType = otoTypes.get(chatId);
+//        OtoType operationType = otoTypes.get(chatId);
         try {
-            Path userDir = Paths.get(createSavingPath(operationType, pending, chatId));
+            Path userDir = Paths.get(createSavingPath(pending, chatId));
 
             Files.createDirectories(userDir);
 
-            String newFileName = createNewFileName(pending, operationType, chatId);
+            String newFileName = createNewFileName(pending, chatId);
             Path destination = userDir.resolve(newFileName);
 
             // Сохранение
@@ -691,39 +700,39 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private String createSavingPath(OtoType operationType, PendingPhoto pending, long chatId) {
+    private String createSavingPath(PendingPhoto pending, long chatId) {
         Map<String, String> savingPaths = getPhotoSavingPathFromExcel(chatId); //TODO переместить??
+        OtoType operationType = otoTypes.get(chatId);
         String baseDir = PHOTO_PATH + File.separator;
-
-        if (operationType != null && PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
-            baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
-        }
         String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
-        String resultPath = !userStates.get(chatId).equals(UserState.WAITING_FOR_DC_PHOTO) || !PHOTO_SUBDIRS_NAME.containsKey(operationType)   ? path.substring(0, path.lastIndexOf("\\")) : path;
 
-        if (photoStates.get(chatId).getUploadedPhotos().isEmpty()) chgePath = resultPath;//TODO заменить на PhotoState
-        if (photoStates.get(chatId).getUploadedPhotos().size() < 2) resultPath = chgePath;
-        return baseDir + resultPath;
+        if (operationType != null) {
+            if (PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
+                baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
+            }
+        } else if (!userStates.get(chatId).equals(UserState.WAITING_FOR_DC_PHOTO))
+            path = path.substring(0, path.lastIndexOf("\\"));
+
+        if (photoStates.get(chatId).getUploadedPhotos().isEmpty()) chgePath = path;
+        else if (photoStates.get(chatId).getUploadedPhotos().size() < 2) path = chgePath;
+        return baseDir + path;
     }
 
-    private String createNewFileName(PendingPhoto pending, OtoType operationType, Long chatId) {
-        String additionalInfo = pending.getAdditionalInfo();
-        String deviceNumber = (pending.getDeviceNumber() != null) ? pending.getDeviceNumber() : "";
-        String meterIndicationOrTtNumber = (additionalInfo != null) ? switch (operationType) {
-            case METER_CHANGE -> "_" + additionalInfo;
-            case TT_CHANGE -> "_(" + additionalInfo + ")";
-            default -> "unknown";
-        } : "";
+    private String createNewFileName(PendingPhoto pending, Long chatId) {
+        OtoType operationType = otoTypes.get(chatId);
+        String photoSuffix = "";
+        String additionalInfo = pending.getAdditionalInfo() != null ? "_" + pending.getAdditionalInfo() : "";
+        if (operationType != null) {
+            photoSuffix = getSavingPhotoSuffix(operationType, photoStates.get(chatId));
+            if (operationType == OtoType.TT_CHANGE) {
+                additionalInfo = "_(" + additionalInfo + ")";
+            } else {
+                additionalInfo = "";
+            }
+        }
 
-        return formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + deviceNumber +
-                meterIndicationOrTtNumber + getSavingPhotoSuffix(operationType, photoStates.get(chatId)) + ".jpg";
-    }
-
-    private String getSavingPhotoSuffix(OtoType operationType, PhotoState state) {
-        if (operationType != null && (operationType.equals(OtoType.METER_CHANGE)
-                || operationType.equals(OtoType.DC_CHANGE))) {
-            return "_" + state.getNextPhotoType(operationType);
-        } else return "";
+        return formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + pending.getDeviceNumber() +
+                additionalInfo + photoSuffix + ".jpg";
     }
 
     private String getSavingPhotoPrefix(String type) {
@@ -734,6 +743,14 @@ public class TBot extends TelegramLongPollingBot {
             default -> "unknown_";
         };
     }
+
+    private String getSavingPhotoSuffix(OtoType operationType, PhotoState state) {
+        if (operationType != null && (operationType.equals(OtoType.METER_CHANGE)
+                || operationType.equals(OtoType.DC_CHANGE))) {
+            return "_" + state.getNextPhotoType(operationType);
+        } else return "";
+    }
+
 
     private void addChangingInfo(PendingPhoto pending) {
         if (pending.getType().equals("counter")) {
