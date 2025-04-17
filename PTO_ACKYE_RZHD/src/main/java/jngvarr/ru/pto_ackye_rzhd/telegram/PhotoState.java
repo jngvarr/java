@@ -13,7 +13,7 @@ public class PhotoState {
     private final Set<String> uploadedPhotos = new HashSet<>();
 
     // Для ТТ определяем порядок фаз A → B → C
-    private static final List<String> TT_PHASES = List.of("Фаза_A", "Фаза_B", "Фаза_C");
+    private static final List<String> TT_PHASES = List.of("ф.A", "ф.B", "ф.C");
 
     public PhotoState(String deviceNumber) {
         this.deviceNumber = deviceNumber;

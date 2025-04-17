@@ -377,7 +377,11 @@ public class TBot extends TelegramLongPollingBot {
             processInfo += msgText + "_";
         }
         if (sequenceNumber < replacedEquipmentData.size()) {
-            sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
+            if (userStates.get(chatId).equals(UserState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
+                sendMessage(chatId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
+            } else {
+                sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
+            }
             sequenceNumber++;
         } else concludeDeviceChange(chatId, otoType);
     }
@@ -414,7 +418,6 @@ public class TBot extends TelegramLongPollingBot {
             boolean isDataFull = pending.getDeviceNumber() != null && pending.getAdditionalInfo() != null;
             if (isDataFull) {
                 savePhoto(chatId, pending);
-//                userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO); //TODO переделать, нах!!!
             } else if (pending.getDeviceNumber() == null) {
                 sendMessage(chatId, "Заводской номер не найден. Введите номер вручную:");
                 userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
@@ -594,17 +597,13 @@ public class TBot extends TelegramLongPollingBot {
     private void savePhoto(long chatId, PendingPhoto pending) {
         OtoType operationType = otoTypes.get(chatId);
         String deviceNumber = pending.getDeviceNumber();
-//        String str = userStates.get(chatId).toString();
         // Получаем состояние загрузки фото (если нет, создаем новое)
         PhotoState photoState = photoStates.computeIfAbsent(chatId, key -> new PhotoState(deviceNumber));
         if (isPTO || !PHOTO_SUBDIRS_NAME.containsKey(operationType)) { // Только фото ПТО
             handleUncontrolledPhoto(chatId, pending);
             return;
         }
-
-//        PhotoState photoState = photoStates.computeIfAbsent(chatId, key -> new PhotoState(deviceNumber));
-
-        handleChangingEquipmentPhoto(chatId, pending, operationType, deviceNumber, photoState);
+        handleChangingEquipmentPhoto(chatId, pending, operationType, photoState);
     }
 
     /**
@@ -619,8 +618,7 @@ public class TBot extends TelegramLongPollingBot {
     /**
      * Обрабатывает фото, связанных с заменой оборудования
      */
-    private void handleChangingEquipmentPhoto(long chatId, PendingPhoto pending, OtoType operationType, String
-            deviceNumber, PhotoState photoState) {
+    private void handleChangingEquipmentPhoto(long chatId, PendingPhoto pending, OtoType operationType, PhotoState photoState) {
         // Определяем, необходимость загрузки нового фото
         String photoPhase = photoState.getNextPhotoType(operationType);
         if (photoPhase == null) {
@@ -689,9 +687,9 @@ public class TBot extends TelegramLongPollingBot {
             case "демонтирован" -> "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
             case "установлен" -> "📸 Пожалуйста, загрузите фото **УСТАНОВЛЕННОГО** прибора и введите "
                     + (userStates.get(chatId).equals(UserState.IIK_WORKS) ? "показания" : "его номер");
-            case "Фаза_A" -> "📸 Прикрепите фото **ТТ фазы A** и введите его номер:";
-            case "Фаза_B" -> "📸 Прикрепите фото **ТТ фазы B** и введите его номер:";
-            case "Фаза_C" -> "📸 Прикрепите фото **ТТ фазы C** и введите его номер:";
+            case "ф.A" -> "📸 Прикрепите фото **ТТ фазы A** и введите его номер:";
+            case "ф.B" -> "📸 Прикрепите фото **ТТ фазы B** и введите его номер:";
+            case "ф.C" -> "📸 Прикрепите фото **ТТ фазы C** и введите его номер:";
             default -> null;
         };
 
@@ -723,14 +721,14 @@ public class TBot extends TelegramLongPollingBot {
         String photoSuffix = "";
         String additionalInfo = pending.getAdditionalInfo() != null ? "_" + pending.getAdditionalInfo() : "";
         if (operationType != null) {
-            photoSuffix = getSavingPhotoSuffix(operationType, photoStates.get(chatId));
+            PhotoState photoState = photoStates.get(chatId);
+            photoSuffix = getSavingPhotoSuffix(operationType, photoState);
             if (operationType == OtoType.TT_CHANGE) {
-                additionalInfo = "_(" + additionalInfo + ")";
+                additionalInfo = "_(" + photoState.getNextPhotoType(operationType) + additionalInfo.replace("_","№-") + ")";
             } else {
                 additionalInfo = "";
             }
         }
-
         return formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + pending.getDeviceNumber() +
                 additionalInfo + photoSuffix + ".jpg";
     }
@@ -1052,8 +1050,8 @@ public class TBot extends TelegramLongPollingBot {
                 case "meterChange" -> resultStr.append(String.format(
                         "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s. Причина: %s.", key, str[1], str[2], str[3], str[4]));
                 case "ttChange" -> resultStr.append(String.format(
-                        "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s.",
-                        str[1], str[2], str[3], str[4], str[5], str[6], str[7]));
+                        "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина: %s.",
+                        str[1], str[2], str[3], str[4], str[5], str[6], str[7], str[8]));
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 default -> {
