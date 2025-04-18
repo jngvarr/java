@@ -25,7 +25,7 @@ public class PtoTelegramBotContent {
              """;
 
     public static final String NEW_TU = """
-            *Монтажные/демонтажные работы *\s
+            *Монтажные/демонтажные работы: *\s
             """;
 
     static final String HELP = "This bot was created to facilitate data processing during\n " +

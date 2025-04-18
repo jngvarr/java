@@ -62,7 +62,9 @@ public class TBot extends TelegramLongPollingBot {
         MANUAL_INSERT_METER_NUMBER,
         MANUAL_INSERT_METER_INDICATION,
         IIK_WORKS,
-        DC_WORKS
+        DC_WORKS,
+        IIK_MOUNT,
+        DC_MOUNT
     }
 
     private void handleStartCommand(long chatId, String firstName) {
@@ -72,7 +74,7 @@ public class TBot extends TelegramLongPollingBot {
     private Map<String, String> startMenuButtons = Map.of(
             "ПТО", "pto",
             "ОТО", "oto",
-            "Монтаж / демонтаж ТУ", "newTU"
+            "Монтаж новой ТУ / концентратора", "newTU"
     );
 
     private Map<String, Map<String, String>> modes = Map.of(
@@ -84,9 +86,7 @@ public class TBot extends TelegramLongPollingBot {
                     "ОТО ИВКЭ", "otoIVKE"),
             "newTU", Map.of(
                     "Монтаж новой точки учёта", "addIIK",
-                    "Демонтаж точки учёта", "delIIK",
-                    "Монтаж концентратора", "dcMount",
-                    "Демонтаж концентратора", "dcRemove")
+                    "Монтаж концентратора", "dcMount")
     );
 
     // Карта для хранения состояния диалога по chatId
@@ -139,6 +139,7 @@ public class TBot extends TelegramLongPollingBot {
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand("/stop", "stop all"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -290,6 +291,10 @@ public class TBot extends TelegramLongPollingBot {
                     handleManualInsert(chatId, msgText);
                     return;
                 }
+                case IIK_MOUNT, DC_MOUNT -> {
+                    handleEquipmentMount(chatId, msgText, userState);
+                    return;
+                }
             }
         }
         if (otoType != null) {
@@ -310,7 +315,10 @@ public class TBot extends TelegramLongPollingBot {
             case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
             case "/help" -> sendMessage(chatId, HELP);
             case "/register" -> registerUser(chatId);
-            case "/return" -> registerUser(chatId);
+            case "/stop" -> {
+                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
+                clearData();
+            }
             default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.");
         }
     }
@@ -334,7 +342,7 @@ public class TBot extends TelegramLongPollingBot {
                     }
                     sequenceNumber++;
                 } else {
-                    formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                    formingOtoLog(processInfo, currentOtoType);
                     sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
 //                    String device = userStates.get(chatId).equals(UserState.IIK_OTO) ? "ПУ" : "концентратора";
 //                    sendTextMessage("Введите номер следующего " + device + " или закончите ввод.", CompleteButton, chatId, 1);
@@ -348,7 +356,7 @@ public class TBot extends TelegramLongPollingBot {
                         sendMessage(chatId, "Опишите причину неисправности: ");
                         sequenceNumber++;
                     } else {
-                        formingOtoLogWithOtoAction(processInfo, currentOtoType);
+                        formingOtoLog(processInfo, currentOtoType);
                         sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
                     }
                 } else {
@@ -383,7 +391,7 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
             }
             sequenceNumber++;
-        } else concludeDeviceChange(chatId, otoType);
+        } else concludeDeviceOperation(chatId);
     }
 
     Map<OtoType, Map<Integer, String>> replacedEquipmentData = Map.of(
@@ -404,6 +412,36 @@ public class TBot extends TelegramLongPollingBot {
             OtoType.DC_CHANGE, Map.of(
                     0, "Введите номер устанавливаемого концентратора.",
                     1, "Опишите причину замены: ")
+    );
+
+    private void handleEquipmentMount(long chatId, String msgText, UserState state) {
+        Map<Integer, String> mountedEquipmentData = getMountedEquipmentData().get(state);
+        if (msgText != null && !msgText.trim().isEmpty()) {
+            processInfo += msgText + "_";
+        }
+        if (sequenceNumber < mountedEquipmentData.size()) {
+            sendMessage(chatId, mountedEquipmentData.get(sequenceNumber));
+            sequenceNumber++;
+        } else concludeDeviceOperation(chatId);
+    }
+
+    Map<UserState, Map<Integer, String>> mountedEquipmentData = Map.of(
+            UserState.IIK_MOUNT, Map.of(
+                    0, "Введите наименование подстанции: ",
+                    1, "Введите наименование точки учета: ",
+                    2, "Введите адрес точки учета: ",
+                    3, "Введите тип прибора учета: ",
+                    4, "Введите номер прибора учета: ",
+                    5, "Введите место установки прибора учета: ",
+                    6, "Введите наименование монтажной организации ",
+                    7, "Введите ФИО монтажника ",
+                    8, "Введите дату монтажа "),
+            UserState.DC_MOUNT, Map.of(
+                    0, "Введите наименование подстанции: ",
+                    4, "Введите номер концентратора: ",
+                    6, "Введите наименование монтажной организации ",
+                    7, "Введите ФИО монтажника ",
+                    8, "Введите дату монтажа ")
     );
 
     private void handleManualInsert(long chatId, String deviceNumber) {
@@ -572,16 +610,25 @@ public class TBot extends TelegramLongPollingBot {
                         "NOT3", "Прибор учета демонтирован (НОТ3).",
                         "NOT2", "Прибор учета сгорел (НОТ2).",
                         "NOT1", "Местонахождения ПУ неизвестно (НОТ1).").get(callbackData);
-                formingOtoLogWithOtoAction(processInfo, OtoType.SET_NOT);
+                formingOtoLog(processInfo, OtoType.SET_NOT);
                 sendTextMessage("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, 1);
 //                sendTextMessage(actionConfirmation(chatId), confirmMenu, chatId, 2);
             }
+            case "addIIK", "dcMount" -> {
+                sendMessage(chatId, "Введите наименование станции: ");
+                if ("addIIK".equals(callbackData)) {
+                    userStates.put(chatId, UserState.IIK_MOUNT);
+                } else {
+                    userStates.put(chatId, UserState.DC_MOUNT);
+                }
+            }
+
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.");
         }
     }
 
-    private void concludeDeviceChange(long chatId, OtoType changeType) {
-        formingOtoLogWithOtoAction(processInfo, changeType);
+    private void concludeDeviceOperation(long chatId) {
+        formingOtoLog(processInfo, otoTypes.get(chatId));
         sendTextMessage(actionConfirmation(null), confirmMenu, chatId, 2);
     }
 
@@ -724,7 +771,7 @@ public class TBot extends TelegramLongPollingBot {
             PhotoState photoState = photoStates.get(chatId);
             photoSuffix = getSavingPhotoSuffix(operationType, photoState);
             if (operationType == OtoType.TT_CHANGE) {
-                additionalInfo = "_(" + photoState.getNextPhotoType(operationType) + additionalInfo.replace("_","№-") + ")";
+                additionalInfo = "_(" + photoState.getNextPhotoType(operationType) + additionalInfo.replace("_", ", №") + ")";
             } else {
                 additionalInfo = "";
             }
@@ -1065,21 +1112,34 @@ public class TBot extends TelegramLongPollingBot {
         return resultStr.toString();
     }
 
-    private void formingOtoLogWithOtoAction(String deviceInfo, OtoType otoType) {
+    private void formingOtoLog(String deviceInfo, Object typeIndicator) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String workType = switch (otoType) {
-            case METER_CHANGE -> "meterChange";
-            case TT_CHANGE -> "ttChange";
-            case DC_CHANGE -> "dcChange";
-            case SET_NOT -> "NOT";
-            case SUPPLY_RESTORING ->
-                    deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "dcSupply" : "meterSupply";
-            default -> "unknown";
-        };
+        String workType = resolveWorkType(typeIndicator, deviceNumber);
         otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
         processInfo = "";
         sequenceNumber = 0;
     }
+    private String resolveWorkType(Object typeIndicator, String deviceNumber) {
+        if (typeIndicator instanceof OtoType otoType) {
+            return switch (otoType) {
+                case METER_CHANGE -> "meterChange";
+                case TT_CHANGE -> "ttChange";
+                case DC_CHANGE -> "dcChange";
+                case SET_NOT -> "NOT";
+                case SUPPLY_RESTORING ->
+                        deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "dcSupply" : "meterSupply";
+                default -> "unknown";
+            };
+        } else if (typeIndicator instanceof UserState userState) {
+            return switch (userState) {
+                case IIK_MOUNT -> "meterMount";
+                case DC_MOUNT -> "dcMount";
+                default -> "unknown";
+            };
+        }
+        return "unknown";
+    }
+
 
     private Map<String, String> getPhotoSavingPathFromExcel(long chatId) {
 
