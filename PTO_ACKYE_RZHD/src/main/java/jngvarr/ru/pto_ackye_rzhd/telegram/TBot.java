@@ -53,9 +53,9 @@ public class TBot extends TelegramLongPollingBot {
     private final PreparingPhotoService preparingPhotoService;
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
-    private Map<String, String> savingPaths = null;
+    private Map<String, String> savingPaths;
 
-    public enum UserState {
+    public enum ProcessState {
         WAITING_FOR_METER_PHOTO,
         WAITING_FOR_DC_PHOTO,
         WAITING_FOR_TT_PHOTO,
@@ -72,7 +72,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     // Мапа для хранения состояния диалога по chatId
-    private Map<Long, UserState> userStates = new HashMap<>();
+    private Map<Long, ProcessState> processStates = new HashMap<>();
     private Map<Long, OtoType> otoTypes = new HashMap<>();
     private Map<String, String> otoLog = new HashMap<>();
     private Map<Long, PhotoState> photoStates = new HashMap<>();
@@ -90,6 +90,7 @@ public class TBot extends TelegramLongPollingBot {
     String chgePath;
     private int sequenceNumber = 0;
     private String processInfo = "";
+    private boolean isDcLocation;
 
     public TBot(BotConfig config, TBotService tBotService, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
@@ -98,6 +99,7 @@ public class TBot extends TelegramLongPollingBot {
         this.service = service;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
+        savingPaths = getPhotoSavingPathFromExcel();//TODO подумать
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
@@ -130,12 +132,12 @@ public class TBot extends TelegramLongPollingBot {
         String manualInput = update.getMessage().getCaption();
 
         // Если фото не запрашивалось
-        if (!userStates.containsKey(chatId)) {
+        if (!processStates.containsKey(chatId)) {
             sendMessage(chatId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
             return;
         }
         sendMessage(chatId, "Подождите, идёт обработка фото....");
-        UserState currentState = userStates.get(chatId);
+        ProcessState currentState = processStates.get(chatId);
         // Получаем самое большое фото
         var photos = update.getMessage().getPhoto();
         var photo = photos.get(photos.size() - 1);
@@ -169,7 +171,7 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             String barcodeText = "";
-            if (currentState.equals(UserState.WAITING_FOR_METER_PHOTO)) {
+            if (currentState.equals(ProcessState.WAITING_FOR_METER_PHOTO)) {
                 // 4. Декодируем штрихкод
                 barcodeText = preparingPhotoService.decodeBarcode(bufferedImage);
                 if (barcodeText == null) {
@@ -179,7 +181,7 @@ public class TBot extends TelegramLongPollingBot {
                 if (barcodeText == null) {
                     barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
                 }
-            } else if (currentState.equals(UserState.WAITING_FOR_TT_PHOTO)) {
+            } else if (currentState.equals(ProcessState.WAITING_FOR_TT_PHOTO)) {
                 barcodeText = processInfo.substring(0, processInfo.indexOf("_"));
             }
 
@@ -204,12 +206,12 @@ public class TBot extends TelegramLongPollingBot {
                 }
                 if (barcodeText == null) {
                     sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:");
-                    userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
+                    processStates.put(chatId, ProcessState.MANUAL_INSERT_METER_NUMBER);
                     return;
                 }
                 if (manualInput == null) {
                     sendMessage(chatId, "Показания счетчика не введены. Введите показания счётчика:");
-                    userStates.put(chatId, UserState.MANUAL_INSERT_METER_INDICATION);
+                    processStates.put(chatId, ProcessState.MANUAL_INSERT_METER_INDICATION);
                 }
 
             } else if (type.equals("tt")) {
@@ -231,7 +233,7 @@ public class TBot extends TelegramLongPollingBot {
                     PhotoState photoState = photoStates.get(chatId);
                     OtoType otoType = otoTypes.get(chatId);
                     sendMessage(chatId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
-                    userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
+                    processStates.put(chatId, ProcessState.MANUAL_INSERT_METER_NUMBER);
 //                    sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(otoType));
                 }
             }
@@ -245,17 +247,17 @@ public class TBot extends TelegramLongPollingBot {
     private void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
-        UserState userState = userStates.get(chatId);
+        ProcessState processState = processStates.get(chatId);
         OtoType otoType = otoTypes.get(chatId);
 
-        if (userState != null) {
-            switch (userState) {
+        if (processState != null) {
+            switch (processState) {
                 case MANUAL_INSERT_METER_NUMBER, MANUAL_INSERT_METER_INDICATION -> {
                     handleManualInsert(chatId, msgText);
                     return;
                 }
                 case IIK_MOUNT, DC_MOUNT -> {
-                    handleEquipmentMount(chatId, msgText, userState);
+                    handleEquipmentMount(chatId, msgText, processState);
                     return;
                 }
             }
@@ -298,7 +300,7 @@ public class TBot extends TelegramLongPollingBot {
             case SET_NOT -> {
                 processInfo += msgText + "_";
                 if (sequenceNumber == 0) {
-                    if (UserState.DC_WORKS.equals(userStates.get(chatId))) {
+                    if (ProcessState.DC_WORKS.equals(processStates.get(chatId))) {
                         sendMessage(chatId, "Введите причину отключения: ");
                     } else {
                         chooseNotType(chatId);
@@ -345,7 +347,7 @@ public class TBot extends TelegramLongPollingBot {
             processInfo += msgText + "_";
         }
         if (sequenceNumber < replacedEquipmentData.size()) {
-            if (userStates.get(chatId).equals(UserState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
+            if (processStates.get(chatId).equals(ProcessState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
                 sendMessage(chatId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
             } else {
                 sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
@@ -354,10 +356,17 @@ public class TBot extends TelegramLongPollingBot {
         } else concludeDeviceOperation(chatId);
     }
 
-    private void handleEquipmentMount(long chatId, String msgText, UserState state) {
+    private void handleEquipmentMount(long chatId, String msgText, ProcessState state) {
         Map<Integer, String> mountedEquipmentData = mountedEquipmentDatum.get(state);
         if (msgText != null && !msgText.trim().isEmpty()) {
             processInfo += msgText + "_";
+        }
+        if (ProcessState.IIK_MOUNT.equals(processStates.get(chatId)) && sequenceNumber == 2) {
+            String path = savingPaths.get(msgText);
+            if (path != null) {
+                sequenceNumber += 2;
+                addPathToProcessInfo(path);
+            }
         }
         if (sequenceNumber < mountedEquipmentData.size()) {
             sendMessage(chatId, mountedEquipmentData.get(sequenceNumber));
@@ -365,11 +374,17 @@ public class TBot extends TelegramLongPollingBot {
         } else concludeDeviceOperation(chatId);
     }
 
+    private void addPathToProcessInfo(String path) {
+        String[] pathParts = path.split("\\\\");
+        processInfo = processInfo + pathParts[pathParts.length - 2] + "_" + pathParts[pathParts.length - 1] + "_";
+        isDcLocation = true;
+    }
+
     private void handleManualInsert(long chatId, String deviceNumber) {
         String manualInput = deviceNumber.trim();
         PendingPhoto pending = pendingPhotos.get(chatId);
         if (pending != null) {
-            if (userStates.get(chatId).equals(UserState.MANUAL_INSERT_METER_INDICATION)) {
+            if (processStates.get(chatId).equals(ProcessState.MANUAL_INSERT_METER_INDICATION)) {
                 pending.setAdditionalInfo(manualInput);
             } else {
                 pending.setDeviceNumber(manualInput);
@@ -379,10 +394,10 @@ public class TBot extends TelegramLongPollingBot {
                 savePhoto(chatId, pending);
             } else if (pending.getDeviceNumber() == null) {
                 sendMessage(chatId, "Заводской номер не найден. Введите номер вручную:");
-                userStates.put(chatId, UserState.MANUAL_INSERT_METER_NUMBER);
+                processStates.put(chatId, ProcessState.MANUAL_INSERT_METER_NUMBER);
             } else {
                 sendMessage(chatId, "Показания счетчика не введены. Введите показания счётчика:");
-                userStates.put(chatId, UserState.MANUAL_INSERT_METER_INDICATION);
+                processStates.put(chatId, ProcessState.MANUAL_INSERT_METER_INDICATION);
             }
         } else {
             sendMessage(chatId, "Ошибка: нет ожидающих фото для привязки показаний.");
@@ -410,10 +425,10 @@ public class TBot extends TelegramLongPollingBot {
                 String textToSend;
                 if ("ptoIIK".equals(callbackData)) {
                     textToSend = "Пожалуйста, загрузите фото счетчика и введите показания.";
-                    userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO);
+                    processStates.put(chatId, ProcessState.WAITING_FOR_METER_PHOTO);
                 } else {
                     textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
-                    userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
+                    processStates.put(chatId, ProcessState.WAITING_FOR_DC_PHOTO);
                 }
                 sendMessage(chatId, textToSend);
             }
@@ -421,10 +436,10 @@ public class TBot extends TelegramLongPollingBot {
             case "otoIIK", "otoIVKE" -> {
                 if (callbackData.equals("otoIIK")) {
                     sendTextMessage("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, 2);
-                    userStates.put(chatId, UserState.IIK_WORKS);
+                    processStates.put(chatId, ProcessState.IIK_WORKS);
                 } else {
                     sendTextMessage("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, 2);
-                    userStates.put(chatId, UserState.DC_WORKS);
+                    processStates.put(chatId, ProcessState.DC_WORKS);
                 }
             }
 
@@ -439,13 +454,13 @@ public class TBot extends TelegramLongPollingBot {
                         otoTypes.put(chatId, OtoType.DC_RESTART);
                     }
                     case "setNot" -> {
-                        String textToSend = userStates.get(chatId).equals(UserState.IIK_WORKS) ?
+                        String textToSend = processStates.get(chatId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
                         sendMessage(chatId, textToSend);
                         otoTypes.put(chatId, OtoType.SET_NOT);
                     }
                     default -> {
-                        String textToSend = userStates.get(chatId).equals(UserState.IIK_WORKS) ?
+                        String textToSend = processStates.get(chatId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
                         sendMessage(chatId, textToSend);
                         otoTypes.put(chatId, OtoType.SUPPLY_RESTORING);
@@ -474,7 +489,7 @@ public class TBot extends TelegramLongPollingBot {
 
             case "ttChangeWithPhoto", "ttChangeWithOutPhoto" -> {
                 if ("ttChangeWithPhoto".equals(callbackData))
-                    userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
+                    processStates.put(chatId, ProcessState.WAITING_FOR_TT_PHOTO);
                 sendMessage(chatId, "Введите номер прибора учета: ");
                 otoTypes.put(chatId, OtoType.TT_CHANGE);
             }
@@ -483,7 +498,7 @@ public class TBot extends TelegramLongPollingBot {
                 String textToSend = "";
                 otoTypes.put(chatId, OtoType.DC_CHANGE);
                 if ("dcChangeWithPhoto".equals(callbackData)) {
-                    userStates.put(chatId, UserState.WAITING_FOR_DC_PHOTO);
+                    processStates.put(chatId, ProcessState.WAITING_FOR_DC_PHOTO);
                     textToSend = "Загрузите фото демонтируемого концентратора и введите его номер: ";
                 } else textToSend = "Введите номер демонтируемого концентратора: ";
                 sendMessage(chatId, textToSend);
@@ -495,7 +510,7 @@ public class TBot extends TelegramLongPollingBot {
 
                 if ("meterChangeWithPhoto".equals(callbackData)) {
                     textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
-                    userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO);
+                    processStates.put(chatId, ProcessState.WAITING_FOR_METER_PHOTO);
                 } else textToSend = "Введите номер демонтируемого прибора учета: ";
                 sendMessage(chatId, textToSend);
             }
@@ -539,10 +554,10 @@ public class TBot extends TelegramLongPollingBot {
                 String textToSend = "";
                 if ("addIIK".equals(callbackData)) {
                     textToSend = "прибора учета";
-                    userStates.put(chatId, UserState.IIK_MOUNT);
+                    processStates.put(chatId, ProcessState.IIK_MOUNT);
                 } else {
                     textToSend = "концентратора";
-                    userStates.put(chatId, UserState.DC_MOUNT);
+                    processStates.put(chatId, ProcessState.DC_MOUNT);
                 }
                 sendMessage(chatId, "Введите номер " + textToSend + ": ");
             }
@@ -552,7 +567,7 @@ public class TBot extends TelegramLongPollingBot {
 
     private void concludeDeviceOperation(long chatId) {
         OtoType otoType = otoTypes.get(chatId);
-        Object typeIndicator = otoType != null ? otoType : userStates.get(chatId);
+        Object typeIndicator = otoType != null ? otoType : processStates.get(chatId);
         formingOtoLog(processInfo, typeIndicator);
         sendTextMessage(actionConfirmation(null), confirmMenu, chatId, 2);
     }
@@ -560,7 +575,7 @@ public class TBot extends TelegramLongPollingBot {
     private void clearData() {
         otoLog.clear();
         sequenceNumber = 0;
-        userStates.clear();
+        processStates.clear();
         otoTypes.clear();
         processInfo = "";
         isPTO = false;
@@ -613,20 +628,20 @@ public class TBot extends TelegramLongPollingBot {
         } else {
             // Рекомендации по загрузке фото
             sendNextPhotoInstruction(chatId, photoState.getNextPhotoType(operationType));
-            setUserState(operationType, chatId);
+            setProcessState(operationType, chatId);
         }
     }
 
     private void changeReasonInput(long chatId, OtoType operationType) {
         sendMessage(chatId, "Введите причину замены: ");
         sequenceNumber = replacedEquipmentDatum.get(operationType).size();
-        userStates.clear();
+        processStates.clear();
     }
 
-    private void setUserState(OtoType operationType, long chatId) {
+    private void setProcessState(OtoType operationType, long chatId) {
         switch (operationType) {
-            case METER_CHANGE -> userStates.put(chatId, UserState.WAITING_FOR_METER_PHOTO);
-            case TT_CHANGE -> userStates.put(chatId, UserState.WAITING_FOR_TT_PHOTO);
+            case METER_CHANGE -> processStates.put(chatId, ProcessState.WAITING_FOR_METER_PHOTO);
+            case TT_CHANGE -> processStates.put(chatId, ProcessState.WAITING_FOR_TT_PHOTO);
             default -> {
             }
         }
@@ -658,7 +673,7 @@ public class TBot extends TelegramLongPollingBot {
         String message = switch (nextPhotoType) {
             case "демонтирован" -> "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
             case "установлен" -> "📸 Пожалуйста, загрузите фото **УСТАНОВЛЕННОГО** прибора и введите "
-                    + (userStates.get(chatId).equals(UserState.IIK_WORKS) ? "показания" : "его номер");
+                    + (processStates.get(chatId).equals(ProcessState.IIK_WORKS) ? "показания" : "его номер");
             case "ф.A" -> "📸 Прикрепите фото **ТТ фазы A** и введите его номер:";
             case "ф.B" -> "📸 Прикрепите фото **ТТ фазы B** и введите его номер:";
             case "ф.C" -> "📸 Прикрепите фото **ТТ фазы C** и введите его номер:";
@@ -671,7 +686,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private String createSavingPath(PendingPhoto pending, long chatId) {
-        Map<String, String> savingPaths = getPhotoSavingPathFromExcel(chatId); //TODO переместить??
+
         OtoType operationType = otoTypes.get(chatId);
         String baseDir = PHOTO_PATH + File.separator;
         String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
@@ -680,7 +695,7 @@ public class TBot extends TelegramLongPollingBot {
             if (PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
                 baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
             }
-        } else if (!userStates.get(chatId).equals(UserState.WAITING_FOR_DC_PHOTO))
+        } else if (!processStates.get(chatId).equals(ProcessState.WAITING_FOR_DC_PHOTO))
             path = path.substring(0, path.lastIndexOf("\\"));
 
         if (photoStates.get(chatId).getUploadedPhotos().isEmpty()) chgePath = path;
@@ -821,21 +836,41 @@ public class TBot extends TelegramLongPollingBot {
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
 
-            boolean isDcOto = containsDcOto();
+            boolean isDcWorks = containsDcWorks();
             boolean isDcChange = containsDcChange();
             boolean isMounting = containsMountWork();
 
             Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
             int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
-            int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, isDcOto ? "Номер УСПД" : "Номер счетчика");
+            int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
 
-            CellStyle commonCellStyle = excelFileService.createCommonCellStyle(operationLog);
-            CellStyle dateCellStyle = excelFileService.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
+            String taskOrder = fillOperationLog(operationLogSheet, meterWorkSheet, orderColumnNumber, deviceNumberColumnIndex, isDcWorks);
 
-            String taskOrder = fillOperationLog(operationLogSheet, meterWorkSheet, orderColumnNumber, deviceNumberColumnIndex, commonCellStyle, dateCellStyle, isDcOto);
 
-            if (isDcOto) {
+            if (isMounting && !isDcLocation) {
+                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
+                    String[] entryParts = entry.getValue().split("_");
+                    String station = entryParts[2];
+                    String substation = entryParts[3];
+                    Optional<String> keyOpt = savingPaths.entrySet().stream()
+                            .filter(e -> e.getValue().contains(station) && e.getValue().contains(substation))
+                            .map(Map.Entry::getKey)
+                            .findAny()
+                            .or(() -> savingPaths.entrySet().stream()
+                                    .filter(e -> e.getValue().contains(station))
+                                    .map(Map.Entry::getKey)
+                                    .findAny()
+                            );
+
+                    keyOpt.ifPresent(key -> {
+                        // Используй найденный key
+                        System.out.println("Найден ключ: " + key);
+                    });
+                }
+            }
+
+            if (isDcWorks) {
                 fillDcSection(planOTOWorkbook.getSheet("ИВКЭ"), taskOrder, isDcChange);
             }
             operationLog.write(fileOut);
@@ -847,7 +882,7 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private String fillOperationLog(Sheet operationLogSheet, Sheet meterWorkSheet, int orderColumnNumber, int deviceNumberColumnIndex, CellStyle commonCellStyle, CellStyle dateCellStyle, boolean isDcOto) {
+    private String fillOperationLog(Sheet operationLogSheet, Sheet meterWorkSheet, int orderColumnNumber, int deviceNumberColumnIndex, boolean isDcOto) {
         int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
         int addedRows = 0;
         boolean isLogFilled = false;
@@ -855,6 +890,7 @@ public class TBot extends TelegramLongPollingBot {
 
 
         for (Row otoRow : meterWorkSheet) {
+
             String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
             String logData = otoLog.getOrDefault(deviceNumber, "");
             boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
@@ -862,7 +898,7 @@ public class TBot extends TelegramLongPollingBot {
             if (!logData.isEmpty()) {
                 if (!isLogFilled) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
-                    excelFileService.copyRow(otoRow, newRow, orderColumnNumber, commonCellStyle, dateCellStyle);
+                    excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
                     taskOrder = addOtoDataToLog(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123);
                     isLogFilled = true;
                     if (isDcOto) {
@@ -896,7 +932,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-    private boolean containsDcOto() {
+    private boolean containsDcWorks() {
         return Stream.concat(otoLog.keySet().stream(), otoLog.values().stream())
                 .anyMatch(val -> val.contains("LW") || val.contains("LJ"));
     }
@@ -906,7 +942,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private boolean containsMountWork() {
-        return otoLog.values().stream().findAny().contains("mount");
+        return otoLog.values().stream().anyMatch(v -> v.contains("mount"));
     }
 
 
@@ -924,14 +960,14 @@ public class TBot extends TelegramLongPollingBot {
     }
 
     private String addOtoDataToLog(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123) {
-        String otoType = logData.substring(0, logData.indexOf("_"));
+        String workType = logData.substring(0, logData.indexOf("_"));
         String[] dataParts = logData.split("_");
-        List<String> columns = getStrings(otoType);
+        List<String> columns = getStrings(workType);
 
         Cell date = newLogRow.getCell(16);
         excelFileService.setDateCellStyle(date);
 
-        String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (otoType) {
+        String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (workType) {
 
             case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
                 if (dataParts.length > 1) {
@@ -962,6 +998,10 @@ public class TBot extends TelegramLongPollingBot {
             case "dcChange" -> {
                 otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
+            }
+            case "addIIK" -> {
+                otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
+                yield String.format(". %s на концентратор № %s.", dataParts[dataParts.length - 3], dataParts[dataParts.length - 2]);
             }
             default -> null;
         };
@@ -1002,9 +1042,9 @@ public class TBot extends TelegramLongPollingBot {
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 case "addIIK" -> resultStr.append(String.format(
                         "Прибор учёта %s. Станция: %s, ТП/КТП: %s, Адрес: %s, ТУ: %s, Дата монтажа: %s.",
-                        key, str[2], str[3], str[5], str[4], str[9]));
+                        key, str[3], str[4], str[6], str[5], str[10]));
                 default -> {
-                    String device = UserState.IIK_WORKS.equals(userStates.get(chatId)) ? " ПУ" : " Концентратор";
+                    String device = ProcessState.IIK_WORKS.equals(processStates.get(chatId)) ? " ПУ" : " Концентратор";
                     resultStr.append(String.format(device + " № %s - ", key));
                     if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
                 }
@@ -1033,8 +1073,8 @@ public class TBot extends TelegramLongPollingBot {
                         deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "dcSupply" : "meterSupply";
                 default -> "unknown";
             };
-        } else if (typeIndicator instanceof UserState userState) {
-            return switch (userState) {
+        } else if (typeIndicator instanceof ProcessState processState) {
+            return switch (processState) {
                 case IIK_MOUNT -> "addIIK";
                 case DC_MOUNT -> "dcMount";
                 default -> "unknown";
@@ -1044,7 +1084,7 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-    private Map<String, String> getPhotoSavingPathFromExcel(long chatId) {
+    private Map<String, String> getPhotoSavingPathFromExcel() {
 
         ExcelFileService excelFileService = new ExcelFileService();
 

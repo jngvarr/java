@@ -17,10 +17,14 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.straightFormatte
 //@RequiredArgsConstructor
 public class ExcelFileService {
 
-    void copyRow(Row sourceRow, Row targetRow, int columnCount, CellStyle defaultCellStyle, CellStyle dateCellStyle) {
+    void copyRow(Row sourceRow, Row targetRow, int columnCount) {
         for (int i = 0; i <= columnCount; i++) {
             Cell sourceCell = sourceRow.getCell(i);
             Cell targetCell = targetRow.createCell(i);
+            Workbook operationLog = targetRow.getSheet().getWorkbook();
+
+            CellStyle defaultCellStyle = createCommonCellStyle(operationLog);
+            CellStyle dateCellStyle = createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
 
             if (sourceCell != null) {
                 switch (sourceCell.getCellType()) {

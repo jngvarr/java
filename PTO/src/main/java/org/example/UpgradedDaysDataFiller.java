@@ -78,7 +78,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-            EmailSenderMultipleRecipients.main(args);
+//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
             createReserveCopy(planOTOWorkbook);
 
 
