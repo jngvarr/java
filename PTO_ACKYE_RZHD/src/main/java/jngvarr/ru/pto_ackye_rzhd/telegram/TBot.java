@@ -99,7 +99,7 @@ public class TBot extends TelegramLongPollingBot {
         this.service = service;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
-        savingPaths = getPhotoSavingPathFromExcel();//TODO подумать
+        savingPaths = excelFileService.getPhotoSavingPathFromExcel();//TODO подумать
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "get a welcome message"));
@@ -361,7 +361,7 @@ public class TBot extends TelegramLongPollingBot {
         if (msgText != null && !msgText.trim().isEmpty()) {
             processInfo += msgText + "_";
         }
-        if (ProcessState.IIK_MOUNT.equals(processStates.get(chatId)) && sequenceNumber == 2) {
+        if (ProcessState.IIK_MOUNT.equals(processStates.get(chatId)) && sequenceNumber == 0) {
             String path = savingPaths.get(msgText);
             if (path != null) {
                 sequenceNumber += 2;
@@ -529,7 +529,7 @@ public class TBot extends TelegramLongPollingBot {
                 if ("confirm".equals(callbackData)) {
                     textToSend = "Информация сохранена.";
                     sendMessage(chatId, "Подождите, идёт загрузка данных...");
-                    operationLogFilling(chatId);
+                    sheetsFilling(chatId);
                 } else {
                     textToSend = "Информация не сохранена.";
                 }
@@ -553,13 +553,13 @@ public class TBot extends TelegramLongPollingBot {
             case "addIIK", "dcMount" -> {
                 String textToSend = "";
                 if ("addIIK".equals(callbackData)) {
-                    textToSend = "прибора учета";
+                    textToSend = " номер концентратора, к которому привязан ИИК (если номер не известен - введите \\\"0\\\"): \"";
                     processStates.put(chatId, ProcessState.IIK_MOUNT);
                 } else {
-                    textToSend = "концентратора";
+                    textToSend = "наименование станции";
                     processStates.put(chatId, ProcessState.DC_MOUNT);
                 }
-                sendMessage(chatId, "Введите номер " + textToSend + ": ");
+                sendMessage(chatId, "Введите " + textToSend + ": ");
             }
             default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.");
         }
@@ -828,7 +828,7 @@ public class TBot extends TelegramLongPollingBot {
         return null;
     }
 
-    private void operationLogFilling(long chatId) {
+    private void sheetsFilling(long chatId) {
         if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
@@ -838,37 +838,36 @@ public class TBot extends TelegramLongPollingBot {
 
             boolean isDcWorks = containsDcWorks();
             boolean isDcChange = containsDcChange();
-            boolean isMounting = containsMountWork();
+
 
             Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
-            int orderColumnNumber = excelFileService.findColumnIndex(meterWorkSheet, "Отчет бригады о выполнении ОТО");
-            int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterWorkSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
-
-            String taskOrder = fillOperationLog(operationLogSheet, meterWorkSheet, orderColumnNumber, deviceNumberColumnIndex, isDcWorks);
 
 
-            if (isMounting && !isDcLocation) {
-                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
-                    String[] entryParts = entry.getValue().split("_");
-                    String station = entryParts[2];
-                    String substation = entryParts[3];
-                    Optional<String> keyOpt = savingPaths.entrySet().stream()
-                            .filter(e -> e.getValue().contains(station) && e.getValue().contains(substation))
-                            .map(Map.Entry::getKey)
-                            .findAny()
-                            .or(() -> savingPaths.entrySet().stream()
-                                    .filter(e -> e.getValue().contains(station))
-                                    .map(Map.Entry::getKey)
-                                    .findAny()
-                            );
+            String taskOrder = dataPreparing(operationLogSheet, meterWorkSheet, isDcWorks);
 
-                    keyOpt.ifPresent(key -> {
-                        // Используй найденный key
-                        System.out.println("Найден ключ: " + key);
-                    });
-                }
-            }
+
+//            if (isMounting && !isDcLocation) {
+//                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
+//                    String[] entryParts = entry.getValue().split("_");
+//                    String station = entryParts[2];
+//                    String substation = entryParts[3];
+//                    Optional<String> keyOpt = savingPaths.entrySet().stream()
+//                            .filter(e -> e.getValue().contains(station) && e.getValue().contains(substation))
+//                            .map(Map.Entry::getKey)
+//                            .findAny()
+//                            .or(() -> savingPaths.entrySet().stream()
+//                                    .filter(e -> e.getValue().contains(station))
+//                                    .map(Map.Entry::getKey)
+//                                    .findAny()
+//                            );
+//
+//                    keyOpt.ifPresent(key -> {
+//                        // Используй найденный key
+//                        System.out.println("Найден ключ: " + key);
+//                    });
+//                }
+//            }
 
             if (isDcWorks) {
                 fillDcSection(planOTOWorkbook.getSheet("ИВКЭ"), taskOrder, isDcChange);
@@ -882,14 +881,17 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private String fillOperationLog(Sheet operationLogSheet, Sheet meterWorkSheet, int orderColumnNumber, int deviceNumberColumnIndex, boolean isDcOto) {
+    private String dataPreparing(Sheet operationLogSheet, Sheet meterSheet, boolean isDcWorks) {
+        int orderColumnNumber = excelFileService.findColumnIndex(meterSheet, "Отчет бригады о выполнении ОТО");
+        int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
         int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
         int addedRows = 0;
         boolean isLogFilled = false;
+        boolean isMounting = containsMountWork();
         String taskOrder = "";
 
 
-        for (Row otoRow : meterWorkSheet) {
+        for (Row otoRow : meterSheet) {
 
             String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
             String logData = otoLog.getOrDefault(deviceNumber, "");
@@ -898,22 +900,33 @@ public class TBot extends TelegramLongPollingBot {
             if (!logData.isEmpty()) {
                 if (!isLogFilled) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
+                    if (isMounting) {
+                        int meterSheetLastRowNumber = meterSheet.getLastRowNum();
+                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + ++addedRows);
+                        excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
+                        excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
+                        newRow = newOtoRow;
+                    }
                     excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
-                    taskOrder = addOtoDataToLog(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123);
+                    taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     isLogFilled = true;
-                    if (isDcOto) {
-                        clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterWorkSheet), newRow); //удаление данных из ненужных ячеек
+                    if (isDcWorks) {
+                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newRow); //удаление данных из ненужных ячеек
                     }
                 }
                 if (dataContainsNot123) {
-                    clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterWorkSheet), otoRow);
+                    excelFileService.clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterSheet), otoRow);
                     String notType = taskOrder.substring(taskOrder.indexOf("(") + 1, taskOrder.indexOf("(") + 1 + 4);
-                    otoRow.getCell(excelFileService.findColumnIndex(meterWorkSheet, "Текущее состояние")).setCellValue(notType);
+                    otoRow.getCell(excelFileService.findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
                 }
-                otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
             }
         }
         return taskOrder;
+    }
+
+    private void prepareMountedDeviceRow(Row newOtoRow, String logData) {
+        String[] dataParts = logData.split("_");
+
     }
 
 
@@ -946,20 +959,15 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-    private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet operationLogSheet) {
+    private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet sheet) {
         return Arrays.stream(columnNames)
-                .mapToInt(name -> excelFileService.findColumnIndex(operationLogSheet, name))
+                .mapToInt(name -> excelFileService.findColumnIndex(sheet, name))
                 .filter(index -> index >= 0)
                 .toArray();
     }
 
-    private void clearCellData(int[] ints, Row row) {
-        for (int anInt : ints) {
-            row.getCell(anInt).setCellValue("");
-        }
-    }
 
-    private String addOtoDataToLog(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123) {
+    private String addOtoData(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123, int orderColumnNumber) {
         String workType = logData.substring(0, logData.indexOf("_"));
         String[] dataParts = logData.split("_");
         List<String> columns = getStrings(workType);
@@ -1000,8 +1008,23 @@ public class TBot extends TelegramLongPollingBot {
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
             }
             case "addIIK" -> {
-                otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
-                yield String.format(". %s на концентратор № %s.", dataParts[dataParts.length - 3], dataParts[dataParts.length - 2]);
+                Object mountingDeviceNumber = parseMeterNumber(deviceNumber);
+                if (mountingDeviceNumber instanceof Long) {
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
+                } else {
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
+                }
+                otoRow.getCell(9).setCellValue(dataParts[4]); // Точка учёта
+                otoRow.getCell(10).setCellValue(dataParts[6]); // Место установки счетчика (Размещение счетчика)
+                otoRow.getCell(11).setCellValue(dataParts[5]); // Адрес установки
+                otoRow.getCell(12).setCellValue(dataParts[1].toUpperCase()); // Марка счётчика
+                otoRow.getCell(15).setCellValue(dataParts[0]); // Номер счетчика
+                otoRow.getCell(16).setCellValue(deviceNumber); // Номер УСПД
+                otoRow.getCell(17).setCellValue(dataParts[2]); // Дата монтажа ТУ
+                otoRow.getCell(18).setCellValue("НОТ"); // Текущее состояние
+
+                excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
+                yield String.format(". %s, %s.", dataParts[dataParts.length - 3], dataParts[dataParts.length - 2]);
             }
             default -> null;
         };
@@ -1011,7 +1034,7 @@ public class TBot extends TelegramLongPollingBot {
         newLogRow.getCell(19).setCellValue("");
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
         newLogRow.getCell(21).setCellValue(taskOrder);
-
+        otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
         return taskOrder;
 
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
@@ -1083,43 +1106,6 @@ public class TBot extends TelegramLongPollingBot {
         return "unknown";
     }
 
-
-    private Map<String, String> getPhotoSavingPathFromExcel() {
-
-        ExcelFileService excelFileService = new ExcelFileService();
-
-        Map<String, String> paths = null;
-        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))) {
-            paths = new HashMap<>();
-            Sheet iikSheet = planOTOWorkbook.getSheet("ИИК");
-            int meterNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер счетчика");
-            int dcNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер УСПД");
-            int eelColumnIndex = excelFileService.findColumnIndex(iikSheet, "ЭЭЛ");
-            int stationColumnIndex = excelFileService.findColumnIndex(iikSheet, "Железнодорожная станция");
-            int substationColumnIndex = excelFileService.findColumnIndex(iikSheet, "ТП/КТП");
-            int meterPointIndex = excelFileService.findColumnIndex(iikSheet, "Точка учёта");
-            for (Row row : iikSheet) {
-                String meterNum = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
-                String dcNum = excelFileService.getCellStringValue(row.getCell(dcNumberColumnIndex));
-                if (meterNum != null) {
-                    paths.put(meterNum,
-                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
-                                    row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
-                                    row.getCell(substationColumnIndex).getStringCellValue() + "\\" +
-                                    row.getCell(meterPointIndex).getStringCellValue());
-                }
-                if (dcNum != null) {
-                    paths.putIfAbsent(dcNum,
-                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
-                                    row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
-                                    row.getCell(substationColumnIndex).getStringCellValue() + "\\");
-                }
-            }
-        } catch (IOException ex) {
-            log.error("Error processing workbook", ex);
-        }
-        return paths;
-    }
 
     // Метод для проверки и преобразования номера счетчика
     private Object parseMeterNumber(String meterNumberStr) {

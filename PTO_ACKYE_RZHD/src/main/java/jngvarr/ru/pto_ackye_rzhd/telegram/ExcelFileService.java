@@ -3,13 +3,20 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
+import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.PLAN_OTO_PATH;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.straightFormattedCurrentDate;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.eelToNtel;
 
 @Data
 @Slf4j
@@ -103,6 +110,11 @@ public class ExcelFileService {
         date.setCellStyle(dateStyle);
     }
 
+    void clearCellData(int[] ints, Row row) {
+        for (int anInt : ints) {
+            row.getCell(anInt).setCellValue("");
+        }
+    }
     String getCellStringValue(Cell cell) {
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -135,5 +147,42 @@ public class ExcelFileService {
             }
         }
         return -1;
+    }
+
+    Map<String, String> getPhotoSavingPathFromExcel() {
+
+        ExcelFileService excelFileService = new ExcelFileService();
+
+        Map<String, String> paths = null;
+        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))) {
+            paths = new HashMap<>();
+            Sheet iikSheet = planOTOWorkbook.getSheet("ИИК");
+            int meterNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер счетчика");
+            int dcNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер УСПД");
+            int eelColumnIndex = excelFileService.findColumnIndex(iikSheet, "ЭЭЛ");
+            int stationColumnIndex = excelFileService.findColumnIndex(iikSheet, "Железнодорожная станция");
+            int substationColumnIndex = excelFileService.findColumnIndex(iikSheet, "ТП/КТП");
+            int meterPointIndex = excelFileService.findColumnIndex(iikSheet, "Точка учёта");
+            for (Row row : iikSheet) {
+                String meterNum = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
+                String dcNum = excelFileService.getCellStringValue(row.getCell(dcNumberColumnIndex));
+                if (meterNum != null) {
+                    paths.put(meterNum,
+                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
+                                    row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
+                                    row.getCell(substationColumnIndex).getStringCellValue() + "\\" +
+                                    row.getCell(meterPointIndex).getStringCellValue());
+                }
+                if (dcNum != null) {
+                    paths.putIfAbsent(dcNum,
+                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
+                                    row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
+                                    row.getCell(substationColumnIndex).getStringCellValue() + "\\");
+                }
+            }
+        } catch (IOException ex) {
+            log.error("Error processing workbook", ex);
+        }
+        return paths;
     }
 }
