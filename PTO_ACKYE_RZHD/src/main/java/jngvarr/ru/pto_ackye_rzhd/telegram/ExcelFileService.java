@@ -112,7 +112,7 @@ public class ExcelFileService {
 
     void clearCellData(int[] ints, Row row) {
         for (int anInt : ints) {
-            row.getCell(anInt).setCellValue("");
+            row.createCell(anInt).setCellValue("");
         }
     }
     String getCellStringValue(Cell cell) {

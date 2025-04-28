@@ -888,7 +888,13 @@ public class TBot extends TelegramLongPollingBot {
         boolean isMounting = containsMountWork();
         String taskOrder = "";
 
-        for (Row otoRow : meterSheet) {
+        List<Row> meterRows = new ArrayList<>();
+        for (Row row : meterSheet) {
+            meterRows.add(row);
+        }
+
+        for (Row otoRow : meterRows) {
+//            log.info(String.valueOf(otoRow.getRowNum()));
             String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
             String logData = otoLog.getOrDefault(deviceNumber, "");
             boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
@@ -898,13 +904,16 @@ public class TBot extends TelegramLongPollingBot {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
                     if (isMounting) {
                         int meterSheetLastRowNumber = meterSheet.getLastRowNum();
-                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + ++addedRows);
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
+                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
                         excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
-                        newRow = newOtoRow;
+                        excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
+//                        excelFileService.copyRow(newRow, newOtoRow, orderColumnNumber);
+                        taskOrder = addOtoData(deviceNumber, logData, newRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
+//                        newRow = newOtoRow;
+                    } else {
+                        excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
+                        taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     }
-                    excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
-                    taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     isLogFilled = true;
                     if (isDcWorks) {
                         excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newRow); //удаление данных из ненужных ячеек
@@ -968,9 +977,6 @@ public class TBot extends TelegramLongPollingBot {
         String[] dataParts = logData.split("_");
         List<String> columns = getStrings(workType);
 
-        Cell date = newLogRow.getCell(16);
-        excelFileService.setDateCellStyle(date);
-
         String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (workType) {
 
             case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
@@ -1010,21 +1016,22 @@ public class TBot extends TelegramLongPollingBot {
                 } else {
                     otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
                 }
-                otoRow.getCell(9).setCellValue(dataParts[4]); // Точка учёта
-                otoRow.getCell(10).setCellValue(dataParts[6]); // Место установки счетчика (Размещение счетчика)
-                otoRow.getCell(11).setCellValue(dataParts[5]); // Адрес установки
-                otoRow.getCell(12).setCellValue(dataParts[3].toUpperCase()); // Марка счётчика
-                otoRow.getCell(15).setCellValue(dataParts[2]); // Номер счетчика
-                otoRow.getCell(16).setCellValue(deviceNumber); // Номер УСПД
-                otoRow.getCell(17).setCellValue(dataParts[9]); // Дата монтажа ТУ
-                otoRow.getCell(18).setCellValue("НОТ"); // Текущее состояние
+                otoRow.getCell(9).setCellValue(dataParts[5]); //4 Точка учёта
+                otoRow.getCell(10).setCellValue(dataParts[7]); // Место установки счетчика (Размещение счетчика)
+                otoRow.getCell(11).setCellValue(dataParts[6]); // Адрес установки
+                otoRow.getCell(12).setCellValue(dataParts[4].toUpperCase()); // Марка счётчика
+                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
+                otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
+                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
+                otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
 
                 excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
-                yield String.format(". %s, %s.", dataParts[dataParts.length - 3], dataParts[dataParts.length - 2]);
+                yield ".";
             }
             default -> null;
         };
-
+        Cell date = newLogRow.getCell(16);
+        excelFileService.setDateCellStyle(date);
         newLogRow.getCell(17).setCellValue(columns.get(0));
         newLogRow.getCell(18).setCellValue(columns.get(1));
         newLogRow.getCell(19).setCellValue("");
