@@ -99,7 +99,6 @@ public class PtoTelegramBotContent {
 
     static final String[] meterMountColumnsToClear = {
             "ID",
-            "Присоединение",
             "Счетчик в Горизонте отмечен как НОТ?",
             "ВСЕГО счетчиков на УСПД",
             "Статус счетчика в Горизонте на",

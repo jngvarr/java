@@ -249,6 +249,26 @@ public class TBot extends TelegramLongPollingBot {
         long chatId = update.getMessage().getChatId();
         ProcessState processState = processStates.get(chatId);
         OtoType otoType = otoTypes.get(chatId);
+        switch (msgText) {
+            case "/start" -> {
+                handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
+                clearData();
+                return;
+            }
+            case "/help" -> {
+                sendMessage(chatId, HELP);
+                return;
+            }
+            case "/register" -> {
+                registerUser(chatId);
+                return;
+            }
+            case "/stop" -> {
+                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
+                clearData();
+                return;
+            }
+        }
 
         if (processState != null) {
             switch (processState) {
@@ -274,18 +294,8 @@ public class TBot extends TelegramLongPollingBot {
                 }
             }
         }
+        sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.");
 
-        // Обработка остальных текстовых сообщений
-        switch (msgText) {
-            case "/start" -> handleStartCommand(chatId, update.getMessage().getChat().getFirstName());
-            case "/help" -> sendMessage(chatId, HELP);
-            case "/register" -> registerUser(chatId);
-            case "/stop" -> {
-                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
-                clearData();
-            }
-            default -> sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.");
-        }
     }
 
     private void handleOtherOtoTypes(long chatId, String msgText) {
@@ -467,7 +477,6 @@ public class TBot extends TelegramLongPollingBot {
                     }
                 }
             }
-
 
             case "meterChange", "ttChange", "dcChange" -> {
                 String value1 = "";
@@ -902,22 +911,20 @@ public class TBot extends TelegramLongPollingBot {
             if (!logData.isEmpty()) {
                 if (!isLogFilled) {
                     Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
+                    if (isDcWorks) {
+                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newRow); //удаление данных из ненужных ячеек
+                    }
                     if (isMounting) {
                         int meterSheetLastRowNumber = meterSheet.getLastRowNum();
                         Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
                         excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
                         excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
-//                        excelFileService.copyRow(newRow, newOtoRow, orderColumnNumber);
                         taskOrder = addOtoData(deviceNumber, logData, newRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
-//                        newRow = newOtoRow;
                     } else {
                         excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
                         taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     }
                     isLogFilled = true;
-                    if (isDcWorks) {
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newRow); //удаление данных из ненужных ячеек
-                    }
                 }
                 if (dataContainsNot123) {
                     excelFileService.clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterSheet), otoRow);
@@ -926,6 +933,7 @@ public class TBot extends TelegramLongPollingBot {
                 }
             }
         }
+        addedRows = 0;
         return taskOrder;
     }
 
@@ -977,7 +985,7 @@ public class TBot extends TelegramLongPollingBot {
         String[] dataParts = logData.split("_");
         List<String> columns = getStrings(workType);
 
-        String taskOrder = straightFormattedCurrentDate + " -" + columns.get(2) + switch (workType) {
+        String taskOrder = straightFormattedCurrentDate + " - " + columns.get(2) + switch (workType) {
 
             case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
                 if (dataParts.length > 1) {
@@ -1010,23 +1018,32 @@ public class TBot extends TelegramLongPollingBot {
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
             }
             case "meterMount" -> {
-                Object mountingDeviceNumber = parseMeterNumber(deviceNumber);
+                Object mountingDeviceNumber = parseMeterNumber(dataParts[3]); //Номер счетчика
                 if (mountingDeviceNumber instanceof Long) {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
+                    otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
                 } else {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
+                    otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
                 }
                 otoRow.getCell(9).setCellValue(dataParts[5]); //4 Точка учёта
                 otoRow.getCell(10).setCellValue(dataParts[7]); // Место установки счетчика (Размещение счетчика)
                 otoRow.getCell(11).setCellValue(dataParts[6]); // Адрес установки
                 otoRow.getCell(12).setCellValue(dataParts[4].toUpperCase()); // Марка счётчика
-                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
-                otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
-                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
-                otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
+                Object mountDeviceNumber = parseMeterNumber(dataParts[3]);
+                if (mountDeviceNumber instanceof Long) {
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
+                } else {
+                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
+                }
 
+//                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
+                otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
+                Cell mountDate = otoRow.getCell(15);
+                mountDate.setCellValue(dataParts[10]); // Дата монтажа ТУ
+                excelFileService.setDateCellStyle(mountDate);
+//                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
+                otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
                 excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
-                yield ".";
+                yield "";
             }
             default -> null;
         };
@@ -1067,7 +1084,7 @@ public class TBot extends TelegramLongPollingBot {
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 case "meterMount" -> resultStr.append(String.format(
-                        "\nНаименование: %s, \nПрибор учёта №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
+                        "\nНаименование ТУ: %s, \nПрибор учёта №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
                         str[5], str[3], str[1], str[2], str[6], str[10]));
                 default -> {
                     String device = ProcessState.IIK_WORKS.equals(processStates.get(chatId)) ? " ПУ" : " Концентратор";

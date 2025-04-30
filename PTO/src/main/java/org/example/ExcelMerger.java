@@ -100,8 +100,7 @@ public class ExcelMerger { // Объединение нескольких ана
 
         // Логирование групп
         fileGroups.forEach((group, files) -> logger.info("Группа '{}' содержит {} файлов", group, files.size()));
-
-
+        
         ExecutorService executorService = Executors.newFixedThreadPool(2); // Пул из 2 потоков
 
         // Отправляем задачи в пул потоков
@@ -117,7 +116,6 @@ public class ExcelMerger { // Объединение нескольких ана
                 logger.warn("Группа '{}' не содержит файлов для обработки", group);
             }
         }
-
 
         // Ожидаем завершения всех задач
         for (Future<?> future : futures) {
