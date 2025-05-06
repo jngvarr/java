@@ -17,6 +17,4 @@ public class BotConfig {
     @Value("${telegram.bot.name}")
     private String botName;
 
-
-
 }

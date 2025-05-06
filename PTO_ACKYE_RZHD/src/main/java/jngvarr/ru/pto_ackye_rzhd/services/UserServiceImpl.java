@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Log4j2
 @Service
@@ -34,8 +36,18 @@ public class UserServiceImpl implements UserService {
         user.setLastName(chat.getLastName());
         user.setUsername(chat.getUserName());
         user.setRegisteredAt(LocalDateTime.now());
+        user.setAccepted(false);
         return user;
     }
+
+    public List<User> getUsers(){
+        return repository.findAll();
+    }
+
+    public User getUserById(Long id){
+        return repository.getReferenceById(id);
+    }
+
 }
 
 

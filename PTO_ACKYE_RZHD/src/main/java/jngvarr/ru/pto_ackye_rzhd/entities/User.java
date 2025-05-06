@@ -30,4 +30,7 @@ public class User {
     @Column(name = "registered_at")
     private LocalDateTime registeredAt;
 
+    @Column(name = "accepted")
+    private boolean accepted;
+
 }

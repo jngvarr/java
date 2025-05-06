@@ -1,6 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
+import jngvarr.ru.pto_ackye_rzhd.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +45,7 @@ public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
     private final TBotService tBotService;
-    private final UserServiceImpl service;
+    private UserServiceImpl userService;
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
     static final String ERROR_TEXT = "Error occurred: ";
@@ -92,19 +93,20 @@ public class TBot extends TelegramLongPollingBot {
     private String processInfo = "";
     private boolean isDcLocation;
 
-    public TBot(BotConfig config, TBotService tBotService, UserServiceImpl service, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
+
+    public TBot(BotConfig config, TBotService tBotService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) {
         super(config.getBotToken());
         this.config = config;
         this.tBotService = tBotService;
-        this.service = service;
+        this.userService = userService;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
         savingPaths = excelFileService.getPhotoSavingPathFromExcel();//TODO подумать
 
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "get a welcome message"));
-        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
-        listOfCommands.add(new BotCommand("/stop", "stop all"));
+        listOfCommands.add(new BotCommand("/start", "Начать работу"));
+        listOfCommands.add(new BotCommand("/help", "немного информации по использованию бота"));
+        listOfCommands.add(new BotCommand("/stop", "сбросить всё, начать заново"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -114,14 +116,27 @@ public class TBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        long chatId;
         if (update.hasMessage()) {
-            if (update.getMessage().hasText()) {
-                handleTextMessage(update);
-            } else if (update.getMessage().hasPhoto()) {
-                handlePhotoMessage(update);
-            }
+            chatId = update.getMessage().getChatId();
         } else if (update.hasCallbackQuery()) {
-            handleCallbackQuery(update);
+            chatId = update.getCallbackQuery().getMessage().getChatId();
+        } else {
+            return;
+        }
+        User user = userService.getUserById(chatId);
+        if (user == null) {
+            sendMessage(chatId, "Пожалуйста пройдитете регистрацию и дождитесь валидации администратора");
+        } else if (user.isAccepted()) {
+            if (update.hasMessage()) {
+                if (update.getMessage().hasText()) {
+                    handleTextMessage(update);
+                } else if (update.getMessage().hasPhoto()) {
+                    handlePhotoMessage(update);
+                }
+            } else if (update.hasCallbackQuery()) {
+                handleCallbackQuery(update);
+            }
         }
     }
 
@@ -264,6 +279,12 @@ public class TBot extends TelegramLongPollingBot {
                 return;
             }
             case "/stop" -> {
+                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
+                clearData();
+                return;
+            }
+            case "/accept" -> {
+
                 sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
                 clearData();
                 return;
