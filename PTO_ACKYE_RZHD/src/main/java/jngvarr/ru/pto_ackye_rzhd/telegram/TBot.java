@@ -125,18 +125,28 @@ public class TBot extends TelegramLongPollingBot {
             return;
         }
         User user = userService.getUserById(chatId);
-        if (user == null) {
-            sendMessage(chatId, "Пожалуйста пройдитете регистрацию и дождитесь валидации администратора");
-        } else if (user.isAccepted() || chatId == config.getOwnerId()) {
-            if (update.hasMessage()) {
-                if (update.getMessage().hasText()) {
-                    handleTextMessage(update);
-                } else if (update.getMessage().hasPhoto()) {
-                    handlePhotoMessage(update);
-                }
-            } else if (update.hasCallbackQuery()) {
-                handleCallbackQuery(update);
+        String incomingText = update.hasMessage() && update.getMessage().hasText()
+                ? update.getMessage().getText()
+                : "";
+
+        if ("/register".equals(incomingText)) {
+            registerUser(update);
+            return;
+        }
+
+        if (user == null || !user.isAccepted()) {
+            sendMessage(chatId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратора.");
+            return;
+        }
+
+        if (update.hasMessage()) {
+            if (update.getMessage().hasText()) {
+                handleTextMessage(update);
+            } else if (update.getMessage().hasPhoto()) {
+                handlePhotoMessage(update);
             }
+        } else if (update.hasCallbackQuery()) {
+            handleCallbackQuery(update);
         }
     }
 
