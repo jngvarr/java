@@ -43,11 +43,10 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsers(){
         return repository.findAll();
     }
-
+    @Transactional
     public User getUserById(Long id){
-        return repository.getReferenceById(id);
+        return repository.findById(id).orElse(null);
     }
-
 }
 
 

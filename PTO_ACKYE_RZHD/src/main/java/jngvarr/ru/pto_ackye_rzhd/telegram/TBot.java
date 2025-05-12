@@ -127,7 +127,7 @@ public class TBot extends TelegramLongPollingBot {
         User user = userService.getUserById(chatId);
         if (user == null) {
             sendMessage(chatId, "Пожалуйста пройдитете регистрацию и дождитесь валидации администратора");
-        } else if (user.isAccepted()) {
+        } else if (user.isAccepted() || chatId == config.getOwnerId()) {
             if (update.hasMessage()) {
                 if (update.getMessage().hasText()) {
                     handleTextMessage(update);

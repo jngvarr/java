@@ -32,5 +32,4 @@ public class User {
 
     @Column(name = "accepted")
     private boolean accepted;
-
 }
