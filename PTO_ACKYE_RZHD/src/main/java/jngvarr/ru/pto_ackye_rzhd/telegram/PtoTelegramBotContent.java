@@ -40,6 +40,16 @@ public class PtoTelegramBotContent {
 //            "Type /mydata to see data stored about yourself\n\n" +
             "Type /help to see this message again\n\n";
 
+    static final Map<Integer, String> registrationMenu = Map.of(
+            0, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",
+            1, "Введите коэффициент трансформации (пример: 300/5): ",
+            2, "Введите класс точности (пример: 0,5 или 0,5S): ",
+            3, "Введите год выпуска трансформаторов (пример: 2025): ",
+            4, "Введите номер ТТ ф.A: ",
+            5, "Введите номер ТТ ф.B: ",
+            6, "Введите номер ТТ ф.C: ",
+            7, "Опишите причину замены: ");
+
     static final Map<TBot.OtoType, Map<Integer, String>> replacedEquipmentDatum = Map.of(
             TBot.OtoType.TT_CHANGE, Map.of(
                     0, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",

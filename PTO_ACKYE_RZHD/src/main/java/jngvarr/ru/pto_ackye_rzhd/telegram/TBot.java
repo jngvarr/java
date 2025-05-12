@@ -46,8 +46,6 @@ public class TBot extends TelegramLongPollingBot {
     private final BotConfig config;
     private final TBotService tBotService;
     private UserServiceImpl userService;
-    static final String YES_BUTTON = "YES_BUTTON";
-    static final String NO_BUTTON = "NO_BUTTON";
     static final String ERROR_TEXT = "Error occurred: ";
     private List<Message> sendMessages = new ArrayList<>();
     private final ExcelFileService excelFileService;
@@ -65,7 +63,8 @@ public class TBot extends TelegramLongPollingBot {
         IIK_WORKS,
         DC_WORKS,
         IIK_MOUNT,
-        DC_MOUNT
+        DC_MOUNT,
+        REGISTRATION
     }
 
     private void handleStartCommand(long chatId, String firstName) {
@@ -107,6 +106,7 @@ public class TBot extends TelegramLongPollingBot {
         listOfCommands.add(new BotCommand("/start", "Начать работу"));
         listOfCommands.add(new BotCommand("/help", "немного информации по использованию бота"));
         listOfCommands.add(new BotCommand("/stop", "сбросить всё, начать заново"));
+        listOfCommands.add(new BotCommand("/register", "регистрация нового пользователя"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -275,7 +275,9 @@ public class TBot extends TelegramLongPollingBot {
                 return;
             }
             case "/register" -> {
-                registerUser(chatId);
+                processStates.put(chatId, ProcessState.REGISTRATION);
+                registerUser(update);
+                clearData();
                 return;
             }
             case "/stop" -> {
@@ -283,12 +285,12 @@ public class TBot extends TelegramLongPollingBot {
                 clearData();
                 return;
             }
-            case "/accept" -> {
-
-                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
-                clearData();
-                return;
-            }
+//            case "/accept" -> {
+//
+//                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
+//                clearData();
+//                return;
+//            }
         }
 
         if (processState != null) {
@@ -774,9 +776,13 @@ public class TBot extends TelegramLongPollingBot {
             processInfo += pending.getType().equals("concentrator") ? pending.getDeviceNumber() + "_" : pending.getAdditionalInfo() + "_";
     }
 
-    private void registerUser(long chatId) {
-        sendTextMessage("Do you really want to register?",
-                Map.of("Yes", YES_BUTTON, "No", NO_BUTTON), chatId, 2);
+    private void registerUser(Update update) {
+        User newUser = userService.createUser(update);
+        userService.registerUser(newUser);
+//        if (sequenceNumber < registrationMenu.size()) {
+//            sendMessage(chatId, registrationMenu.get(sequenceNumber));
+//            sequenceNumber++;
+//        }
     }
 
     private void sendMessage(long chatId, String textToSend) {
@@ -1155,32 +1161,6 @@ public class TBot extends TelegramLongPollingBot {
         } catch (NumberFormatException e) {
             return meterNumberStr;
         }
-    }
-
-
-    private void register(long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Do you really want to register?");
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        var yesButton = new InlineKeyboardButton();
-        yesButton.setText("Yes");
-        yesButton.setCallbackData(YES_BUTTON);
-
-        var noButton = new InlineKeyboardButton();
-        noButton.setText("No");
-        noButton.setCallbackData(NO_BUTTON);
-
-        rowInLine.add(yesButton);
-        rowInLine.add(noButton);
-        rowsInLine.add(rowInLine);
-        inlineKeyboardMarkup.setKeyboard(rowsInLine);
-
-        message.setReplyMarkup(inlineKeyboardMarkup);
-
-        executeMessage(message);
     }
 
     @Override
