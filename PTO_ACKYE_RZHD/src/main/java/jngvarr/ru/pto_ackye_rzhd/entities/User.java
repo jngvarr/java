@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 //@Entity
 @Data
@@ -32,4 +33,16 @@ public class User {
 
     @Column(name = "accepted")
     private boolean accepted;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return getChatId() == user.getChatId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getChatId());
+    }
 }

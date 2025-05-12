@@ -129,9 +129,11 @@ public class TBot extends TelegramLongPollingBot {
                 ? update.getMessage().getText()
                 : "";
 
-        if ("/register".equals(incomingText)) {
+        if (user == null && "/register".equals(incomingText)) {
             registerUser(update);
             return;
+        } else if ("/register".equals(incomingText)) {
+            sendMessage(chatId, "Вы уже зарегистрированы!!!");
         }
 
         if (user == null || !user.isAccepted()) {
@@ -961,7 +963,7 @@ public class TBot extends TelegramLongPollingBot {
                         excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
                         taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     }
-                    isLogFilled = true;
+                    if (addedRows == otoLog.size()) isLogFilled = true;
                 }
                 if (dataContainsNot123) {
                     excelFileService.clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterSheet), otoRow);
@@ -1088,7 +1090,8 @@ public class TBot extends TelegramLongPollingBot {
         excelFileService.setDateCellStyle(date);
         newLogRow.getCell(17).setCellValue(columns.get(0));
         newLogRow.getCell(18).setCellValue(columns.get(1));
-        newLogRow.getCell(19).setCellValue("");
+        newLogRow.createCell(19);
+//        newLogRow.getCell(19).setCellValue("");
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по chatId
         newLogRow.getCell(21).setCellValue(taskOrder);
         otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);

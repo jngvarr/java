@@ -12,6 +12,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Log4j2
 @Service
@@ -23,8 +25,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void registerUser(User user) {
-        repository.save(user);
+        if (!repository.existsById(user.getChatId())) {
+            repository.save(user);
+        }
     }
+
     @Override
     public User createUser(Update update) {
         var chatId = update.getMessage().getChatId();
@@ -40,11 +45,12 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    public List<User> getUsers(){
+    public List<User> getUsers() {
         return repository.findAll();
     }
+
     @Transactional
-    public User getUserById(Long id){
+    public User getUserById(Long id) {
         return repository.findById(id).orElse(null);
     }
 }
