@@ -11,9 +11,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 @Log4j2
 @Service
@@ -25,25 +22,32 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void registerUser(User user) {
-        if (!repository.existsById(user.getChatId())) {
+        if (!repository.existsById(user.getUserId())) {
             repository.save(user);
         }
     }
 
+
     @Override
     public User createUser(Update update) {
-        var chatId = update.getMessage().getChatId();
-        var chat = update.getMessage().getChat();
+        var message = update.getMessage();
+        var from = message.getFrom(); // именно этот объект содержит пользователя
+
+        if (from == null) {
+            throw new IllegalStateException("Невозможно определить пользователя: update.getMessage().getFrom() == null");
+        }
 
         User user = new User();
-        user.setChatId(chatId);
-        user.setFirstName(chat.getFirstName());
-        user.setLastName(chat.getLastName());
-        user.setUsername(chat.getUserName());
+        user.setUserId(message.getFrom().getId()); // сохраняем ID чата (может быть userId или groupId)
+        from.getFirstName();
+        user.setFirstName(from.getFirstName()); // защита от null
+        user.setLastName(from.getLastName() != null ? from.getLastName() : "");
+        user.setUsername(from.getUserName());
         user.setRegisteredAt(LocalDateTime.now());
         user.setAccepted(false);
         return user;
     }
+
 
     public List<User> getUsers() {
         return repository.findAll();

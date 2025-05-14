@@ -16,8 +16,8 @@ import java.util.Objects;
 public class User {
     @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_id")
-    private long chatId;
+    @Column(name = "user_id")
+    private long userId;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -38,11 +38,11 @@ public class User {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return getChatId() == user.getChatId();
+        return getUserId() == user.getUserId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getChatId());
+        return Objects.hash(getUserId());
     }
 }
