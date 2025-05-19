@@ -75,7 +75,7 @@ public class OFOGTemplateFiller {
 
                         //Задаем месяц отчета в ручную
                         int year = 2025;
-                        int month = 3;
+                        int month = 4;
 
                         int eventYear = localDate.getYear();
                         int eventMonth = localDate.getMonthValue();

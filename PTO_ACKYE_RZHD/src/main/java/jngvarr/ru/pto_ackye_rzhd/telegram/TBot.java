@@ -134,14 +134,16 @@ public class TBot extends TelegramLongPollingBot {
 
         if (user == null && "/register".equals(incomingText)) {
             registerUser(update);
-            sendMessage(chatId, "Пользователь успешно зарегистрирован.");
+            sendMessage(chatId, "Вы успешно зарегистрированы. Дождитесь валидации администратора.");
             return;
         } else if ("/register".equals(incomingText)) {
             sendMessage(chatId, "Вы уже зарегистрированы!!!");
+            return;
         }
 
         if (user == null || !user.isAccepted()) {
-            sendMessage(chatId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратора.");
+            String textToSend = user == null ? "Пожалуйста, пройдите регистрацию!." : "Дождитесь валидации администратора.";
+            sendMessage(chatId, textToSend);
             return;
         }
 
