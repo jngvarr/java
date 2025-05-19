@@ -13,6 +13,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -47,7 +48,8 @@ public class TBot extends TelegramLongPollingBot {
     private final TBotService tBotService;
     private UserServiceImpl userService;
     static final String ERROR_TEXT = "Error occurred: ";
-    private List<Message> sendMessages = new ArrayList<>();
+    private Map<Long, Integer> sendMessagesIds = new HashMap<>();
+    private List<Message> sentMessages = new ArrayList<>();
     private final ExcelFileService excelFileService;
     private final PreparingPhotoService preparingPhotoService;
     // Карта для хранения информации о фото, ожидающих подтверждения
@@ -134,16 +136,14 @@ public class TBot extends TelegramLongPollingBot {
 
         if (user == null && "/register".equals(incomingText)) {
             registerUser(update);
-            sendMessage(chatId, "Вы успешно зарегистрированы. Дождитесь валидации администратора.");
+            sendMessage(chatId, userId, "Пользователь успешно зарегистрирован.");
             return;
         } else if ("/register".equals(incomingText)) {
-            sendMessage(chatId, "Вы уже зарегистрированы!!!");
-            return;
+            sendMessage(chatId, userId, "Вы уже зарегистрированы!!!");
         }
 
         if (user == null || !user.isAccepted()) {
-            String textToSend = user == null ? "Пожалуйста, пройдите регистрацию!." : "Дождитесь валидации администратора.";
-            sendMessage(chatId, textToSend);
+            sendMessage(chatId, userId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратора.");
             return;
         }
 
@@ -167,10 +167,10 @@ public class TBot extends TelegramLongPollingBot {
 
         // Если фото не запрашивалось
         if (!processStates.containsKey(userId)) {
-            sendMessage(chatId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
+            sendMessage(chatId, userId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
             return;
         }
-        sendMessage(chatId, "Подождите, идёт обработка фото....");
+        sendMessage(chatId, userId, "Подождите, идёт обработка фото....");
         ProcessState currentState = processStates.get(userId);
         // Получаем самое большое фото
         var photos = update.getMessage().getPhoto();
@@ -200,7 +200,7 @@ public class TBot extends TelegramLongPollingBot {
             // 3. Читаем изображение
             BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
             if (bufferedImage == null) {
-                sendMessage(chatId, "Не удалось обработать изображение.");
+                sendMessage(chatId, userId, "Не удалось обработать изображение.");
                 return;
             }
 
@@ -239,12 +239,12 @@ public class TBot extends TelegramLongPollingBot {
                     return;
                 }
                 if (barcodeText == null) {
-                    sendMessage(chatId, "Штрихкод не найден. Введите номер ПУ вручную:");
+                    sendMessage(chatId, userId, "Штрихкод не найден. Введите номер ПУ вручную:");
                     processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
                     return;
                 }
                 if (manualInput == null) {
-                    sendMessage(chatId, "Показания счетчика не введены. Введите показания счётчика:");
+                    sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
                     processStates.put(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
                 }
 
@@ -255,7 +255,7 @@ public class TBot extends TelegramLongPollingBot {
                 } else {
                     PhotoState photoState = photoStates.get(userId);
                     OtoType otoType = otoTypes.get(userId);
-                    sendMessage(chatId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
+                    sendMessage(chatId, userId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
                     sendNextPhotoInstruction(userId, chatId, photoState.getNextPhotoType(otoType));
                 }
             } else {
@@ -266,14 +266,14 @@ public class TBot extends TelegramLongPollingBot {
                     pendingPhoto.setAdditionalInfo("Данные не требуются.");
                     PhotoState photoState = photoStates.get(userId);
                     OtoType otoType = otoTypes.get(userId);
-                    sendMessage(chatId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
+                    sendMessage(chatId, userId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
                     processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
 //                    sendNextPhotoInstruction(userId, photoState.getNextPhotoType(otoType));
                 }
             }
         } catch (Exception e) {
             log.error("Ошибка обработки фото: " + e.getMessage());
-            sendMessage(chatId, "Произошла ошибка при обработке фото.");
+            sendMessage(chatId, userId, "Произошла ошибка при обработке фото.");
         }
     }
 
@@ -291,7 +291,7 @@ public class TBot extends TelegramLongPollingBot {
                 return;
             }
             case "/help" -> {
-                sendMessage(chatId, HELP);
+                sendMessage(chatId, userId, HELP);
                 return;
             }
 //            case "/register" -> {
@@ -301,7 +301,7 @@ public class TBot extends TelegramLongPollingBot {
 //                return;
 //            }
             case "/stop" -> {
-                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
+                sendMessage(chatId, userId, "Работа прервана, для продолжения нажмите /start");
                 clearData();
                 return;
             }
@@ -337,7 +337,7 @@ public class TBot extends TelegramLongPollingBot {
                 }
             }
         }
-        sendMessage(chatId, "Команда не распознана. Попробуйте еще раз.");
+        sendMessage(chatId, userId, "Команда не распознана. Попробуйте еще раз.");
 
     }
 
@@ -354,7 +354,7 @@ public class TBot extends TelegramLongPollingBot {
                 processInfo += msgText + "_";
                 if (sequenceNumber == 0) {
                     if (ProcessState.DC_WORKS.equals(processStates.get(userId))) {
-                        sendMessage(chatId, "Введите причину отключения: ");
+                        sendMessage(chatId, userId, "Введите причину отключения: ");
                     } else {
                         chooseNotType(chatId);
                     }
@@ -368,7 +368,7 @@ public class TBot extends TelegramLongPollingBot {
                 if (currentOtoType.equals(OtoType.SUPPLY_RESTORING)) {
                     processInfo += msgText + "_";
                     if (sequenceNumber == 0) {
-                        sendMessage(chatId, "Опишите причину неисправности: ");
+                        sendMessage(chatId, userId, "Опишите причину неисправности: ");
                         sequenceNumber++;
                     } else {
                         formingOtoLog(processInfo, currentOtoType);
@@ -401,9 +401,9 @@ public class TBot extends TelegramLongPollingBot {
         }
         if (sequenceNumber < replacedEquipmentData.size()) {
             if (processStates.get(userId).equals(ProcessState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
-                sendMessage(chatId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
+                sendMessage(chatId, userId,"📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
             } else {
-                sendMessage(chatId, replacedEquipmentData.get(sequenceNumber));
+                sendMessage(chatId, userId, replacedEquipmentData.get(sequenceNumber));
             }
             sequenceNumber++;
         } else concludeDeviceOperation(userId, chatId);
@@ -422,7 +422,7 @@ public class TBot extends TelegramLongPollingBot {
             }
         }
         if (sequenceNumber < mountedEquipmentData.size()) {
-            sendMessage(chatId, mountedEquipmentData.get(sequenceNumber));
+            sendMessage(chatId, userId, mountedEquipmentData.get(sequenceNumber));
             sequenceNumber++;
         } else concludeDeviceOperation(userId, chatId);
     }
@@ -446,14 +446,14 @@ public class TBot extends TelegramLongPollingBot {
             if (isDataFull) {
                 savePhoto(userId, chatId, pending);
             } else if (pending.getDeviceNumber() == null) {
-                sendMessage(chatId, "Заводской номер не найден. Введите номер вручную:");
+                sendMessage(chatId, userId,"Заводской номер не найден. Введите номер вручную:");
                 processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
             } else {
-                sendMessage(chatId, "Показания счетчика не введены. Введите показания счётчика:");
+                sendMessage(chatId, userId,"Показания счетчика не введены. Введите показания счётчика:");
                 processStates.put(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
             }
         } else {
-            sendMessage(chatId, "Ошибка: нет ожидающих фото для привязки показаний.");
+            sendMessage(chatId, userId,"Ошибка: нет ожидающих фото для привязки показаний.");
         }
     }
 
@@ -484,7 +484,7 @@ public class TBot extends TelegramLongPollingBot {
                     textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
                     processStates.put(userId, ProcessState.WAITING_FOR_DC_PHOTO);
                 }
-                sendMessage(chatId, textToSend);
+                sendMessage(chatId, userId, textToSend);
             }
 
             case "otoIIK", "otoIVKE" -> {
@@ -500,23 +500,23 @@ public class TBot extends TelegramLongPollingBot {
             case "wkDrop", "setNot", "powerSupplyRestoring", "dcRestart" -> {
                 switch (callbackData) {
                     case "wkDrop" -> {
-                        sendMessage(chatId, "Введите номер прибора учета: ");
+                        sendMessage(chatId, userId,"Введите номер прибора учета: ");
                         otoTypes.put(userId, OtoType.WK_DROP);
                     }
                     case "dcRestart" -> {
-                        sendMessage(chatId, "Введите номер концентратора: ");
+                        sendMessage(chatId, userId, "Введите номер концентратора: ");
                         otoTypes.put(userId, OtoType.DC_RESTART);
                     }
                     case "setNot" -> {
                         String textToSend = processStates.get(userId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
-                        sendMessage(chatId, textToSend);
+                        sendMessage(chatId, userId, textToSend);
                         otoTypes.put(userId, OtoType.SET_NOT);
                     }
                     default -> {
                         String textToSend = processStates.get(userId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
-                        sendMessage(chatId, textToSend);
+                        sendMessage(chatId, userId, textToSend);
                         otoTypes.put(userId, OtoType.SUPPLY_RESTORING);
                     }
                 }
@@ -543,7 +543,7 @@ public class TBot extends TelegramLongPollingBot {
             case "ttChangeWithPhoto", "ttChangeWithOutPhoto" -> {
                 if ("ttChangeWithPhoto".equals(callbackData))
                     processStates.put(userId, ProcessState.WAITING_FOR_TT_PHOTO);
-                sendMessage(chatId, "Введите номер прибора учета: ");
+                sendMessage(chatId, userId,"Введите номер прибора учета: ");
                 otoTypes.put(userId, OtoType.TT_CHANGE);
             }
 
@@ -554,7 +554,7 @@ public class TBot extends TelegramLongPollingBot {
                     processStates.put(userId, ProcessState.WAITING_FOR_DC_PHOTO);
                     textToSend = "Загрузите фото демонтируемого концентратора и введите его номер: ";
                 } else textToSend = "Введите номер демонтируемого концентратора: ";
-                sendMessage(chatId, textToSend);
+                sendMessage(chatId, userId, textToSend);
             }
 
             case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
@@ -565,13 +565,13 @@ public class TBot extends TelegramLongPollingBot {
                     textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
                     processStates.put(userId, ProcessState.WAITING_FOR_METER_PHOTO);
                 } else textToSend = "Введите номер демонтируемого прибора учета: ";
-                sendMessage(chatId, textToSend);
+                sendMessage(chatId, userId, textToSend);
             }
 
             case "LOADING_COMPLETE" -> {
                 if (isPTO) {
                     clearData();
-                    sendMessage(chatId, "Для продолжения снова нажмите /start");
+                    sendMessage(chatId, userId,"Для продолжения снова нажмите /start");
                 } else {
                     sendTextMessage(actionConfirmation(userId), confirmMenu, chatId, 2);
                 }
@@ -581,14 +581,14 @@ public class TBot extends TelegramLongPollingBot {
                 String textToSend;
                 if ("confirm".equals(callbackData)) {
                     textToSend = "Информация сохранена.";
-                    sendMessage(chatId, "Подождите, идёт загрузка данных...");
+                    sendMessage(chatId, userId,"Подождите, идёт загрузка данных...");
                     sheetsFilling(userId);
                 } else {
                     textToSend = "Информация не сохранена.";
                 }
-                sendMessage(chatId, textToSend);
+                sendMessage(chatId, userId, textToSend);
                 clearData();
-                sendMessage(chatId, "Для продолжения снова нажмите /start");
+                sendMessage(chatId, userId,"Для продолжения снова нажмите /start");
             }
 
             case "NOT", "lowPLC", "NOT3", "NOT2", "seasonNOT", "NOT1" -> {
@@ -611,9 +611,9 @@ public class TBot extends TelegramLongPollingBot {
                     textToSend = "наименование станции";
                     processStates.put(userId, ProcessState.DC_MOUNT);
                 }
-                sendMessage(chatId, "Введите " + textToSend + ": ");
+                sendMessage(chatId, userId,"Введите " + textToSend + ": ");
             }
-            default -> sendMessage(chatId, "Неизвестное действие. Попробуйте еще раз.");
+            default -> sendMessage(chatId, userId,"Неизвестное действие. Попробуйте еще раз.");
         }
     }
 
@@ -661,7 +661,7 @@ public class TBot extends TelegramLongPollingBot {
         // Определяем, необходимость загрузки нового фото
         String photoPhase = photoState.getNextPhotoType(operationType);
         if (photoPhase == null) {
-            sendMessage(chatId, "⚠ Ошибка: уже загружены все необходимые фото.");
+            sendMessage(chatId, userId,"⚠ Ошибка: уже загружены все необходимые фото.");
             return;
         }
         // Сохранение фото
@@ -673,8 +673,8 @@ public class TBot extends TelegramLongPollingBot {
 
         // Проверка необходимости продолжения загрузки фото
         if (photoState.isComplete(operationType)) {
-            sendMessage(chatId, "✅ Все фото загружены!");
-            changeReasonInput(chatId, operationType);
+            sendMessage(chatId, userId,"✅ Все фото загружены!");
+            changeReasonInput(chatId, userId, operationType);
 
             photoStates.remove(userId);
         } else {
@@ -684,8 +684,8 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void changeReasonInput(long chatId, OtoType operationType) {
-        sendMessage(chatId, "Введите причину замены: ");
+    private void changeReasonInput(long chatId, long userId, OtoType operationType) {
+        sendMessage(chatId, userId, "Введите причину замены: ");
         sequenceNumber = replacedEquipmentDatum.get(operationType).size();
         processStates.clear();
     }
@@ -712,10 +712,10 @@ public class TBot extends TelegramLongPollingBot {
 
             // Сохранение
             Files.move(pending.getTempFilePath(), destination, StandardCopyOption.REPLACE_EXISTING);
-            sendMessage(chatId, "Фото сохранено!\nФайл: " + newFileName);
+            sendMessage(chatId, userId,"Фото сохранено!\nФайл: " + newFileName);
         } catch (IOException e) {
             log.error("❌ Ошибка сохранения фото для userId {}: {}", userId, e.getMessage(), e);
-            sendMessage(chatId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
+            sendMessage(chatId, userId,"⚠ Ошибка при сохранении фото. Попробуйте снова.");
         }
     }
 
@@ -733,7 +733,7 @@ public class TBot extends TelegramLongPollingBot {
         };
 
         if (message != null) {
-            sendMessage(chatId, message);
+            sendMessage(chatId, userId, message);
         }
     }
 
@@ -805,18 +805,31 @@ public class TBot extends TelegramLongPollingBot {
 //        }
     }
 
-    private void sendMessage(long chatId, String textToSend) {
+    private void sendMessage(long chatId, long userId, String textToSend) {
         SendMessage message = new SendMessage();
-        message.setChatId(chatId); //TODO
+        message.setChatId(chatId);
         message.setText(textToSend);
-        executeMessage(message);
+        executeMessage(message, userId);
     }
 
-    private void executeMessage(SendMessage message) {
+    private void editMessage(long chatId, long userId, String newTextToReplace) {
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setChatId(chatId);
+        editMessage.setMessageId(sendMessagesIds.get(userId));
+        editMessage.setText(newTextToReplace);
+
         try {
-            execute(message); // Отправляем сообщение в Telegram
-        } catch (
-                TelegramApiException e) {
+            execute(editMessage);
+        } catch (TelegramApiException e) {
+            log.error(ERROR_TEXT + e.getMessage());
+        }
+    }
+
+    private void executeMessage(SendMessage message, long userId) {
+        try {
+            Message sentMessage = execute(message); // Отправляем сообщение в Telegram
+            sendMessagesIds.put(userId, sentMessage.getMessageId());
+        } catch (TelegramApiException e) {
             log.error(ERROR_TEXT + e.getMessage());
         }
     }
@@ -825,7 +838,7 @@ public class TBot extends TelegramLongPollingBot {
         try {
             SendMessage message = createMessage(text, buttons, chatId, columns);
             var task = sendApiMethodAsync(message);
-            this.sendMessages.add(task.get());
+            this.sentMessages.add(task.get());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
