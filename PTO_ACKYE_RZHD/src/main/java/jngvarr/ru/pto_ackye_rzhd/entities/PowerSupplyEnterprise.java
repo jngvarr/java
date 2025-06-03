@@ -10,7 +10,7 @@ public class PowerSupplyEnterprise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "structural_subdivision_id", nullable = false)

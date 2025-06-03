@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 @Data
 //@Entity
 @RequiredArgsConstructor
-public class OperationalLog {
+public class OperationLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     Long id;
 
-    OperationalLogNote note;
+    OperationLogNote note;
 }

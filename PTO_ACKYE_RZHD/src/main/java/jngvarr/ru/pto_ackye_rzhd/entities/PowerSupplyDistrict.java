@@ -10,7 +10,7 @@ public class PowerSupplyDistrict {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "power_supply_enterprise_id", nullable = false)
