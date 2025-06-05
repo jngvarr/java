@@ -18,7 +18,7 @@ public class Dc {
     @JoinColumn(name = "substation_id")
     private Substation substation;
     private int busSection;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String dcNumber;
     private String dcModel;
     private LocalDate manufactureDate;

@@ -2,6 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Supplier;
 
 @Slf4j
 @Component
@@ -30,9 +32,8 @@ public class PtoService {
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
-    private static final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
-    private static final Map<EntityType, Map<String, Object>> entityMaps = new EnumMap<>(EntityType.class);
-    private static final Map<String, Region> REGION_MAP = new HashMap<>();
+    private final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
+    private final Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
     private static final int CELL_NUMBER_REGION_NAME = 1;
     private static final int CELL_NUMBER_STATION_NAME = 2;
     private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 3;
@@ -61,6 +62,9 @@ public class PtoService {
     public void addDataFromExcelFile(String dataFilePath) {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
         ) {
+            for (EntityType type : EntityType.values()) {
+                entityCache.put(type, new HashMap<>());
+            }
             fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
             fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
 //            planOTOWorkbook.close();
@@ -77,33 +81,25 @@ public class PtoService {
 
     @Transactional
     protected void fillDbWithIvkeData(Sheet sheet) {
-        for (EntityType type : EntityType.values()) {
-            entityMaps.put(type, new HashMap<>());
-        }
-
 
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
-            String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
-            String subdivisionName = getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME));
-            String powerSupplyEnterpriseName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME));
-            String districtName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME));
-            String stationName = getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME));
-            String substationName = getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME));
+
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
-            Substation substation = createSubstationIfNotExists(regionName, subdivisionName, powerSupplyEnterpriseName, districtName, stationName, substationName);
-
-            Dc newIvke = createDc(substation, dcNumber, row);
-
-            DC_MAP.putIfAbsent(dcNumber, newIvke);
+            if (!DC_MAP.containsKey(dcNumber)) {
+                Substation substation = createSubstationIfNotExists(row);
+                Dc newIvke = createDc(substation, dcNumber, row);
+                dcService.createDc(newIvke);
+                DC_MAP.putIfAbsent(dcNumber, newIvke);
+            }
         }
-        for (
-                Dc dc : DC_MAP.values()) {
-            dcService.createDc(dc);
-        }
+//        for (
+//                Dc dc : DC_MAP.values()) {
+//            ;
+//        }
     }
 
     private Dc createDc(Substation substation, String dcNumber, Row row) {
@@ -118,95 +114,94 @@ public class PtoService {
         }};
     }
 
-    public Substation createSubstationIfNotExists(String regionName,
-                                                  String subdivisionName,
-                                                  String powerSupplyEnterpriseName,
-                                                  String districtName,
-                                                  String stationName,
-                                                  String substationName) {
+    @Transactional
+    public Substation createSubstationIfNotExists(Row row) {
 
-        Region region = em.createQuery("SELECT r FROM Region r WHERE r.name = :name", Region.class)
-                .setParameter("name", regionName)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+        String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
+        String subdivisionName = getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME));
+        String powerSupplyEnterpriseName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME));
+        String districtName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME));
+        String stationName = getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME));
+        String substationName = getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME));
+
+        Region region = (Region) findOrCreateEntity(
+                EntityType.REGION, regionName,
+                "SELECT r FROM Region r WHERE r.name = :name",
+                Map.of("name", regionName),
+                () -> {
                     Region r = new Region();
                     r.setName(regionName);
                     em.persist(r);
+                    log.info("Создан регион: {}", regionName);
                     return r;
                 });
 
-        StructuralSubdivision subdivision = em.createQuery(
-                        "SELECT s FROM StructuralSubdivision s WHERE s.name = :name AND s.region = :region", StructuralSubdivision.class)
-                .setParameter("name", subdivisionName)
-                .setParameter("region", region)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+        StructuralSubdivision subdivision = (StructuralSubdivision) findOrCreateEntity(
+                EntityType.STRUCTURAL_SUBDIVISION, subdivisionName + "_" + region.getName(),
+                "SELECT s FROM StructuralSubdivision s WHERE s.name = :name AND s.region = :region",
+                Map.of("name", subdivisionName, "region", region),
+                () -> {
                     StructuralSubdivision s = new StructuralSubdivision();
                     s.setName(subdivisionName);
                     s.setRegion(region);
                     em.persist(s);
+                    log.info("Создан линейный отдел{} (регион: {})", subdivisionName, regionName);
                     return s;
                 });
-        PowerSupplyEnterprise enterprise = em.createQuery(
-                        "SELECT e FROM PowerSupplyEnterprise e WHERE e.name = :name AND e.structuralSubdivision = :subdivision", PowerSupplyEnterprise.class)
-                .setParameter("name", powerSupplyEnterpriseName)
-                .setParameter("subdivision", subdivision)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+
+        PowerSupplyEnterprise enterprise = (PowerSupplyEnterprise) findOrCreateEntity(
+                EntityType.POWER_SUPPLY_ENTERPRISE, powerSupplyEnterpriseName + "_" + subdivision.getName(),
+                "SELECT e FROM PowerSupplyEnterprise e WHERE e.name = :name AND e.structuralSubdivision = :subdivision",
+                Map.of("name", powerSupplyEnterpriseName, "subdivision", subdivision),
+                () -> {
                     PowerSupplyEnterprise e = new PowerSupplyEnterprise();
                     e.setName(powerSupplyEnterpriseName);
                     e.setStructuralSubdivision(subdivision);
                     em.persist(e);
+                    log.info("Создано дистанция электроснабжения: {} (подразделение: {})", powerSupplyEnterpriseName, subdivisionName);
                     return e;
                 });
 
-        PowerSupplyDistrict district = em.createQuery(
-                        "SELECT d FROM PowerSupplyDistrict d WHERE d.name = :name AND d.powerSupplyEnterprise = :enterprise", PowerSupplyDistrict.class)
-                .setParameter("name", districtName)
-                .setParameter("enterprise", enterprise)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+        PowerSupplyDistrict district = (PowerSupplyDistrict) findOrCreateEntity(
+                EntityType.POWER_SUPPLY_DISTRICT, districtName + "_" + enterprise.getName(),
+                "SELECT d FROM PowerSupplyDistrict d WHERE d.name = :name AND d.powerSupplyEnterprise = :enterprise",
+                Map.of("name", districtName, "enterprise", enterprise),
+                () -> {
                     PowerSupplyDistrict d = new PowerSupplyDistrict();
                     d.setName(districtName);
                     d.setPowerSupplyEnterprise(enterprise);
                     em.persist(d);
+                    log.info("Создан район электроснабжения: {} (предприятие: {})", districtName, powerSupplyEnterpriseName);
                     return d;
                 });
 
-        Station station = em.createQuery(
-                        "SELECT s FROM Station s WHERE s.name = :name AND s.powerSupplyDistrict = :district", Station.class)
-                .setParameter("name", stationName)
-                .setParameter("district", district)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+        Station station = (Station) findOrCreateEntity(
+                EntityType.STATION, stationName + "_" + district.getName(),
+                "SELECT s FROM Station s WHERE s.name = :name AND s.powerSupplyDistrict = :district",
+                Map.of("name", stationName, "district", district),
+                () -> {
                     Station s = new Station();
                     s.setName(stationName);
                     s.setPowerSupplyDistrict(district);
                     em.persist(s);
+                    log.info("Создана станция: {} (район: {})", stationName, districtName);
                     return s;
                 });
 
-        Substation substation = em.createQuery(
-                        "SELECT s FROM Substation s WHERE s.name = :name AND s.station = :station", Substation.class)
-                .setParameter("name", substationName)
-                .setParameter("station", station)
-                .getResultStream()
-                .findFirst()
-                .orElseGet(() -> {
+        return (Substation) findOrCreateEntity(
+                EntityType.SUBSTATION, substationName + "_" + station.getName(),
+                "SELECT s FROM Substation s WHERE s.name = :name AND s.station = :station",
+                Map.of("name", substationName, "station", station),
+                () -> {
                     Substation s = new Substation();
                     s.setName(substationName);
                     s.setStation(station);
                     em.persist(s);
+                    log.info("Создана подстанция: {} (станция: {})", substationName, stationName);
                     return s;
                 });
-        SUBSTATION_MAP.putIfAbsent(buildSubstationMapKey(substation), substation);
-        return substation;
     }
+
 
     private String getStringMapKey(Row row) {
         return new StringBuilder()
@@ -224,40 +219,89 @@ public class PtoService {
                 .toString();
     }
 
+    @Transactional
+    protected Object findOrCreateEntity(EntityType type,
+                                        String cacheKey,
+                                        String jpql,
+                                        Map<String, Object> params,
+                                        Supplier<Object> createSupplier) {
+        entityCache.putIfAbsent(type, new HashMap<>());
+        Map<String, Object> map = entityCache.get(type);
+
+        return map.computeIfAbsent(cacheKey, key -> {
+            TypedQuery<Object> query = em.createQuery(jpql, Object.class);
+            params.forEach(query::setParameter);
+
+            return query.getResultStream()
+                    .findFirst()
+                    .orElseGet(createSupplier);
+        });
+    }
+
     private void fillDbWithIikData(Sheet sheet) {
-        List<MeteringPoint> meteringPoints = new ArrayList<>();
+        Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 continue;
             }
-            MeteringPoint newIik = new MeteringPoint();
-            Meter newMeter = new Meter();
-            try {
-                String mapKey = getStringMapKey(row);
-                newIik.setSubstation(SUBSTATION_MAP.get(mapKey));
-            } catch (NullPointerException e) {
-                log.error("There is no such substation in DB {}: ", e.getMessage());
-            }
-            newIik.setId(Long.parseLong(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
-            newIik.setConnection(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
-            newIik.setName(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
-            newIik.setMeterPlacement(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
-            newIik.setMeteringPointAddress(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
-            newIik.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE))
-                    , DATE_FORMATTER_DDMMYYYY));
-            newMeter.setMeterModel(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER)));
-            newMeter.setMeterNumber(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL)));
+            Meter newMeter = createMeter(row);
+            MeteringPoint newIik = createIIk(row);
+
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
             Dc dcToAdd = addMeterToDc(newMeter, dcNumber);
             newIik.setMeter(newMeter);
             newMeter.setDc(dcToAdd);
-            meteringPoints.add(newIik);
+            meteringPoints.put(newIik.getId(), newIik);
         }
-        for (MeteringPoint point : meteringPoints) {
+        for (MeteringPoint point : meteringPoints.values()) {
             service.create(point);
         }
-//            meterService.saveAll(meters);
     }
+
+    private Meter createMeter(Row row) {
+        String meterNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
+        String meterModel = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
+
+        return Optional.ofNullable(meterNumber)
+                .filter(meterNum -> !meterNum.isBlank())
+                .map(meterNum -> {
+                    if (meterModel == null || meterModel.isBlank()) {
+                        return null;
+                    }
+                    Meter meter = new Meter();
+                    meter.setMeterNumber(meterNumber);
+                    meter.setMeterModel(meterModel);
+                    return meter;
+                })
+                .orElse(null);
+    }
+
+    private MeteringPoint createIIk(Row row) {
+        String mapKey = getStringMapKey(row);
+
+        Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
+
+        if (substation == null) {
+            substation = createSubstationIfNotExists(row);
+            entityCache.get(EntityType.SUBSTATION).put(mapKey, substation);
+        }
+
+        Substation finalSubstation = substation;
+
+        return new MeteringPoint() {{
+            setSubstation(finalSubstation);
+            setId(Long.parseLong(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
+            setConnection(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
+            setName(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
+            setMeterPlacement(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
+            setMeteringPointAddress(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
+            setInstallationDate(LocalDate.parse(
+                    getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE)),
+                    DATE_FORMATTER_DDMMYYYY
+            ));
+        }};
+    }
+
 
     private static String getCellStringValue(Cell cell) {
         if (cell != null) {
