@@ -5,7 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
-import jngvarr.ru.pto_ackye_rzhd.repositories.others.RegionRepository;
+import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -26,11 +26,14 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class PtoService {
     @PersistenceContext
-    private EntityManager em;
     private final DcService dcService;
     private final MeteringPointService service;
-    private final SubstationService substationService;
     private final RegionRepository regionRepository;
+    private final StructuralSubdivisionRepository subdivisionRepository;
+    private final PowerSupplyEnterpriseRepository powerSupplyEnterpriseRepository;
+    private final PowerSupplyDistrictRepository powerSupplyDistrictRepository;
+    private final StationRepository stationRepository;
+    private final SubstationService substationService;
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final long startTime = System.currentTimeMillis();
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
@@ -115,7 +118,8 @@ public class PtoService {
             setDcNumber(dcNumber);
         }};
     }
-//    @Transactional
+
+    //    @Transactional
 //    public Substation createSubstationIfNotExists(Row row) {
 //
 //        String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
@@ -212,81 +216,57 @@ public class PtoService {
         String stationName = getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME));
         String substationName = getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME));
 
-        Region region = regionRepository.existsRegionByName()
-                EntityType.REGION, regionName,
-                "SELECT r FROM Region r WHERE r.name = :name",
-                Map.of("name", regionName),
-                () -> {
+        Region region = regionRepository.findByName(regionName)
+                .orElseGet(() -> {
                     Region r = new Region();
                     r.setName(regionName);
-                    em.persist(r);
                     log.info("Создан регион: {}", regionName);
-                    return r;
+                    return regionRepository.save(r);
                 });
 
-        StructuralSubdivision subdivision = (StructuralSubdivision) findOrCreateEntity(
-                EntityType.STRUCTURAL_SUBDIVISION, subdivisionName + "_" + region.getName(),
-                "SELECT s FROM StructuralSubdivision s WHERE s.name = :name AND s.region = :region",
-                Map.of("name", subdivisionName, "region", region),
-                () -> {
+        StructuralSubdivision subdivision = subdivisionRepository.findByName(subdivisionName)
+                .orElseGet(() -> {
                     StructuralSubdivision s = new StructuralSubdivision();
                     s.setName(subdivisionName);
                     s.setRegion(region);
-                    em.persist(s);
-                    log.info("Создан линейный отдел{} (регион: {})", subdivisionName, regionName);
-                    return s;
+                    log.info("Создано подразделение: {}", subdivisionName);
+                    return subdivisionRepository.save(s);
                 });
 
-        PowerSupplyEnterprise enterprise = (PowerSupplyEnterprise) findOrCreateEntity(
-                EntityType.POWER_SUPPLY_ENTERPRISE, powerSupplyEnterpriseName + "_" + subdivision.getName(),
-                "SELECT e FROM PowerSupplyEnterprise e WHERE e.name = :name AND e.structuralSubdivision = :subdivision",
-                Map.of("name", powerSupplyEnterpriseName, "subdivision", subdivision),
-                () -> {
+        PowerSupplyEnterprise enterprise = powerSupplyEnterpriseRepository.findByName(powerSupplyEnterpriseName)
+                .orElseGet(() -> {
                     PowerSupplyEnterprise e = new PowerSupplyEnterprise();
                     e.setName(powerSupplyEnterpriseName);
                     e.setStructuralSubdivision(subdivision);
-                    em.persist(e);
-                    log.info("Создано дистанция электроснабжения: {} (подразделение: {})", powerSupplyEnterpriseName, subdivisionName);
-                    return e;
+                    log.info("Создан участок электроснабжения: {}", powerSupplyEnterpriseName);
+                    return powerSupplyEnterpriseRepository.save(e);
                 });
 
-        PowerSupplyDistrict district = (PowerSupplyDistrict) findOrCreateEntity(
-                EntityType.POWER_SUPPLY_DISTRICT, districtName + "_" + enterprise.getName(),
-                "SELECT d FROM PowerSupplyDistrict d WHERE d.name = :name AND d.powerSupplyEnterprise = :enterprise",
-                Map.of("name", districtName, "enterprise", enterprise),
-                () -> {
+        PowerSupplyDistrict district = powerSupplyDistrictRepository.findByName(districtName)
+                .orElseGet(() -> {
                     PowerSupplyDistrict d = new PowerSupplyDistrict();
                     d.setName(districtName);
                     d.setPowerSupplyEnterprise(enterprise);
-                    em.persist(d);
                     log.info("Создан район электроснабжения: {} (предприятие: {})", districtName, powerSupplyEnterpriseName);
-                    return d;
+                    return powerSupplyDistrictRepository.save(d);
                 });
 
-        Station station = (Station) findOrCreateEntity(
-                EntityType.STATION, stationName + "_" + district.getName(),
-                "SELECT s FROM Station s WHERE s.name = :name AND s.powerSupplyDistrict = :district",
-                Map.of("name", stationName, "district", district),
-                () -> {
+        Station station = stationRepository.findByNameAndPowerSupplyDistrict(stationName, district)
+                .orElseGet(() -> {
                     Station s = new Station();
                     s.setName(stationName);
                     s.setPowerSupplyDistrict(district);
-                    em.persist(s);
                     log.info("Создана станция: {} (район: {})", stationName, districtName);
-                    return s;
+                    return stationRepository.save(s);
                 });
 
-        return (Substation) findOrCreateEntity(
-                EntityType.SUBSTATION, substationName + "_" + station.getName(),
-                "SELECT s FROM Substation s WHERE s.name = :name AND s.station = :station",
-                Map.of("name", substationName, "station", station),
-                () -> {
+        return substationService.findByName(substationName, station.getName())
+                .orElseGet(() -> {
                     Substation s = new Substation();
                     s.setName(substationName);
                     s.setStation(station);
-                    em.persist(s);
                     log.info("Создана подстанция: {} (станция: {})", substationName, stationName);
-                    return s;
+                    return substationService.create(s);
                 });
     }
 
@@ -306,7 +286,6 @@ public class PtoService {
                 .append(getCellStringValue(row.getCell(7)))
                 .toString();
     }
-
 
 
     private void fillDbWithIikData(Sheet sheet) {

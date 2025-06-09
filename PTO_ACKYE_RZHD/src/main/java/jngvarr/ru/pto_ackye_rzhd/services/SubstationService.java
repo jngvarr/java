@@ -19,12 +19,16 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SubstationService {
     private final SubstationRepository repository;
+
     public Substation getSubstationById(Long id) {
-        Optional<Substation> substation = repository.findById(id);
-        return substation.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id));
+        return repository.findById(id).orElseThrow(() -> new NeededObjectNotFound("Substation not found: " + id));
     }
 
-    public Substation create(Substation substation){
+    public Substation create(Substation substation) {
         return repository.save(substation);
+    }
+
+    Optional<Substation> findByName(String substationName, String stationName) {
+        return repository.findByNameAndAndStationName(substationName, stationName);
     }
 }
