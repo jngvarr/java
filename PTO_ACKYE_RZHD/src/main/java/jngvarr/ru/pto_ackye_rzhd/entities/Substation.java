@@ -13,7 +13,8 @@ public class Substation {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+//    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
 }

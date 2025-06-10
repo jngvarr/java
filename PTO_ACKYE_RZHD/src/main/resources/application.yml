@@ -25,6 +25,8 @@ telegram:
 logging:
   level:
     ru.jngvarr: DEBUG
+#    org.springframework: DEBUG
     org.springframework.cloud.config: DEBUG
 server:
   port: 8081
+

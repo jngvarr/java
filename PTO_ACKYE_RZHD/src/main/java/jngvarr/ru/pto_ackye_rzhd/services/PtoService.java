@@ -1,8 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
@@ -19,13 +16,11 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Supplier;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PtoService {
-    @PersistenceContext
     private final DcService dcService;
     private final MeteringPointService service;
     private final RegionRepository regionRepository;
@@ -96,7 +91,7 @@ public class PtoService {
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             if (!DC_MAP.containsKey(dcNumber)) {
                 Substation substation = createSubstationIfNotExists(row);
-                Dc newIvke = createDc(substation, dcNumber, row);
+                Dc newIvke = constructDc(substation, dcNumber, row);
                 dcService.createDc(newIvke);
                 DC_MAP.putIfAbsent(dcNumber, newIvke);
             }
@@ -107,16 +102,17 @@ public class PtoService {
 //        }
     }
 
-    private Dc createDc(Substation substation, String dcNumber, Row row) {
-        return new Dc() {{
-            setSubstation(substation);
-            setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))) == 2 ? 2 : 1);
-            setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)),
-                    DATE_FORMATTER_DDMMYYYY));
-            setDcModel(DC_MODEL);
-            setMeters(new ArrayList<>());
-            setDcNumber(dcNumber);
-        }};
+    private Dc constructDc(Substation substation, String dcNumber, Row row) {
+        Dc newDc = new Dc();
+        newDc.setSubstation(substation);
+        log.info("{}", row.getRowNum());
+        newDc.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))) == 2 ? 2 : 1);
+        newDc.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)),
+                DATE_FORMATTER_DDMMYYYY));
+        newDc.setDcModel(DC_MODEL);
+        newDc.setMeters(new ArrayList<>());
+        newDc.setDcNumber(dcNumber);
+        return newDc;
     }
 
     //    @Transactional
