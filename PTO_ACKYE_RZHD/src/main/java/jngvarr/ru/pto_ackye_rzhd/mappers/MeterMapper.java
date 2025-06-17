@@ -10,7 +10,6 @@ import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
 
 public class MeterMapper {
 
-
     public static MeterDTO toMeterDTO(Meter meter) {
         return new MeterDTO() {{
             setId(meter.getId());

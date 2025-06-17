@@ -34,16 +34,16 @@ public class PtoService {
     private static final Map<String, Dc> DC_MAP = new HashMap<>();
     private final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
     private final Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
-    private static final int CELL_NUMBER_REGION_NAME = 1;
-    private static final int CELL_NUMBER_STATION_NAME = 2;
-    private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 3;
-    private static final int CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME = 4;
-    private static final int CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME = 5;
-    private static final int CELL_NUMBER_SUBSTATION_NAME = 6;
-    private static final int CELL_NUMBER_BUS_SECTION_NUM = 7;
+    private static final int CELL_NUMBER_REGION_NAME = 2;
+    private static final int CELL_NUMBER_STATION_NAME = 6;
+    private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 4;
+    private static final int CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME = 5;
+    private static final int CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME = 3;
+    private static final int CELL_NUMBER_SUBSTATION_NAME = 7;
+    private static final int CELL_NUMBER_BUS_SECTION_NUM = 8;
     private static final String DC_MODEL = "DC-1000/SL";
-    private static final int CELL_NUMBER_DC_NUMBER = 9;
-    private static final int CELL_NUMBER_DC_INSTALLATION_DATE = 10;
+    private static final int CELL_NUMBER_DC_NUMBER = 10;
+    private static final int CELL_NUMBER_DC_INSTALLATION_DATE = 11;
     private static final int CELL_NUMBER_METERING_POINT_ID = 1;
     private static final int CELL_NUMBER_METERING_POINT_CONNECTION = 8;
     private static final int CELL_NUMBER_METERING_POINT_NAME = 9;
@@ -81,13 +81,12 @@ public class PtoService {
 
     @Transactional
     protected void fillDbWithIvkeData(Sheet sheet) {
-
+        getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
-
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             if (!DC_MAP.containsKey(dcNumber)) {
                 Substation substation = createSubstationIfNotExists(row);
@@ -388,10 +387,17 @@ public class PtoService {
 
     private Dc addMeterToDc(Meter meter, String dcNum) {
         if (DC_MAP.containsKey(dcNum)) {
-            Dc dc = DC_MAP.get(dcNum);
+            Dc dc = dcService.getDcByNumber(dcNum);
+//            Dc dc = DC_MAP.get(dcNum);
             dc.getMeters().add(meter);
             return dc;
         }
         return null;
+    }
+
+    private void getAllDcMap(List<Dc> dcs) {
+        for (Dc dc : dcs) {
+            DC_MAP.put(dc.getDcNumber(), dc);
+        }
     }
 }

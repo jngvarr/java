@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,10 @@ public class DcService {
         return dcs.stream()
                 .map(MeterMapper::toDcDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<Dc> getAllDc() {
+        return dcRepository.findAll();
     }
 
     public DcDTO getDcById(Long id) {
@@ -68,7 +74,8 @@ public class DcService {
                 && !dcIsExists
         ) {
             dcRepository.save(dcToCreate);
-        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
+        }
+//        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
     }
 
 
