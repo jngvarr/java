@@ -21,6 +21,7 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class PtoService {
     private final MeterService meterService;
     private final DcService dcService;
@@ -297,7 +298,8 @@ public class PtoService {
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
             log.debug("Ищем DC по номеру: '{}'", dcNumber);
             Dc dcToAdd = dcService.getDcByNumber(dcNumber);
-            Hibernate.initialize(dcToAdd.getMeters());
+            log.debug("meters: {}", dcToAdd.getMeters().size());
+//            Hibernate.initialize(dcToAdd.getMeters());
             meterService.addMeterToDc(newMeter, dcToAdd);
             newIik.setMeter(newMeter);
             newMeter.setDc(dcToAdd);
