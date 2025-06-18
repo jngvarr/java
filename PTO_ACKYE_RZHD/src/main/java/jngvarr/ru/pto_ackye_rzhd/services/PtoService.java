@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -21,6 +22,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class PtoService {
+    private final MeterService meterService;
     private final DcService dcService;
     private final MeteringPointService service;
     private final RegionRepository regionRepository;
@@ -79,7 +81,7 @@ public class PtoService {
         log.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    @Transactional
+//    @Transactional
     protected void fillDbWithIvkeData(Sheet sheet) {
         getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
@@ -201,7 +203,7 @@ public class PtoService {
 //                    return s;
 //                });
 //    }
-    @Transactional
+//    @Transactional
     public Substation createSubstationIfNotExists(Row row) {
 
         String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
@@ -282,8 +284,8 @@ public class PtoService {
                 .toString();
     }
 
-
-    private void fillDbWithIikData(Sheet sheet) {
+//    @Transactional
+    protected void fillDbWithIikData(Sheet sheet) {
         Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
@@ -293,7 +295,10 @@ public class PtoService {
             MeteringPoint newIik = createIIk(row);
 
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-            Dc dcToAdd = addMeterToDc(newMeter, dcNumber);
+            log.debug("Ищем DC по номеру: '{}'", dcNumber);
+            Dc dcToAdd = dcService.getDcByNumber(dcNumber);
+            Hibernate.initialize(dcToAdd.getMeters());
+            meterService.addMeterToDc(newMeter, dcToAdd);
             newIik.setMeter(newMeter);
             newMeter.setDc(dcToAdd);
             meteringPoints.put(newIik.getId(), newIik);
@@ -385,7 +390,8 @@ public class PtoService {
 
     }
 
-    private Dc addMeterToDc(Meter meter, String dcNum) {
+
+    protected Dc addMeterToDc(Meter meter, String dcNum) {
         if (DC_MAP.containsKey(dcNum)) {
             Dc dc = dcService.getDcByNumber(dcNum);
 //            Dc dc = DC_MAP.get(dcNum);

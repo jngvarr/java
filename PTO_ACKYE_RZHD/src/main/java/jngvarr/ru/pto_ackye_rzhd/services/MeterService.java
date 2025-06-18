@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MeterService {
     private final MeterRepository meterRepository;
-    //    private final EntityManager entityManager;
     private final DcService dcService;
 
 
@@ -103,5 +102,11 @@ public class MeterService {
             throw new NeededObjectNotFound("Meter not found with id: " + id);
         }
         meterRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void addMeterToDc(Meter meter, Dc dc) {
+        dc.getMeters().add(meter);
+        meter.setDc(dc);
     }
 }

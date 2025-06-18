@@ -153,13 +153,13 @@ public class ExcelSplitter { //разбиение сводных файлов н
     }
 
 
-    private static int findColumnIndex(Sheet sheet, String columnName) {
+    static int findColumnIndex(Sheet sheet, String columnName) {
         Row headerRow = sheet.getRow(0); // Заголовок на первой строке
         if (headerRow == null) return -1;
 
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
             Cell cell = headerRow.getCell(i);
-            if (cell != null && columnName.equalsIgnoreCase(cell.getStringCellValue())) {
+            if (cell != null && cell.getStringCellValue().startsWith(columnName)) {
                 return i;
             }
         }

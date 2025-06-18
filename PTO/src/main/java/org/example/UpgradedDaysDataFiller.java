@@ -20,6 +20,8 @@ import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.example.ExcelSplitter.findColumnIndex;
+
 public class UpgradedDaysDataFiller { //заполнение файла Контроль ПУ РРЭ (Задания на ОТО РРЭ)
 
     private static final Logger logger = LoggerFactory.getLogger(UpgradedDaysDataFiller.class);
@@ -268,12 +270,12 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         dateCellStyle.setDataFormat(poiDataFormat.getFormat("dd.MM.yyyy"));
 
         for (Row row : ivkeSheet) {
-            Cell ivkeCell = row.getCell(9);
+            Cell ivkeCell = row.getCell(findColumnIndex(ivkeSheet, "Серийный номер концентратора"));
             String ivkeNumber = getCellStringValue(ivkeCell);
             if (ivkeNumber != null) {
                 String key = ivkeNumber.trim();
                 if (dataMaps.get(DataType.CONNECTION_DIAG).containsKey(key)) {
-                    Cell connectionDiagCol = row.createCell(11);
+                    Cell connectionDiagCol = row.createCell(findColumnIndex(ivkeSheet, "Дата последней связи с УСПД"));
                     String dateString = dataMaps.get(DataType.CONNECTION_DIAG).get(key);
 
                     // Попытка преобразовать строку в дату

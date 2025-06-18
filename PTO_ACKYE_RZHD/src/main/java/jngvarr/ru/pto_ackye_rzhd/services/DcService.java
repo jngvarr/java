@@ -1,6 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
@@ -12,10 +11,9 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,9 +42,16 @@ public class DcService {
         return MeterMapper.toDcDTO(neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id)));
     }
 
-    public Dc getDcByNumber(String num) {
-        Optional<Dc> neededDc = dcRepository.getDcByDcNumber(num);
-        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
+//    @Transactional
+//    public Dc getDcByNumber(String num) {
+//        Optional<Dc> neededDc = dcRepository.getDcByDcNumber(num);
+//        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
+//    }
+
+    @Transactional(readOnly = true)
+    public Dc getDcByNumber(String dcNumber) {
+        return dcRepository.findByDcNumberWithMeters(dcNumber)
+                .orElseThrow(() -> new RuntimeException("Not found"));
     }
 
     public DcDTO getDcDTOByNumber(String num) {
