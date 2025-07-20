@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -21,11 +20,11 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Transactional
+//@Transactional
 public class PtoService {
     private final MeterService meterService;
     private final DcService dcService;
-    private final MeteringPointService service;
+    private final MeteringPointService meteringPointService;
     private final RegionRepository regionRepository;
     private final StructuralSubdivisionRepository subdivisionRepository;
     private final PowerSupplyEnterpriseRepository powerSupplyEnterpriseRepository;
@@ -52,8 +51,8 @@ public class PtoService {
     private static final int CELL_NUMBER_METERING_POINT_NAME = 9;
     private static final int CELL_NUMBER_METERING_POINT_PLACEMENT = 10;
     private static final int CELL_NUMBER_METERING_POINT_ADDRESS = 11;
-    private static final int CELL_NUMBER_METERING_POINT_METER_NUMBER = 12;
-    private static final int CELL_NUMBER_METERING_POINT_METER_MODEL = 13;
+    private static final int CELL_NUMBER_METERING_POINT_METER_MODEL = 12;
+    private static final int CELL_NUMBER_METERING_POINT_METER_NUMBER = 13;
     private static final int CELL_NUMBER_METERING_POINT_DC_NUMBER = 14;
     private static final int CELL_NUMBER_METERING_POINT_INSTALLATION_DATE = 15;
 
@@ -68,8 +67,7 @@ public class PtoService {
             for (EntityType type : EntityType.values()) {
                 entityCache.put(type, new HashMap<>());
             }
-            fillDbWithIvkeData(planOTOWorkbook.getSheet("ИВКЭ"));
-            fillDbWithIikData(planOTOWorkbook.getSheet("ИИК"));
+            fillDbWithData(planOTOWorkbook.getSheet("ИВКЭ"), planOTOWorkbook.getSheet("ИИК"));
 //            planOTOWorkbook.close();
 
             log.info("Data filled successfully!");
@@ -82,7 +80,17 @@ public class PtoService {
         log.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-//    @Transactional
+    @Transactional
+    protected void fillDbWithData(Sheet ivkeSheet, Sheet iikSheet) {
+        fillDbWithIvkeData(ivkeSheet);
+        fillDbWithIikData(iikSheet);
+        for (
+                Dc dc : DC_MAP.values()) {
+            dcService.createDc(dc);
+        }
+    }
+
+    //    @Transactional
     protected void fillDbWithIvkeData(Sheet sheet) {
         getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
@@ -98,17 +106,16 @@ public class PtoService {
                 DC_MAP.putIfAbsent(dcNumber, newIvke);
             }
         }
-//        for (
-//                Dc dc : DC_MAP.values()) {
-//            ;
-//        }
     }
 
     private Dc constructDc(Substation substation, String dcNumber, Row row) {
         Dc newDc = new Dc();
         newDc.setSubstation(substation);
         log.info("{}", row.getRowNum());
-        newDc.setBusSection(Integer.parseInt(getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM))) == 2 ? 2 : 1);
+        String sectionNumber = getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
+        if (!sectionNumber.isBlank()) {
+            newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
+        } else newDc.setBusSection(1);
         newDc.setInstallationDate(LocalDate.parse(getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE)),
                 DATE_FORMATTER_DDMMYYYY));
         newDc.setDcModel(DC_MODEL);
@@ -269,6 +276,83 @@ public class PtoService {
     }
 
 
+    //    @Transactional
+    protected void fillDbWithIikData(Sheet sheet) {
+        Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+            Meter newMeter = createMeter(row);
+//            meterService.create(newMeter);
+            MeteringPoint newIik = createIIk(row);
+
+            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
+            log.debug("Ищем DC по номеру: '{}'", dcNumber);
+//            Dc dcToAdd = dcService.getDcByNumber(dcNumber);
+            Dc dcToAdd = DC_MAP.get(dcNumber);
+            if (dcToAdd != null) {
+                log.debug("meters: {}", dcToAdd.getMeters().size());
+                meterService.addMeterToDc(newMeter, dcToAdd);
+            }
+            newIik.setMeter(newMeter);
+//            newMeter.setDc(dcToAdd);
+            meteringPoints.put(newIik.getId(), newIik);
+        }
+        for (MeteringPoint point : meteringPoints.values()) {
+            meteringPointService.create(point);
+        }
+    }
+
+    private Meter createMeter(Row row) {
+        String meterNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
+        String meterModel = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
+        String dcNum = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
+//        Dc dc = dcService.getDcByNumber(dcNum);
+        Dc dc = DC_MAP.get(dcNum);
+        return Optional.ofNullable(meterNumber)
+                .filter(meterNum -> !meterNum.isBlank())
+                .map(meterNum -> {
+                    if (meterModel == null || meterModel.isBlank()) {
+                        return null;
+                    }
+                    Meter meter = new Meter();
+                    meter.setMeterNumber(meterNumber);
+                    meter.setMeterModel(meterModel);
+                    meter.setDc(dc);
+                    return meter;
+                })
+                .orElse(null);
+    }
+
+    private MeteringPoint createIIk(Row row) {
+        String mapKey = getStringMapKey(row);
+
+//        Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
+        Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
+
+        if (substation == null) {
+            substation = createSubstationIfNotExists(row);
+            entityCache.get(EntityType.SUBSTATION).put(mapKey, substation);
+        }
+
+        Substation finalSubstation = substation;
+        MeteringPoint newMeteringPoint = new MeteringPoint();
+
+        newMeteringPoint.setSubstation(finalSubstation);
+        newMeteringPoint.setId(Long.parseLong(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
+        newMeteringPoint.setConnection(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
+        newMeteringPoint.setName(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
+        newMeteringPoint.setMeterPlacement(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
+        newMeteringPoint.setMeteringPointAddress(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
+
+        String installationDateStr = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE));
+        if (installationDateStr != null && !installationDateStr.isBlank()) {
+            newMeteringPoint.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
+        }
+        return newMeteringPoint;
+    }
+
     private String getStringMapKey(Row row) {
         return new StringBuilder()
                 .append(getCellStringValue(row.getCell(2)))
@@ -284,76 +368,6 @@ public class PtoService {
                 .append(getCellStringValue(row.getCell(7)))
                 .toString();
     }
-
-//    @Transactional
-    protected void fillDbWithIikData(Sheet sheet) {
-        Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0) {
-                continue;
-            }
-            Meter newMeter = createMeter(row);
-            MeteringPoint newIik = createIIk(row);
-
-            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-            log.debug("Ищем DC по номеру: '{}'", dcNumber);
-            Dc dcToAdd = dcService.getDcByNumber(dcNumber);
-            log.debug("meters: {}", dcToAdd.getMeters().size());
-//            Hibernate.initialize(dcToAdd.getMeters());
-            meterService.addMeterToDc(newMeter, dcToAdd);
-            newIik.setMeter(newMeter);
-            newMeter.setDc(dcToAdd);
-            meteringPoints.put(newIik.getId(), newIik);
-        }
-        for (MeteringPoint point : meteringPoints.values()) {
-            service.create(point);
-        }
-    }
-
-    private Meter createMeter(Row row) {
-        String meterNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
-        String meterModel = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
-
-        return Optional.ofNullable(meterNumber)
-                .filter(meterNum -> !meterNum.isBlank())
-                .map(meterNum -> {
-                    if (meterModel == null || meterModel.isBlank()) {
-                        return null;
-                    }
-                    Meter meter = new Meter();
-                    meter.setMeterNumber(meterNumber);
-                    meter.setMeterModel(meterModel);
-                    return meter;
-                })
-                .orElse(null);
-    }
-
-    private MeteringPoint createIIk(Row row) {
-        String mapKey = getStringMapKey(row);
-
-        Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
-
-        if (substation == null) {
-            substation = createSubstationIfNotExists(row);
-            entityCache.get(EntityType.SUBSTATION).put(mapKey, substation);
-        }
-
-        Substation finalSubstation = substation;
-
-        return new MeteringPoint() {{
-            setSubstation(finalSubstation);
-            setId(Long.parseLong(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
-            setConnection(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
-            setName(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
-            setMeterPlacement(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
-            setMeteringPointAddress(getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
-            setInstallationDate(LocalDate.parse(
-                    getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE)),
-                    DATE_FORMATTER_DDMMYYYY
-            ));
-        }};
-    }
-
 
     private static String getCellStringValue(Cell cell) {
         if (cell != null) {

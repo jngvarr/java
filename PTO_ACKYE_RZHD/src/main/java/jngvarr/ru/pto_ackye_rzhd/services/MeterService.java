@@ -73,11 +73,21 @@ public class MeterService {
         if (meter.getId() == null
                 && meter.getMeterNumber() != null
                 && meter.getMeterModel() != null
-                && meter.getDc() != null
+//                && meter.getDc() != null
         ) {
             meterRepository.save(meter);
         } else throw new NotEnoughDataException("Not enough Meter data: " + meter.getId());
     }
+
+//    public void createDc(Dc dcToCreate) {
+//        boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
+//        if (dcToCreate.getDcNumber() != null
+//                && !dcIsExists
+//        ) {
+//            dcRepository.save(dcToCreate);
+//        }
+////        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
+//    }
 
     public MeterDTO updateMeter(MeterDTO newData, Long id) {
         Optional<Meter> oldMeter = meterRepository.findById(id);
@@ -104,7 +114,7 @@ public class MeterService {
         meterRepository.deleteById(id);
     }
 
-    @Transactional
+//    @Transactional
     public void addMeterToDc(Meter meter, Dc dc) {
         dc.getMeters().add(meter);
         meter.setDc(dc);

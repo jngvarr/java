@@ -76,11 +76,8 @@ public class DcService {
     public void createDc(Dc dcToCreate) {
         boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
         if (dcToCreate.getDcNumber() != null
-                && !dcIsExists
-        ) {
+                && !dcIsExists)
             dcRepository.save(dcToCreate);
-        }
-//        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
     }
 
 
