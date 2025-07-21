@@ -20,7 +20,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
 
     @Override
-    @Transactional
+//    @Transactional
     public void registerUser(User user) {
         if (!repository.existsById(user.getUserId())) {
             repository.save(user);

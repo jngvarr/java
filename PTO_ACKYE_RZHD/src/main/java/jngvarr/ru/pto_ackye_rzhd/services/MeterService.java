@@ -38,7 +38,7 @@ public class MeterService {
         return MeterMapper.toMeterDTO(neededMeter.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id)));
     }
 
-    @Transactional
+//    @Transactional
     public void saveAll(List<Meter> meters) {
         // Приводим связанные сущности (например, Dc) в актуальное состояние
 //        for (Meter meter : meters) {

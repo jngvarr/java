@@ -68,7 +68,6 @@ public class PtoService {
                 entityCache.put(type, new HashMap<>());
             }
             fillDbWithData(planOTOWorkbook.getSheet("ИВКЭ"), planOTOWorkbook.getSheet("ИИК"));
-//            planOTOWorkbook.close();
 
             log.info("Data filled successfully!");
 
@@ -80,17 +79,21 @@ public class PtoService {
         log.info("Execution time: " + duration / 1000 + " seconds");
     }
 
-    @Transactional
     protected void fillDbWithData(Sheet ivkeSheet, Sheet iikSheet) {
         fillDbWithIvkeData(ivkeSheet);
+        saveDcFromMap();
         fillDbWithIikData(iikSheet);
+        saveDcFromMap();
+    }
+
+    private void saveDcFromMap() {
         for (
                 Dc dc : DC_MAP.values()) {
             dcService.createDc(dc);
         }
     }
 
-    //    @Transactional
+    @Transactional
     protected void fillDbWithIvkeData(Sheet sheet) {
         getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
@@ -276,7 +279,7 @@ public class PtoService {
     }
 
 
-    //    @Transactional
+    @Transactional
     protected void fillDbWithIikData(Sheet sheet) {
         Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
         for (Row row : sheet) {
@@ -284,19 +287,19 @@ public class PtoService {
                 continue;
             }
             Meter newMeter = createMeter(row);
-//            meterService.create(newMeter);
             MeteringPoint newIik = createIIk(row);
 
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-            log.debug("Ищем DC по номеру: '{}'", dcNumber);
-//            Dc dcToAdd = dcService.getDcByNumber(dcNumber);
-            Dc dcToAdd = DC_MAP.get(dcNumber);
-            if (dcToAdd != null) {
-                log.debug("meters: {}", dcToAdd.getMeters().size());
-                meterService.addMeterToDc(newMeter, dcToAdd);
+//            log.debug("Ищем DC по номеру: '{}'", dcNumber);
+            Dc dcByNumber = dcService.getDcByNumber(dcNumber);
+//            Dc dcByNumber = DC_MAP.get(dcNumber);
+            if (dcByNumber != null) {
+//                log.debug("meters: {}", dcByNumber.getMeters().size());
+                meterService.create(newMeter);
+                meterService.addMeterToDc(newMeter, dcByNumber);
             }
             newIik.setMeter(newMeter);
-//            newMeter.setDc(dcToAdd);
+//            newMeter.setDc(dcByNumber);
             meteringPoints.put(newIik.getId(), newIik);
         }
         for (MeteringPoint point : meteringPoints.values()) {

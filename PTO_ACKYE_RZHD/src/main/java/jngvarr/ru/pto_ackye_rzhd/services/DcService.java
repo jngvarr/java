@@ -48,7 +48,7 @@ public class DcService {
 //        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
 //    }
 
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public Dc getDcByNumber(String dcNumber) {
         return dcRepository.findByDcNumberWithMeters(dcNumber)
                 .orElseThrow(() -> new RuntimeException("Not found"));
@@ -81,7 +81,7 @@ public class DcService {
     }
 
 
-    @Transactional
+//    @Transactional
     public void createAll(List<Dc> ivke) {
         dcRepository.saveAll(ivke);
     }

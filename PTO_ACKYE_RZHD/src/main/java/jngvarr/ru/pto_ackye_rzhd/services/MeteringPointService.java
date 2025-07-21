@@ -68,7 +68,7 @@ public class MeteringPointService {
         }
     }
 
-    @Transactional
+//    @Transactional !!
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
         for (MeteringPoint iik : iiks) {
             if (iik.getName() == null || iik.getMeteringPointAddress() == null || iik.getSubstation() == null) {
