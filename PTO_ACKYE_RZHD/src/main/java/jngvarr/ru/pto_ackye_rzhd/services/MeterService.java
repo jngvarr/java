@@ -33,12 +33,21 @@ public class MeterService {
                 .collect(Collectors.toList());
     }
 
+    public List<Meter> getAllMeters() {
+        return meterRepository.findAll();
+    }
+
     public MeterDTO getMeterById(Long id) {
         Optional<Meter> neededMeter = meterRepository.findById(id);
         return MeterMapper.toMeterDTO(neededMeter.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + id)));
     }
 
-//    @Transactional
+    public Meter getMeterByNumber(String meterNumber) {
+        return meterRepository.findByMeterNumber(meterNumber)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+    }
+
+    //    @Transactional
     public void saveAll(List<Meter> meters) {
         // Приводим связанные сущности (например, Dc) в актуальное состояние
 //        for (Meter meter : meters) {
@@ -69,25 +78,17 @@ public class MeterService {
         } else throw new NotEnoughDataException("Not enough DC data: " + meterDTO.getId());
     }
 
-    public void create(Meter meter) {
+    public Meter create(Meter meter) {
+        Meter createdMeter;
         if (meter.getId() == null
                 && meter.getMeterNumber() != null
                 && meter.getMeterModel() != null
 //                && meter.getDc() != null
         ) {
-            meterRepository.save(meter);
+            createdMeter = meterRepository.save(meter);
         } else throw new NotEnoughDataException("Not enough Meter data: " + meter.getId());
+        return createdMeter;
     }
-
-//    public void createDc(Dc dcToCreate) {
-//        boolean dcIsExists = dcRepository.existsByDcNumber(dcToCreate.getDcNumber());
-//        if (dcToCreate.getDcNumber() != null
-//                && !dcIsExists
-//        ) {
-//            dcRepository.save(dcToCreate);
-//        }
-////        } else throw new NotEnoughDataException("Not enough DC data: " + dcToCreate.getId());
-//    }
 
     public MeterDTO updateMeter(MeterDTO newData, Long id) {
         Optional<Meter> oldMeter = meterRepository.findById(id);
@@ -106,17 +107,10 @@ public class MeterService {
         } else throw new IllegalArgumentException("Meter not found");
     }
 
-
     public void delete(Long id) {
         if (!meterRepository.existsById(id)) {
             throw new NeededObjectNotFound("Meter not found with id: " + id);
         }
         meterRepository.deleteById(id);
-    }
-
-//    @Transactional
-    public void addMeterToDc(Meter meter, Dc dc) {
-        dc.getMeters().add(meter);
-        meter.setDc(dc);
     }
 }

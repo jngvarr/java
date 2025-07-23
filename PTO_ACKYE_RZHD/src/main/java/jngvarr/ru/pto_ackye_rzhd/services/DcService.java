@@ -48,10 +48,13 @@ public class DcService {
 //        return neededDc.orElseThrow(() -> new NeededObjectNotFound("Dc not found: " + num));
 //    }
 
-//    @Transactional(readOnly = true)
+    //    @Transactional(readOnly = true)
     public Dc getDcByNumber(String dcNumber) {
         return dcRepository.findByDcNumberWithMeters(dcNumber)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseGet(() -> {
+                    log.warn("Dc с номером {} не найден", dcNumber);
+                    return null;
+                });
     }
 
     public DcDTO getDcDTOByNumber(String num) {
@@ -81,7 +84,7 @@ public class DcService {
     }
 
 
-//    @Transactional
+    //    @Transactional
     public void createAll(List<Dc> ivke) {
         dcRepository.saveAll(ivke);
     }

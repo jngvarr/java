@@ -33,6 +33,14 @@ public class MeteringPointService {
                 .collect(Collectors.toList());
     }
 
+    public List<MeteringPoint> getAllIik() {
+       return meteringPointRepository.findAll();
+    }
+
+    public boolean isIikExists(long id){
+        return meteringPointRepository.existsById(id);
+    }
+
     public MeteringPointDTO getIik(Long id) {
         Optional<MeteringPoint> neededMeteringPoint = meteringPointRepository.findById(id);
         if (neededMeteringPoint.isPresent()) {
