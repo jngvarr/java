@@ -296,20 +296,14 @@ public class PtoService {
 
 
     protected void fillDbWithIikData(Sheet sheet) {
-        List<MeteringPoint> meteringPointsFromDb = meteringPointService.getAllIik();
-        List<Meter> metersFromDb = meterService.getAllMeters();
         Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
-        Map<String, Meter> meters = new HashMap<>();
-
-        if (!meteringPointsFromDb.isEmpty()) {
-            for (MeteringPoint meteringPoint : meteringPointsFromDb) {
-                meteringPoints.put(meteringPoint.getId(), meteringPoint);
-            }
+        for (MeteringPoint mp : meteringPointService.getAllIik()) {
+            meteringPoints.put(mp.getId(), mp);
         }
-        if (!metersFromDb.isEmpty()) {
-            for (Meter m : metersFromDb) {
-                meters.put(m.getMeterNumber(), m);
-            }
+
+        Map<String, Meter> meters = new HashMap<>();
+        for (Meter m : meterService.getAllMeters()) {
+            meters.put(m.getMeterNumber(), m);
         }
 
         for (Row row : sheet) {
@@ -325,19 +319,23 @@ public class PtoService {
 
             if (!meteringPoints.containsKey(newIik.getId())) {
                 String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
-                Dc dcByNumber = dcService.getDcByNumber(dcNumber);
-                    log.warn("Что-то не так в строке {}", row.getRowNum() + 1);
-                if (dcByNumber == null && !dcNumber.isBlank()) {
-                    dcByNumber = createVirtualDc(newIik.getSubstation(), dcNumber);
-                }
-                if (dcByNumber != null) {
-                    newMeter.setDc(dcByNumber);
-                    if (!meters.containsKey(newMeter.getMeterNumber())) {
-                        newMeter = meterService.create(newMeter);
+                if (dcNumber == null) {
+                    if (newIik.getMeteringPointAddress() == null) newIik.setMeteringPointAddress("");
+                } else {
+                    Dc dcByNumber = dcService.getDcByNumber(dcNumber);
+                    if (dcByNumber == null && !dcNumber.isBlank()) {
+                        dcByNumber = createVirtualDc(newIik.getSubstation(), dcNumber);
                     }
+
+                    if (dcByNumber != null) {
+                        newMeter.setDc(dcByNumber);
+                        if (!meters.containsKey(newMeter.getMeterNumber())) {
+                            newMeter = meterService.create(newMeter);
+                        }
 //                    newMeter = meterService.getMeterByNumber(newMeter.getMeterNumber());
-                    dcByNumber.getMeters().add(newMeter);
-                    DC_MAP.put(dcByNumber.getDcNumber(), dcByNumber);
+                        dcByNumber.getMeters().add(newMeter);
+                        DC_MAP.put(dcByNumber.getDcNumber(), dcByNumber);
+                    }
                 }
                 newIik.setMeter(newMeter);
                 meteringPoints.put(newIik.getId(), newIik);

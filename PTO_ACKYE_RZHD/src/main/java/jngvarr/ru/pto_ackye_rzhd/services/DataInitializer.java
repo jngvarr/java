@@ -15,15 +15,18 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        log.info("Приложение запущено. Инициализирую данные...");
+        boolean needInitialize = false;
+        if (needInitialize) { // TODO реализовать необходимость обновление данных из файла
+            log.info("Приложение запущено. Инициализирую данные...");
 
-        String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+            String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
 
-        try {
-            ptoService.addDataFromExcelFile(filePath);
-            log.info("Загрузка данных из Excel завершена.");
-        } catch (Exception e) {
-            log.error("Ошибка при загрузке данных из Excel-файла", e);
+            try {
+                ptoService.addDataFromExcelFile(filePath);
+                log.info("Загрузка данных из Excel завершена.");
+            } catch (Exception e) {
+                log.error("Ошибка при загрузке данных из Excel-файла", e);
+            }
         }
     }
 }
