@@ -1,7 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
+import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.entities.User;
+import jngvarr.ru.pto_ackye_rzhd.services.MeterService;
+import jngvarr.ru.pto_ackye_rzhd.services.MeteringPointService;
 import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -47,6 +51,8 @@ public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
     private final TBotService tBotService;
+    private final MeteringPointService meteringPointService;
+    private final MeterService meterService;
     private UserServiceImpl userService;
     static final String ERROR_TEXT = "Error occurred: ";
     private Map<Long, Integer> sendMessagesIds = new HashMap<>();
@@ -97,10 +103,12 @@ public class TBot extends TelegramLongPollingBot {
     private boolean isDcLocation;
 
 
-    public TBot(BotConfig config, TBotService tBotService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
+    public TBot(BotConfig config, TBotService tBotService, MeteringPointService meteringPointService, MeterService meterService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
         this.tBotService = tBotService;
+        this.meteringPointService = meteringPointService;
+        this.meterService = meterService;
         this.userService = userService;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
@@ -207,7 +215,7 @@ public class TBot extends TelegramLongPollingBot {
             if (!Files.exists(userDir)) {
                 Files.createDirectories(userDir);
 
-                // Сохраняем файл во временное хранилище
+            // Сохраняем файл во временное хранилище
             }
             Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
             try (InputStream in = new URL(fileUrl).openStream()) {
@@ -961,7 +969,6 @@ public class TBot extends TelegramLongPollingBot {
 
             String taskOrder = dataPreparing(operationLogSheet, meterWorkSheet, isDcWorks);
 
-
 //            if (isMounting && !isDcLocation) {
 //                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
 //                    String[] entryParts = entry.getValue().split("_");
@@ -1112,7 +1119,13 @@ public class TBot extends TelegramLongPollingBot {
             }
 
             case "meterChange" -> {
-                Object mountingDeviceNumber = parseMeterNumber(dataParts[2]);
+                String mountingMeterNumber = dataParts[2];
+                Meter m = meterService.getMeterByNumber(deviceNumber);
+                MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
+                MeteringPoint nmp = new MeteringPoint();
+                nmp.setMeter(meterService.getMeterByNumber(mountingMeterNumber));
+                meteringPointService.update(nmp, mp.getId());
+                Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
                 if (mountingDeviceNumber instanceof Long) {
                     otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);

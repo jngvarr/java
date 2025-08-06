@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -97,6 +96,7 @@ public class MeteringPointService {
             if (newData.getInstallationDate() != null) newIik.setInstallationDate(newData.getInstallationDate());
             if (newData.getConnection() != null) newIik.setConnection(newData.getConnection());
             if (newData.getSubstation() != null) newIik.setSubstation(newData.getSubstation());
+            if (newData.getMeter() != null) newIik.setMeter(newData.getMeter());
 
             return meteringPointRepository.save(newIik);
         } else throw new IllegalArgumentException("MeteringPoint not found");
@@ -107,6 +107,10 @@ public class MeteringPointService {
             throw new NeededObjectNotFound("MeteringPoint not found with id: " + id);
         }
         meteringPointRepository.deleteById(id);
+    }
+
+    public MeteringPoint getIikByMeterId(Long deviceId) {
+       return meteringPointRepository.findByMeterId(deviceId);
     }
 }
 

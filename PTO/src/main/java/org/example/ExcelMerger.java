@@ -75,13 +75,9 @@ public class ExcelMerger { // Объединение нескольких ана
 
     public static void main(String[] args) throws IOException {
 
-//        String folderPath = "d:\\Downloads\\пто\\";
         String folderPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
-//        String folderPath = "d:\\Downloads\\пто\\план ПТО\\2024\\декабрь\\";
         File folder = new File(folderPath);
         String scheduleTemplatePath = "d:\\Downloads\\пто\\month_reports\\templates\\works_schedule_template.xlsx";
-
-//        String[] fileNames = new File(folderPath).list((dir, name) -> name.contains("ПТО"));
 
         Map<String, List<File>> fileGroups = new HashMap<>();
         fileGroups.put("ИИК", new ArrayList<>());
@@ -110,7 +106,6 @@ public class ExcelMerger { // Объединение нескольких ана
             if (!files.isEmpty()) {
                 futures.add(executorService.submit(() -> processGroup(files, folderPath, group)));
                 logger.info("Начало обработки группы '{}'", group);
-//                processGroup(files, folderPath, group);
                 logger.info("Обработка группы '{}' завершена", group);
             } else {
                 logger.warn("Группа '{}' не содержит файлов для обработки", group);

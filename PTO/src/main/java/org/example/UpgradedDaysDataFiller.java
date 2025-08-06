@@ -119,7 +119,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             if (fileName.startsWith("Контроль поступления данных")) {
                 dataMaps.get(DataType.DATA_CONTROL).putAll(fillingMapWithData(1, 5, file));
             } else if (fileName.startsWith("Состав ИИК")) {
-                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(11, 8, file));
+                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(13, 8, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
                 dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
             } else if (fileName.startsWith("Диагностика связи")) {
