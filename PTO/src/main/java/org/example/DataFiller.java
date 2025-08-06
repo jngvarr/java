@@ -61,7 +61,7 @@ public class DataFiller {
                 Cell monthCell = summaryRow.getCell(monthColumnIndex); // Get cell in the month column
                 Cell counterCell = summaryRow.getCell(10);
                 if (monthCell != null) {
-                    String monthValue = monthCell.  getStringCellValue(); // Assuming "Фамилия_дата"
+                    String monthValue = monthCell.getStringCellValue(); // Assuming "Фамилия_дата"
                     String[] parts = monthValue.split("_");
                     if (parts.length > 1) {
                         String dateString = parts[1]; // Get date part
