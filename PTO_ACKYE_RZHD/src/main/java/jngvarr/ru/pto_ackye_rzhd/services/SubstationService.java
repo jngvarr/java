@@ -28,7 +28,7 @@ public class SubstationService {
         return repository.save(substation);
     }
 
-    Optional<Substation> findByName(String substationName, String stationName) {
+    public Optional<Substation> findByName(String substationName, String stationName) {
         return repository.findByNameAndAndStationName(substationName, stationName);
     }
 }

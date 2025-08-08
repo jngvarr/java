@@ -3,10 +3,9 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
+import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.entities.User;
-import jngvarr.ru.pto_ackye_rzhd.services.MeterService;
-import jngvarr.ru.pto_ackye_rzhd.services.MeteringPointService;
-import jngvarr.ru.pto_ackye_rzhd.services.UserServiceImpl;
+import jngvarr.ru.pto_ackye_rzhd.services.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +52,8 @@ public class TBot extends TelegramLongPollingBot {
     private final TBotService tBotService;
     private final MeteringPointService meteringPointService;
     private final MeterService meterService;
+    private final SubstationService substationService;
+    private final PtoService ptoService;
     private UserServiceImpl userService;
     static final String ERROR_TEXT = "Error occurred: ";
     private Map<Long, Integer> sendMessagesIds = new HashMap<>();
@@ -103,12 +104,14 @@ public class TBot extends TelegramLongPollingBot {
     private boolean isDcLocation;
 
 
-    public TBot(BotConfig config, TBotService tBotService, MeteringPointService meteringPointService, MeterService meterService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
+    public TBot(BotConfig config, TBotService tBotService, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, PtoService ptoService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
         this.tBotService = tBotService;
         this.meteringPointService = meteringPointService;
         this.meterService = meterService;
+        this.substationService = substationService;
+        this.ptoService = ptoService;
         this.userService = userService;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
@@ -215,7 +218,7 @@ public class TBot extends TelegramLongPollingBot {
             if (!Files.exists(userDir)) {
                 Files.createDirectories(userDir);
 
-            // Сохраняем файл во временное хранилище
+                // Сохраняем файл во временное хранилище
             }
             Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
             try (InputStream in = new URL(fileUrl).openStream()) {
@@ -630,9 +633,9 @@ public class TBot extends TelegramLongPollingBot {
                 formingOtoLog(processInfo, OtoType.SET_NOT);
                 editTextAndButtons("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, userId, 1);
             }
-            case "meterMount", "dcMount" -> {
+            case "iikMount", "dcMount" -> {
                 String textToSend = "";
-                if ("meterMount".equals(callbackData)) {
+                if ("iikMount".equals(callbackData)) {
                     textToSend = " номер концентратора, к которому привязан ИИК (если номер не известен - введите \\\"0\\\"): \"";
                     processStates.put(userId, ProcessState.IIK_MOUNT);
                 } else {
@@ -1143,18 +1146,34 @@ public class TBot extends TelegramLongPollingBot {
                 otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
             }
-            case "meterMount" -> {
+            case "iikMount" -> {
+                MeteringPoint nmp = new MeteringPoint();
+                String stationName = otoRow.getCell(6).getStringCellValue();
+                String substationName = otoRow.getCell(7).getStringCellValue();
+                String meteringPointName = dataParts[5];
+                String meteringPointAddress = dataParts[6];
+                String meterPlacement = dataParts[7];
+                String mountingMeterNumber = dataParts[3];
+                Substation s = substationService.findByName(substationName, stationName).orElseGet(null);
+                if (s == null) {
+                    s = ptoService.createSubstationIfNotExists(otoRow);
+                }
+                nmp.setSubstation(s);
+                nmp.setName(meteringPointName);
+                nmp.setMeteringPointAddress(meteringPointAddress);
+                nmp.setMeterPlacement(meterPlacement);
+
                 Object mountingDeviceNumber = parseMeterNumber(dataParts[3]); //Номер счетчика
                 if (mountingDeviceNumber instanceof Long) {
                     otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
                 } else {
                     otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
                 }
-                otoRow.getCell(9).setCellValue(dataParts[5]); //4 Точка учёта
-                otoRow.getCell(10).setCellValue(dataParts[7]); // Место установки счетчика (Размещение счетчика)
-                otoRow.getCell(11).setCellValue(dataParts[6]); // Адрес установки
+                otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
+                otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
+                otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
                 otoRow.getCell(12).setCellValue(dataParts[4].toUpperCase()); // Марка счётчика
-                Object mountDeviceNumber = parseMeterNumber(dataParts[3]);
+                Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 if (mountDeviceNumber instanceof Long) {
                     otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
                 } else {
@@ -1169,6 +1188,8 @@ public class TBot extends TelegramLongPollingBot {
 //                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
                 otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
                 excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
+
+
                 yield "";
             }
             default -> null;
@@ -1210,7 +1231,7 @@ public class TBot extends TelegramLongPollingBot {
                         str[1], str[2], str[3], str[4], str[5], str[6], str[7], str[8]));
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
-                case "meterMount" -> resultStr.append(String.format(
+                case "iikMount" -> resultStr.append(String.format(
                         "\nНаименование ТУ: %s, \nПрибор учёта №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
                         str[5], str[3], str[1], str[2], str[6], str[10]));
                 default -> {
@@ -1245,7 +1266,7 @@ public class TBot extends TelegramLongPollingBot {
             };
         } else if (typeIndicator instanceof ProcessState processState) {
             return switch (processState) {
-                case IIK_MOUNT -> "meterMount";
+                case IIK_MOUNT -> "iikMount";
                 case DC_MOUNT -> "dcMount";
                 default -> "unknown";
             };
