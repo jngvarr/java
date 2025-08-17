@@ -134,7 +134,7 @@ public class PtoTelegramBotContent {
             "dcRestart", List.of("Нет связи со всеми счетчиками\n", "Сбой ПО устройства (сделан рестарт по питанию)",
                     " Перезагрузка концентратора. "),
             "dcSupply", List.of("Нет связи со всеми счетчиками\n", "Восстановление схемы.", " Восстановление схемы подключения."),
-            "meterMount", List.of("Монтаж новой ТУ\n", "Монтаж новой ТУ.", "Монтаж новой ТУ. "),
+            "iikMount", List.of("Монтаж новой ТУ\n", "Монтаж новой ТУ.", "Монтаж новой ТУ. "),
             "dcMount", List.of("Монтаж нового концентратора. \n", "Монтаж нового концентратора.", " Монтаж нового концентратора.")
     );
 
@@ -153,7 +153,7 @@ public class PtoTelegramBotContent {
     static final Map<String, String> startMenuButtons = Map.of(
             "ПТО", "pto",
             "ОТО", "oto",
-            "Монтаж новой ТУ / концентратора", "newTU"
+            "Монтаж новой ТУ / концентратора", "mount"
     );
 
     static final Map<String, Map<String, String>> modes = Map.of(
@@ -163,8 +163,8 @@ public class PtoTelegramBotContent {
             "oto", Map.of(
                     "ОТО ИИК", "otoIIK",
                     "ОТО ИВКЭ", "otoIVKE"),
-            "newTU", Map.of(
-                    "Монтаж новой точки учёта (ИИК)", "meterMount",
+            "mount", Map.of(
+                    "Монтаж новой точки учёта (ИИК)", "iikMount",
                     "Монтаж нового концентратора (ИВКЭ)", "dcMount")
     );
 

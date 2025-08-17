@@ -1,6 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +32,7 @@ public class PtoService {
     private final SubstationService substationService;
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final long startTime = System.currentTimeMillis();
-    private static final Map<String, Dc> DC_MAP = new HashMap<>();
-    private final Map<String, Substation> SUBSTATION_MAP = new HashMap<>();
-    private final Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
+    public Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
     private static final int CELL_NUMBER_REGION_NAME = 2;
     private static final int CELL_NUMBER_STATION_NAME = 6;
     private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 4;
@@ -44,7 +41,8 @@ public class PtoService {
     private static final int CELL_NUMBER_SUBSTATION_NAME = 7;
     private static final int CELL_NUMBER_BUS_SECTION_NUM = 8;
     private static final String DC_MODEL = "DC-1000/SL";
-    private static final int CELL_NUMBER_DC_NUMBER = 10;
+    private static final int CELL_NUMBER_DC_NUMBER = 14;
+    //    private static final int CELL_NUMBER_DC_NUMBER = 10;
     private static final int CELL_NUMBER_DC_INSTALLATION_DATE = 11;
     private static final int CELL_NUMBER_METERING_POINT_ID = 1;
     private static final int CELL_NUMBER_METERING_POINT_CONNECTION = 8;
@@ -57,8 +55,8 @@ public class PtoService {
     private static final int CELL_NUMBER_METERING_POINT_INSTALLATION_DATE = 15;
 
 
-    private enum EntityType {
-        SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION
+    public enum EntityType {
+        SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION, METERING_POINT, METER, DC
     }
 
     public void addDataFromExcelFile(String dataFilePath) {
@@ -88,8 +86,8 @@ public class PtoService {
 
     private void saveDcFromMap() {
         for (
-                Dc dc : DC_MAP.values()) {
-            dcService.createDc(dc);
+                Object dc : entityCache.get(EntityType.DC).values()) {
+            dcService.createDc((Dc)dc);
         }
     }
 
@@ -101,7 +99,7 @@ public class PtoService {
                 continue;
             }
             String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
-            if (!DC_MAP.containsKey(dcNumber)) {
+            if (!entityCache.get(EntityType.DC).containsKey(dcNumber)) {
                 Substation substation = createSubstationIfNotExists(row);
                 createDc(substation, dcNumber, row);
             }
@@ -128,7 +126,7 @@ public class PtoService {
         newDc.setMeters(new ArrayList<>());
         newDc.setDcNumber(dcNumber);
         dcService.createDc(newDc);
-        DC_MAP.putIfAbsent(dcNumber, newDc);
+        entityCache.get(EntityType.DC).putIfAbsent(dcNumber, newDc);
     }
 
     private Dc createVirtualDc(Substation substation, String dcNumber) {
@@ -138,7 +136,7 @@ public class PtoService {
         newDc.setMeters(new ArrayList<>());
         newDc.setDcNumber(dcNumber);
         dcService.createDc(newDc);
-        DC_MAP.putIfAbsent(dcNumber, newDc);
+        entityCache.get(EntityType.DC).putIfAbsent(dcNumber, newDc);
         return newDc;
     }
 
@@ -334,7 +332,7 @@ public class PtoService {
                         }
 //                    newMeter = meterService.getMeterByNumber(newMeter.getMeterNumber());
                         dcByNumber.getMeters().add(newMeter);
-                        DC_MAP.put(dcByNumber.getDcNumber(), dcByNumber);
+                        entityCache.get(EntityType.DC).put(dcByNumber.getDcNumber(), dcByNumber);
                     }
                 }
                 newIik.setMeter(newMeter);
@@ -346,31 +344,42 @@ public class PtoService {
         }
     }
 
-    private Meter createMeter(Row row) {
+    public Meter createMeter(Row row) {
         String meterNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
         String meterModel = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
         String dcNum = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
-//        Dc dc = dcService.getDcByNumber(dcNum);
-        Dc dc = DC_MAP.get(dcNum);
+
+        // Dc ищем либо в карте, либо в сервисе
+        Dc foundDc = Optional.ofNullable((Dc)entityCache.get(EntityType.DC).get(dcNum))
+                .orElseGet(() -> dcService.getDcByNumber(dcNum));
+
         return Optional.ofNullable(meterNumber)
-                .filter(meterNum -> !meterNum.isBlank())
-                .map(meterNum -> {
-                    if (meterModel == null || meterModel.isBlank()) {
-                        return null;
-                    }
+                .filter(num -> !num.isBlank())                // проверка, что номер не пустой
+                .filter(num -> meterModel != null && !meterModel.isBlank()) // проверка модели
+                .map(num -> {
                     Meter meter = new Meter();
-                    meter.setMeterNumber(meterNumber);
+                    meter.setMeterNumber(num);
                     meter.setMeterModel(meterModel);
-                    meter.setDc(dc);
+                    meter.setDc(foundDc);
                     return meter;
                 })
-                .orElse(null);
+                .orElse(null); // если номер или модель не прошли проверки — null
     }
+
+    public Meter createMeter(String meterNum, String meterModel, String dcNum) {
+        Dc foundDc = dcService.getDcByNumber(dcNum);
+        Meter meter = new Meter();
+        meter.setMeterNumber(meterNum);
+        meter.setMeterModel(meterModel);
+        foundDc.getMeters().add(meter);
+        meter.setDc(foundDc);
+        return meter;
+    }
+
 
     private MeteringPoint createIIk(Row row) {
         String mapKey = getStringMapKey(row);
 
-//        Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
 
         if (substation == null) {
@@ -450,9 +459,8 @@ public class PtoService {
 
 
     protected Dc addMeterToDc(Meter meter, String dcNum) {
-        if (DC_MAP.containsKey(dcNum)) {
+        if (entityCache.get(EntityType.DC).containsKey(dcNum)) {
             Dc dc = dcService.getDcByNumber(dcNum);
-//            Dc dc = DC_MAP.get(dcNum);
             dc.getMeters().add(meter);
             return dc;
         }
@@ -461,7 +469,7 @@ public class PtoService {
 
     private void getAllDcMap(List<Dc> dcs) {
         for (Dc dc : dcs) {
-            DC_MAP.put(dc.getDcNumber(), dc);
+            entityCache.get(EntityType.DC).put(dc.getDcNumber(), dc);
         }
     }
 }

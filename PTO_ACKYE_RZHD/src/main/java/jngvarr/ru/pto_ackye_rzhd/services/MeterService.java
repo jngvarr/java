@@ -44,7 +44,7 @@ public class MeterService {
 
     public Meter getMeterByNumber(String meterNumber) {
         return meterRepository.findByMeterNumber(meterNumber)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElse(null);
     }
 
     //    @Transactional

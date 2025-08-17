@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -102,6 +103,7 @@ public class TBot extends TelegramLongPollingBot {
     private int sequenceNumber = 0;
     private String processInfo = "";
     private boolean isDcLocation;
+//    private boolean isMeterInstalled;
 
 
     public TBot(BotConfig config, TBotService tBotService, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, PtoService ptoService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
@@ -491,7 +493,7 @@ public class TBot extends TelegramLongPollingBot {
         long chatId = update.getCallbackQuery().getMessage().getChatId();
 
         switch (callbackData) {
-            case "newTU" -> {
+            case "mount" -> {
                 editTextAndButtons(NEW_TU, modes.get(callbackData), chatId, userId, 1);
 //                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
             }
@@ -1065,7 +1067,6 @@ public class TBot extends TelegramLongPollingBot {
 
     }
 
-
     private void fillDcSection(Sheet dcWorkSheet, String taskOrder, boolean isDcChange) { // заполнение данных на вкладке "ИВКЭ"
         int dcNumberColIndex = excelFileService.findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
         int dcCurrentStateColIndex = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
@@ -1150,18 +1151,39 @@ public class TBot extends TelegramLongPollingBot {
                 MeteringPoint nmp = new MeteringPoint();
                 String stationName = otoRow.getCell(6).getStringCellValue();
                 String substationName = otoRow.getCell(7).getStringCellValue();
+                String mountingMeterNumber = dataParts[3];
+                String meterType = dataParts[4].toUpperCase();
                 String meteringPointName = dataParts[5];
                 String meteringPointAddress = dataParts[6];
                 String meterPlacement = dataParts[7];
-                String mountingMeterNumber = dataParts[3];
+                String mountOrg = dataParts[9];
+                LocalDate meteringPointMountDate = LocalDate.parse(dataParts[10], FileManagement.DD_MM_YYYY);
                 Substation s = substationService.findByName(substationName, stationName).orElseGet(null);
                 if (s == null) {
                     s = ptoService.createSubstationIfNotExists(otoRow);
                 }
+                nmp.setId(meteringPointService.getNextId());
+                nmp.setInstallationDate(meteringPointMountDate);
                 nmp.setSubstation(s);
                 nmp.setName(meteringPointName);
                 nmp.setMeteringPointAddress(meteringPointAddress);
                 nmp.setMeterPlacement(meterPlacement);
+                nmp.setMountOrganization(mountOrg);
+                Meter newMeteringPointMeter = Optional.ofNullable(
+                                meterService.getMeterByNumber(mountingMeterNumber)
+                        )
+                        .orElseGet(() -> {
+                            Meter created = ptoService.createMeter(mountingMeterNumber, meterType, deviceNumber);
+                            return meterService.create(created);
+                        });
+
+                if (!isMeterInstalled(mountingMeterNumber)) {
+                    nmp.setMeter(newMeteringPointMeter);
+                } else {
+                    log.warn("Данный прибор учета уже установлен на другой точке учёта");
+                }
+
+                meteringPointService.create(nmp);
 
                 Object mountingDeviceNumber = parseMeterNumber(dataParts[3]); //Номер счетчика
                 if (mountingDeviceNumber instanceof Long) {
@@ -1172,7 +1194,7 @@ public class TBot extends TelegramLongPollingBot {
                 otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
                 otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
                 otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
-                otoRow.getCell(12).setCellValue(dataParts[4].toUpperCase()); // Марка счётчика
+                otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
                 Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 if (mountDeviceNumber instanceof Long) {
                     otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
@@ -1188,8 +1210,6 @@ public class TBot extends TelegramLongPollingBot {
 //                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
                 otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
                 excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
-
-
                 yield "";
             }
             default -> null;
@@ -1208,6 +1228,17 @@ public class TBot extends TelegramLongPollingBot {
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
 
+    private boolean isMeterInstalled(String meterNum) {
+        return ptoService.entityCache
+                .get(PtoService.EntityType.METERING_POINT)
+                .values()
+                .stream()
+                .map(o -> (MeteringPoint) o)
+                .map(MeteringPoint::getMeter)
+                .filter(Objects::nonNull)
+                .anyMatch(m -> meterNum.equals(m.getMeterNumber()));
+    }
+
     private static List<String> getStrings(String data) {
         return fillingData.get(data);
     }
@@ -1219,6 +1250,7 @@ public class TBot extends TelegramLongPollingBot {
         for (Map.Entry<String, String> entry : otoLog.entrySet()) {
             String key = entry.getKey();
             String[] str = entry.getValue().split("_");
+            str[4] = str[4].toUpperCase();
             String actionType = str[0];
             List<String> strings = getStrings(actionType);
 
@@ -1232,8 +1264,8 @@ public class TBot extends TelegramLongPollingBot {
                 case "dcChange" -> resultStr.append(String.format(
                         "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
                 case "iikMount" -> resultStr.append(String.format(
-                        "\nНаименование ТУ: %s, \nПрибор учёта №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
-                        str[5], str[3], str[1], str[2], str[6], str[10]));
+                        "\nНаименование ТУ: %s, \nПрибор учёта: %s №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
+                        str[5], str[4], str[3], str[1], str[2], str[6], str[10]));
                 default -> {
                     String device = ProcessState.IIK_WORKS.equals(processStates.get(userId)) ? " ПУ" : " Концентратор";
                     resultStr.append(String.format(device + " № %s - ", key));

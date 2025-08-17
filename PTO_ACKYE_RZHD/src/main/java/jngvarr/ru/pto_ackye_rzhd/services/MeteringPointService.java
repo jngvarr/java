@@ -33,10 +33,10 @@ public class MeteringPointService {
     }
 
     public List<MeteringPoint> getAllIik() {
-       return meteringPointRepository.findAll();
+        return meteringPointRepository.findAll();
     }
 
-    public boolean isIikExists(long id){
+    public boolean isIikExists(long id) {
         return meteringPointRepository.existsById(id);
     }
 
@@ -61,8 +61,13 @@ public class MeteringPointService {
         }
     }
 
-    private Long getExternalId() {
+    public Long getExternalId() {
         return id++;
+    }
+
+    // TODO Временный метод, на время разработки. id брать из выгрузки
+    public Long getNextId() {
+        return meteringPointRepository.findMaxId() + 1;
     }
 
     public MeteringPoint create(MeteringPoint iik) {
@@ -75,7 +80,7 @@ public class MeteringPointService {
         }
     }
 
-//    @Transactional !!
+    //    @Transactional !!
     public List<MeteringPoint> createIiks(List<MeteringPoint> iiks) {
         for (MeteringPoint iik : iiks) {
             if (iik.getName() == null || iik.getMeteringPointAddress() == null || iik.getSubstation() == null) {
@@ -110,7 +115,7 @@ public class MeteringPointService {
     }
 
     public MeteringPoint getIikByMeterId(Long deviceId) {
-       return meteringPointRepository.findByMeterId(deviceId);
+        return meteringPointRepository.findByMeterId(deviceId);
     }
 }
 
