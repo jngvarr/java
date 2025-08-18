@@ -30,7 +30,7 @@ public class PtoService {
     private final PowerSupplyDistrictRepository powerSupplyDistrictRepository;
     private final StationRepository stationRepository;
     private final SubstationService substationService;
-    private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final long startTime = System.currentTimeMillis();
     public Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
     private static final int CELL_NUMBER_REGION_NAME = 2;
@@ -58,6 +58,10 @@ public class PtoService {
     public enum EntityType {
         SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION, METERING_POINT, METER, DC
     }
+
+    public List<String> MeterType = Arrays.asList(
+            "EM-1021", "EM-1023", "EM_2023", "EM-1021", "EM-1023", "EM_2023");
+
 
     public void addDataFromExcelFile(String dataFilePath) {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
@@ -87,7 +91,7 @@ public class PtoService {
     private void saveDcFromMap() {
         for (
                 Object dc : entityCache.get(EntityType.DC).values()) {
-            dcService.createDc((Dc)dc);
+            dcService.createDc((Dc) dc);
         }
     }
 
@@ -350,7 +354,7 @@ public class PtoService {
         String dcNum = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
 
         // Dc ищем либо в карте, либо в сервисе
-        Dc foundDc = Optional.ofNullable((Dc)entityCache.get(EntityType.DC).get(dcNum))
+        Dc foundDc = Optional.ofNullable((Dc) entityCache.get(EntityType.DC).get(dcNum))
                 .orElseGet(() -> dcService.getDcByNumber(dcNum));
 
         return Optional.ofNullable(meterNumber)

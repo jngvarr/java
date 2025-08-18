@@ -36,9 +36,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static jngvarr.ru.pto_ackye_rzhd.services.PtoService.DATE_FORMATTER_DDMMYYYY;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
@@ -441,20 +443,67 @@ public class TBot extends TelegramLongPollingBot {
 
     private void handleEquipmentMount(long userId, long chatId, String msgText, ProcessState state) {
         Map<Integer, String> mountedEquipmentData = mountedEquipmentDatum.get(state);
+
         if (msgText != null && !msgText.trim().isEmpty()) {
-            processInfo += msgText + "_";
-        }
-        if (ProcessState.IIK_MOUNT.equals(processStates.get(userId)) && sequenceNumber == 0) {
-            String path = savingPaths.get(msgText);
-            if (path != null) {
-                sequenceNumber += 2;
-                addPathToProcessInfo(path);
+
+            // Проверка типа прибора учета
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
+                    && sequenceNumber == 3
+                    && !ptoService.MeterType.contains(msgText)) {
+
+                editMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
+                sequenceNumber--;
+                return; // сразу выходим, чтобы не продолжать дальше
+            }
+
+            // Для всех остальных шагов (кроме даты на шаге 9) добавляем текст как есть
+            if (!(ProcessState.IIK_MOUNT.equals(processStates.get(userId)) && sequenceNumber == 9)) {
+                processInfo += msgText + "_";
+            }
+
+            // Обработка по шагам
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))) {
+                switch (sequenceNumber) {
+                    case 0 -> {
+                        String path = savingPaths.get(msgText);
+                        if (path != null) {
+                            sequenceNumber += 2;
+                            addPathToProcessInfo(path);
+                        }
+                    }
+                    case 9 -> {
+                        // Нормализация и проверка даты
+                        String normalizedDate = DateValidator.normalizeDate(msgText);
+                        if (normalizedDate == null) {
+                            editMessage(chatId, userId, "Формат даты указан неверно!!!");
+                            sequenceNumber--;
+                            return;
+                        } else {
+                            processInfo += normalizedDate + "_"; // сохраняем уже нормализованную дату
+                        }
+                    }
+                }
             }
         }
+
+        // Следующий шаг или завершение процесса
         if (sequenceNumber < mountedEquipmentData.size()) {
             sendMessage(chatId, userId, mountedEquipmentData.get(sequenceNumber));
             sequenceNumber++;
-        } else concludeDeviceOperation(userId, chatId);
+        } else {
+            concludeDeviceOperation(userId, chatId);
+        }
+    }
+
+
+
+    public static boolean isValidDate(String msgText) {
+        try {
+            LocalDate.parse(msgText, DATE_FORMATTER_DDMMYYYY);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 
     private void addPathToProcessInfo(String path) {
