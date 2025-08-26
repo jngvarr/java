@@ -40,7 +40,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static jngvarr.ru.pto_ackye_rzhd.services.PtoService.DATE_FORMATTER_DDMMYYYY;
+import static jngvarr.ru.pto_ackye_rzhd.services.PtoService.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
@@ -443,21 +443,24 @@ public class TBot extends TelegramLongPollingBot {
 
     private void handleEquipmentMount(long userId, long chatId, String msgText, ProcessState state) {
         Map<Integer, String> mountedEquipmentData = mountedEquipmentDatum.get(state);
-
+        boolean hasWrongInput = false;
         if (msgText != null && !msgText.trim().isEmpty()) {
 
             // Проверка типа прибора учета
             if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
-                    && sequenceNumber == 3
-                    && !ptoService.MeterType.contains(msgText)) {
+                    && sequenceNumber == 4
+                    && !ptoService.MeterType.contains(msgText.toUpperCase())) {
 
-                editMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
+                sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
                 sequenceNumber--;
-                return; // сразу выходим, чтобы не продолжать дальше
+                hasWrongInput = true;
+//                return; // сразу выходим, чтобы не продолжать дальше
             }
 
             // Для всех остальных шагов (кроме даты на шаге 9) добавляем текст как есть
-            if (!(ProcessState.IIK_MOUNT.equals(processStates.get(userId)) && sequenceNumber == 9)) {
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
+                    && sequenceNumber != 10
+                    && !hasWrongInput) {
                 processInfo += msgText + "_";
             }
 
@@ -471,13 +474,13 @@ public class TBot extends TelegramLongPollingBot {
                             addPathToProcessInfo(path);
                         }
                     }
-                    case 9 -> {
+                    case 10 -> {
                         // Нормализация и проверка даты
-                        String normalizedDate = DateValidator.normalizeDate(msgText);
+                        String normalizedDate = normalizeDate(msgText);
                         if (normalizedDate == null) {
-                            editMessage(chatId, userId, "Формат даты указан неверно!!!");
+                            sendMessage(chatId, userId, "Формат даты указан неверно!!!");
                             sequenceNumber--;
-                            return;
+//                            return;
                         } else {
                             processInfo += normalizedDate + "_"; // сохраняем уже нормализованную дату
                         }
@@ -496,13 +499,47 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
+    /**
+     * Проверяет и нормализует дату в формат dd.MM.yyyy.
+     *
+     * @param msgText строка с датой
+     * @return нормализованная дата или null, если неверная
+     */
 
-    public static boolean isValidDate(String msgText) {
+    public static String normalizeDate(String msgText) {
+        if (msgText == null || msgText.trim().isEmpty()) {
+            return null;
+        }
+
+        msgText = msgText.trim();
+
+        // 1. Проверка на допустимый шаблон (дд.мм.гг или д.м.гггг)
+        if (!msgText.matches("^\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}$")) {
+            return null;
+        }
+
+        // 2. Разбираем строку на части
+        String[] parts = msgText.split("\\.");
+        if (parts.length != 3) return null;
+
+        String day = parts[0];
+        String month = parts[1];
+        String year = parts[2];
+
+        // Если год указан в виде 2 цифр → добавляем "20"
+        if (year.length() == 2) {
+            year = "20" + year;
+        }
+
+        String normalizedInput = day + "." + month + "." + year;
+
+        // 3. Парсим с гибким форматом
         try {
-            LocalDate.parse(msgText, DATE_FORMATTER_DDMMYYYY);
-            return true;
+            LocalDate date = LocalDate.parse(normalizedInput,FLEXIBLE_FORMATTER);
+            // 4. Возвращаем нормализованную строку
+            return date.format(STRICT_FORMATTER);
         } catch (DateTimeParseException e) {
-            return false;
+            return null;
         }
     }
 
@@ -1197,68 +1234,8 @@ public class TBot extends TelegramLongPollingBot {
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
             }
             case "iikMount" -> {
-                MeteringPoint nmp = new MeteringPoint();
-                String stationName = otoRow.getCell(6).getStringCellValue();
-                String substationName = otoRow.getCell(7).getStringCellValue();
-                String mountingMeterNumber = dataParts[3];
-                String meterType = dataParts[4].toUpperCase();
-                String meteringPointName = dataParts[5];
-                String meteringPointAddress = dataParts[6];
-                String meterPlacement = dataParts[7];
-                String mountOrg = dataParts[9];
-                LocalDate meteringPointMountDate = LocalDate.parse(dataParts[10], FileManagement.DD_MM_YYYY);
-                Substation s = substationService.findByName(substationName, stationName).orElseGet(null);
-                if (s == null) {
-                    s = ptoService.createSubstationIfNotExists(otoRow);
-                }
-                nmp.setId(meteringPointService.getNextId());
-                nmp.setInstallationDate(meteringPointMountDate);
-                nmp.setSubstation(s);
-                nmp.setName(meteringPointName);
-                nmp.setMeteringPointAddress(meteringPointAddress);
-                nmp.setMeterPlacement(meterPlacement);
-                nmp.setMountOrganization(mountOrg);
-                Meter newMeteringPointMeter = Optional.ofNullable(
-                                meterService.getMeterByNumber(mountingMeterNumber)
-                        )
-                        .orElseGet(() -> {
-                            Meter created = ptoService.createMeter(mountingMeterNumber, meterType, deviceNumber);
-                            return meterService.create(created);
-                        });
-
-                if (!isMeterInstalled(mountingMeterNumber)) {
-                    nmp.setMeter(newMeteringPointMeter);
-                } else {
-                    log.warn("Данный прибор учета уже установлен на другой точке учёта");
-                }
-
-                meteringPointService.create(nmp);
-
-                Object mountingDeviceNumber = parseMeterNumber(dataParts[3]); //Номер счетчика
-                if (mountingDeviceNumber instanceof Long) {
-                    otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
-                } else {
-                    otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
-                }
-                otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
-                otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
-                otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
-                otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
-                Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
-                if (mountDeviceNumber instanceof Long) {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
-                } else {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
-                }
-
-//                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
-                otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
-                Cell mountDate = otoRow.getCell(15);
-                mountDate.setCellValue(dataParts[10]); // Дата монтажа ТУ
-                excelFileService.setDateCellStyle(mountDate);
-//                otoRow.getCell(15).setCellValue(dataParts[10]); // Дата монтажа ТУ
-                otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
-                excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
+                createNewMeteringPointInDb(dataParts, otoRow);
+                createNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
                 yield "";
             }
             default -> null;
@@ -1275,6 +1252,80 @@ public class TBot extends TelegramLongPollingBot {
         return taskOrder;
 
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+    }
+
+    private void createNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
+        String mountingMeterNumber = dataParts[3];
+        String meterType = dataParts[4].toUpperCase();
+        String meteringPointName = dataParts[5];
+        String meteringPointAddress = dataParts[6];
+        String meterPlacement = dataParts[7];
+        String mountOrg = dataParts[9];
+        String date = dataParts[10];
+        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber); //Номер счетчика
+        if (mountingDeviceNumber instanceof Long) {
+            otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
+        } else {
+            otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
+        }
+        otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
+        otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
+        otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
+        otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
+        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
+        if (mountDeviceNumber instanceof Long) {
+            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
+        } else {
+            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
+        }
+
+//                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
+        otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
+        Cell mountDateCell = otoRow.getCell(15);
+        mountDateCell.setCellValue(date); // Дата монтажа ТУ
+        excelFileService.setDateCellStyle(mountDateCell);
+        otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
+        excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
+    }
+
+    private void createNewMeteringPointInDb(String[] dataParts, Row otoRow) {
+        MeteringPoint nmp = new MeteringPoint();
+        String stationName = dataParts[1];
+        String substationName = dataParts[2];
+        String mountingMeterNumber = dataParts[3];
+        String meterType = dataParts[4].toUpperCase();
+        String meteringPointName = dataParts[5];
+        String meteringPointAddress = dataParts[6];
+        String meterPlacement = dataParts[7];
+        String mountOrg = dataParts[9];
+        String date = dataParts[10];
+        LocalDate meteringPointMountDate = LocalDate.parse(date, FileManagement.DD_MM_YYYY);
+        Substation s = substationService.findByName(substationName, stationName).orElseGet(null);
+        if (s == null) {
+            s = ptoService.createSubstationIfNotExists(otoRow);
+        }
+        nmp.setId(meteringPointService.getNextId());
+        nmp.setInstallationDate(meteringPointMountDate);
+        nmp.setSubstation(s);
+        nmp.setName(meteringPointName);
+        nmp.setMeteringPointAddress(meteringPointAddress);
+        nmp.setMeterPlacement(meterPlacement);
+        nmp.setMountOrganization(mountOrg);
+        Meter newMeteringPointMeter = Optional.ofNullable(
+                        meterService.getMeterByNumber(mountingMeterNumber)
+                )
+                .orElseGet(() -> {
+                    Meter created = ptoService.createMeter(mountingMeterNumber, meterType, dataParts[0]);
+                    return meterService.create(created);
+                });
+
+        if (!isMeterInstalled(mountingMeterNumber)) {
+            nmp.setMeter(newMeteringPointMeter);
+        } else {
+            log.warn("Данный прибор учета уже установлен на другой точке учёта");
+        }
+
+        meteringPointService.create(nmp);
     }
 
     private boolean isMeterInstalled(String meterNum) {

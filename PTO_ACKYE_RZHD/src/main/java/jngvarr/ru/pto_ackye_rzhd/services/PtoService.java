@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.*;
 
 @Slf4j
@@ -31,6 +32,13 @@ public class PtoService {
     private final StationRepository stationRepository;
     private final SubstationService substationService;
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final DateTimeFormatter STRICT_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                    .withResolverStyle(ResolverStyle.STRICT);
+
+    public static final DateTimeFormatter FLEXIBLE_FORMATTER =
+            DateTimeFormatter.ofPattern("d.M.yyyy")
+                    .withResolverStyle(ResolverStyle.SMART);
     private final long startTime = System.currentTimeMillis();
     public Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
     private static final int CELL_NUMBER_REGION_NAME = 2;
@@ -60,7 +68,7 @@ public class PtoService {
     }
 
     public List<String> MeterType = Arrays.asList(
-            "EM-1021", "EM-1023", "EM_2023", "EM-1021", "EM-1023", "EM_2023");
+            "EM-1021", "EM-1023", "EM-2023", "KNUM-1021", "KNUM-1023", "KNUM-2023");
 
 
     public void addDataFromExcelFile(String dataFilePath) {
@@ -144,95 +152,6 @@ public class PtoService {
         return newDc;
     }
 
-
-    //    @Transactional
-//    public Substation createSubstationIfNotExists(Row row) {
-//
-//        String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
-//        String subdivisionName = getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME));
-//        String powerSupplyEnterpriseName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME));
-//        String districtName = getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME));
-//        String stationName = getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME));
-//        String substationName = getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME));
-//
-//        Region region = (Region) findOrCreateEntity(
-//                EntityType.REGION, regionName,
-//                "SELECT r FROM Region r WHERE r.name = :name",
-//                Map.of("name", regionName),
-//                () -> {
-//                    Region r = new Region();
-//                    r.setName(regionName);
-//                    em.persist(r);
-//                    log.info("Создан регион: {}", regionName);
-//                    return r;
-//                });
-//
-//        StructuralSubdivision subdivision = (StructuralSubdivision) findOrCreateEntity(
-//                EntityType.STRUCTURAL_SUBDIVISION, subdivisionName + "_" + region.getName(),
-//                "SELECT s FROM StructuralSubdivision s WHERE s.name = :name AND s.region = :region",
-//                Map.of("name", subdivisionName, "region", region),
-//                () -> {
-//                    StructuralSubdivision s = new StructuralSubdivision();
-//                    s.setName(subdivisionName);
-//                    s.setRegion(region);
-//                    em.persist(s);
-//                    log.info("Создан линейный отдел{} (регион: {})", subdivisionName, regionName);
-//                    return s;
-//                });
-//
-//        PowerSupplyEnterprise enterprise = (PowerSupplyEnterprise) findOrCreateEntity(
-//                EntityType.POWER_SUPPLY_ENTERPRISE, powerSupplyEnterpriseName + "_" + subdivision.getName(),
-//                "SELECT e FROM PowerSupplyEnterprise e WHERE e.name = :name AND e.structuralSubdivision = :subdivision",
-//                Map.of("name", powerSupplyEnterpriseName, "subdivision", subdivision),
-//                () -> {
-//                    PowerSupplyEnterprise e = new PowerSupplyEnterprise();
-//                    e.setName(powerSupplyEnterpriseName);
-//                    e.setStructuralSubdivision(subdivision);
-//                    em.persist(e);
-//                    log.info("Создано дистанция электроснабжения: {} (подразделение: {})", powerSupplyEnterpriseName, subdivisionName);
-//                    return e;
-//                });
-//
-//        PowerSupplyDistrict district = (PowerSupplyDistrict) findOrCreateEntity(
-//                EntityType.POWER_SUPPLY_DISTRICT, districtName + "_" + enterprise.getName(),
-//                "SELECT d FROM PowerSupplyDistrict d WHERE d.name = :name AND d.powerSupplyEnterprise = :enterprise",
-//                Map.of("name", districtName, "enterprise", enterprise),
-//                () -> {
-//                    PowerSupplyDistrict d = new PowerSupplyDistrict();
-//                    d.setName(districtName);
-//                    d.setPowerSupplyEnterprise(enterprise);
-//                    em.persist(d);
-//                    log.info("Создан район электроснабжения: {} (предприятие: {})", districtName, powerSupplyEnterpriseName);
-//                    return d;
-//                });
-//
-//        Station station = (Station) findOrCreateEntity(
-//                EntityType.STATION, stationName + "_" + district.getName(),
-//                "SELECT s FROM Station s WHERE s.name = :name AND s.powerSupplyDistrict = :district",
-//                Map.of("name", stationName, "district", district),
-//                () -> {
-//                    Station s = new Station();
-//                    s.setName(stationName);
-//                    s.setPowerSupplyDistrict(district);
-//                    em.persist(s);
-//                    log.info("Создана станция: {} (район: {})", stationName, districtName);
-//                    return s;
-//                });
-//
-//        return (Substation) findOrCreateEntity(
-//                EntityType.SUBSTATION, substationName + "_" + station.getName(),
-//                "SELECT s FROM Substation s WHERE s.name = :name AND s.station = :station",
-//                Map.of("name", substationName, "station", station),
-//                () -> {
-//                    Substation s = new Substation();
-//                    s.setName(substationName);
-//                    s.setStation(station);
-//                    em.persist(s);
-//                    log.info("Создана подстанция: {} (станция: {})", substationName, stationName);
-//                    return s;
-//                });
-//    }
-//    @Transactional
     public Substation createSubstationIfNotExists(Row row) {
 
         String regionName = getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME));
@@ -295,6 +214,7 @@ public class PtoService {
                     return substationService.create(s);
                 });
     }
+
 
 
     protected void fillDbWithIikData(Sheet sheet) {
