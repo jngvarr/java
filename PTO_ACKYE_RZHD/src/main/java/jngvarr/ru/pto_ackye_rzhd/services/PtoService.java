@@ -216,7 +216,6 @@ public class PtoService {
     }
 
 
-
     protected void fillDbWithIikData(Sheet sheet) {
         Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
         for (MeteringPoint mp : meteringPointService.getAllIik()) {
@@ -232,7 +231,7 @@ public class PtoService {
             if (row.getRowNum() == 0) {
                 continue;
             }
-            Meter newMeter = createMeter(row);
+            Meter newMeter = constructMeter(row);
             MeteringPoint newIik = createIIk(row);
 //            if (newMeter == null || newIik == null) {
 //                log.warn("Не удалось создать Meter или MeteringPoint из строки {}", row.getRowNum() + 1);
@@ -268,7 +267,7 @@ public class PtoService {
         }
     }
 
-    public Meter createMeter(Row row) {
+    public Meter constructMeter(Row row) {
         String meterNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
         String meterModel = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
         String dcNum = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
@@ -290,7 +289,7 @@ public class PtoService {
                 .orElse(null); // если номер или модель не прошли проверки — null
     }
 
-    public Meter createMeter(String meterNum, String meterModel, String dcNum) {
+    public Meter constructMeter(String meterNum, String meterModel, String dcNum) {
         Dc foundDc = dcService.getDcByNumber(dcNum);
         Meter meter = new Meter();
         meter.setMeterNumber(meterNum);
@@ -300,6 +299,16 @@ public class PtoService {
         return meter;
     }
 
+    public Meter getOrCreateMeter(String mountingMeterNumber, String meterType, String dcNum) {
+
+       return Optional.ofNullable(
+                        meterService.getMeterByNumber(mountingMeterNumber)
+                )
+                .orElseGet(() -> {
+                    Meter created = constructMeter(mountingMeterNumber, meterType, dcNum);
+                    return meterService.create(created);
+                });
+    }
 
     private MeteringPoint createIIk(Row row) {
         String mapKey = getStringMapKey(row);

@@ -535,7 +535,7 @@ public class TBot extends TelegramLongPollingBot {
 
         // 3. Парсим с гибким форматом
         try {
-            LocalDate date = LocalDate.parse(normalizedInput,FLEXIBLE_FORMATTER);
+            LocalDate date = LocalDate.parse(normalizedInput, FLEXIBLE_FORMATTER);
             // 4. Возвращаем нормализованную строку
             return date.format(STRICT_FORMATTER);
         } catch (DateTimeParseException e) {
@@ -1117,19 +1117,19 @@ public class TBot extends TelegramLongPollingBot {
 
             if (!logData.isEmpty()) {
                 if (!isLogFilled) {
-                    Row newRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
+                    Row newLogSheetRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
                     if (isDcWorks) {
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newRow); //удаление данных из ненужных ячеек
+                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newLogSheetRow); //удаление данных из ненужных ячеек
                     }
                     if (isMounting) {
                         int meterSheetLastRowNumber = meterSheet.getLastRowNum();
                         Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
                         excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
                         excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
-                        taskOrder = addOtoData(deviceNumber, logData, newRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
+                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     } else {
-                        excelFileService.copyRow(otoRow, newRow, orderColumnNumber);
-                        taskOrder = addOtoData(deviceNumber, logData, newRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
+                        excelFileService.copyRow(otoRow, newLogSheetRow, orderColumnNumber);
+                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
                     }
                     if (addedRows == otoLog.size()) isLogFilled = true;
                 }
@@ -1211,10 +1211,12 @@ public class TBot extends TelegramLongPollingBot {
             case "meterChange" -> {
                 String mountingMeterNumber = dataParts[2];
                 Meter m = meterService.getMeterByNumber(deviceNumber);
+                Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
                 MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
-                MeteringPoint nmp = new MeteringPoint();
-                nmp.setMeter(meterService.getMeterByNumber(mountingMeterNumber));
-                meteringPointService.update(nmp, mp.getId());
+                mp.setMeter(nm);
+                meteringPointService.update(mp, mp.getId());
+
+
                 Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
                 if (mountingDeviceNumber instanceof Long) {
@@ -1240,6 +1242,13 @@ public class TBot extends TelegramLongPollingBot {
             }
             default -> null;
         };
+        copyAndFillLogRow(otoRow, newLogRow, orderColumnNumber, taskOrder, columns);
+
+        return taskOrder;
+    }
+
+    private void copyAndFillLogRow(Row otoRow, Row newLogRow, int orderColumnNumber, String taskOrder, List<String> columns) {
+        excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
         Cell date = newLogRow.getCell(16);
         excelFileService.setDateCellStyle(date);
         newLogRow.getCell(17).setCellValue(columns.get(0));
@@ -1249,12 +1258,11 @@ public class TBot extends TelegramLongPollingBot {
         newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по userId
         newLogRow.getCell(21).setCellValue(taskOrder);
         otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
-        return taskOrder;
-
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
 
     private void createNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
+        String deviceNumber = dataParts[0];
         String mountingMeterNumber = dataParts[3];
         String meterType = dataParts[4].toUpperCase();
         String meteringPointName = dataParts[5];
@@ -1272,20 +1280,18 @@ public class TBot extends TelegramLongPollingBot {
         otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
         otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
         otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
-        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
-        if (mountDeviceNumber instanceof Long) {
-            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
-        } else {
-            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
-        }
+//        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
+//        if (mountDeviceNumber instanceof Long) {
+//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
+//        } else {
+//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
+//        }
 
-//                otoRow.getCell(13).setCellValue(dataParts[3]); // Номер счетчика
         otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
         Cell mountDateCell = otoRow.getCell(15);
         mountDateCell.setCellValue(date); // Дата монтажа ТУ
         excelFileService.setDateCellStyle(mountDateCell);
         otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
-        excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
     }
 
     private void createNewMeteringPointInDb(String[] dataParts, Row otoRow) {
@@ -1300,7 +1306,7 @@ public class TBot extends TelegramLongPollingBot {
         String mountOrg = dataParts[9];
         String date = dataParts[10];
         LocalDate meteringPointMountDate = LocalDate.parse(date, FileManagement.DD_MM_YYYY);
-        Substation s = substationService.findByName(substationName, stationName).orElseGet(null);
+        Substation s = substationService.findByName(substationName, stationName).orElse(null);
         if (s == null) {
             s = ptoService.createSubstationIfNotExists(otoRow);
         }
@@ -1311,13 +1317,7 @@ public class TBot extends TelegramLongPollingBot {
         nmp.setMeteringPointAddress(meteringPointAddress);
         nmp.setMeterPlacement(meterPlacement);
         nmp.setMountOrganization(mountOrg);
-        Meter newMeteringPointMeter = Optional.ofNullable(
-                        meterService.getMeterByNumber(mountingMeterNumber)
-                )
-                .orElseGet(() -> {
-                    Meter created = ptoService.createMeter(mountingMeterNumber, meterType, dataParts[0]);
-                    return meterService.create(created);
-                });
+        Meter newMeteringPointMeter = ptoService.getOrCreateMeter(mountingMeterNumber, meterType, dataParts[0]);
 
         if (!isMeterInstalled(mountingMeterNumber)) {
             nmp.setMeter(newMeteringPointMeter);
