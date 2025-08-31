@@ -1,10 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
-import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
-import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
-import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
-import jngvarr.ru.pto_ackye_rzhd.entities.User;
+import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.services.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -1215,7 +1212,7 @@ public class TBot extends TelegramLongPollingBot {
                 MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
                 mp.setMeter(nm);
                 meteringPointService.update(mp, mp.getId());
-
+                ptoService.changeMeterOnDc(m, nm);
 
                 Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
@@ -1310,6 +1307,7 @@ public class TBot extends TelegramLongPollingBot {
         if (s == null) {
             s = ptoService.createSubstationIfNotExists(otoRow);
         }
+
         nmp.setId(meteringPointService.getNextId());
         nmp.setInstallationDate(meteringPointMountDate);
         nmp.setSubstation(s);

@@ -105,6 +105,22 @@ public class DcService {
         } else throw new IllegalArgumentException("Dc not found");
     }
 
+    public Dc updateDc(Dc newData, Long ivkeId) {
+        Optional<Dc> oldDc = dcRepository.findById(ivkeId);
+        if (oldDc.isPresent()) {
+            Dc newDc = oldDc.get();
+            if (newData.getBusSection() != 0) newDc.setBusSection(newData.getBusSection());
+            if (newData.getDcNumber() != null) newDc.setDcNumber(newData.getDcNumber());
+            if (newData.getDcModel() != null) newDc.setDcModel(newData.getDcModel());
+            if (newData.getInstallationDate() != null) newDc.setInstallationDate(newData.getInstallationDate());
+            if (newData.getManufactureDate() != null) newDc.setManufactureDate(newData.getManufactureDate());
+            if (newData.getSubstation() != null) {
+                newDc.setSubstation(updateSubstation(newData.getSubstation().getId()));
+            }
+            return dcRepository.save(newDc);
+        } else throw new IllegalArgumentException("Dc not found");
+    }
+
     public void delete(Long iikId) {
         dcRepository.deleteById(iikId);
     }

@@ -103,6 +103,7 @@ public class PtoService {
         }
     }
 
+
     protected void fillDbWithIvkeData(Sheet sheet) {
         getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
@@ -150,6 +151,16 @@ public class PtoService {
         dcService.createDc(newDc);
         entityCache.get(EntityType.DC).putIfAbsent(dcNumber, newDc);
         return newDc;
+    }
+
+    public void changeMeterOnDc(Meter oldMeter, Meter newMeter) {
+        Dc dc = dcService.getDcByNumber(oldMeter.getDc().getDcNumber());
+        List<Meter> meters = dc.getMeters();
+        meters.removeIf(m -> m.getMeterNumber().equals(oldMeter.getMeterNumber()));
+        meters.add(newMeter);
+        newMeter.setDc(dc);
+        dc.setMeters(meters);
+        dcService.updateDc(dc, dc.getId());
     }
 
     public Substation createSubstationIfNotExists(Row row) {
@@ -301,7 +312,7 @@ public class PtoService {
 
     public Meter getOrCreateMeter(String mountingMeterNumber, String meterType, String dcNum) {
 
-       return Optional.ofNullable(
+        return Optional.ofNullable(
                         meterService.getMeterByNumber(mountingMeterNumber)
                 )
                 .orElseGet(() -> {
