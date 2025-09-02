@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.*;
 
+import static org.apache.commons.lang3.ArrayUtils.toArray;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -61,6 +63,32 @@ public class PtoService {
     private static final int CELL_NUMBER_METERING_POINT_METER_NUMBER = 13;
     private static final int CELL_NUMBER_METERING_POINT_DC_NUMBER = 14;
     private static final int CELL_NUMBER_METERING_POINT_INSTALLATION_DATE = 15;
+
+    public Optional<String[]> getMeterData(String mountingMeterNumber) {
+        String filePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\Номенклатура KNUM(EM).xlsx";
+
+        try (Workbook meterDataWorkbook = new XSSFWorkbook(new FileInputStream(filePath))) {
+            Sheet dataSheet = meterDataWorkbook.getSheet("Свод");
+
+            for (Row row : dataSheet) {
+                String cellValue = getCellStringValue(row.getCell(1));
+                if (mountingMeterNumber.equals(cellValue)) {
+                    String[] result = {
+                            getCellStringValue(row.getCell(1)),
+                            getCellStringValue(row.getCell(2)),
+                            getCellStringValue(row.getCell(3))
+                    };
+                    return Optional.of(result);
+                }
+            }
+
+            log.warn("Meter number {} not found in file {}", mountingMeterNumber, filePath);
+
+        } catch (IOException ex) {
+            log.error("Error processing workbook {}", filePath, ex);
+        }
+        return Optional.empty();
+    }
 
 
     public enum EntityType {
@@ -161,6 +189,8 @@ public class PtoService {
         newMeter.setDc(dc);
         dc.setMeters(meters);
         dcService.updateDc(dc, dc.getId());
+        oldMeter.setDc(createVirtualDc(, new Random()));
+        meterService.create(oldMeter);
     }
 
     public Substation createSubstationIfNotExists(Row row) {

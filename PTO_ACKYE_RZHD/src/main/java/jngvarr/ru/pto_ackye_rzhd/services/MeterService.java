@@ -109,6 +109,23 @@ public class MeterService {
         } else throw new IllegalArgumentException("Meter not found");
     }
 
+    public Meter updateMeter(Meter newData, Long id) {
+        Optional<Meter> oldMeter = meterRepository.findById(id);
+        if (oldMeter.isPresent()) {
+            Meter newMeter = oldMeter.get();
+            if (newData.getMeterNumber() != null) newMeter.setMeterNumber(newData.getMeterNumber());
+            if (newData.getMeterModel() != null) newMeter.setMeterModel(newData.getMeterModel());
+            if (newData.getDc() != null && !newData.getDc().getDcNumber().equals(newMeter.getDc().getDcNumber())) {
+                try {
+                    newMeter.setDc(dcService.getDcByNumber(newData.getDc().getDcNumber()));
+                } catch (Exception e) {
+                    log.error("Something went wrong {}: ", e.getMessage());
+                }
+            }
+            return meterRepository.save(newMeter);
+        } else throw new IllegalArgumentException("Meter not found");
+    }
+
     public void delete(Long id) {
         if (!meterRepository.existsById(id)) {
             throw new NeededObjectNotFound("Meter not found with id: " + id);

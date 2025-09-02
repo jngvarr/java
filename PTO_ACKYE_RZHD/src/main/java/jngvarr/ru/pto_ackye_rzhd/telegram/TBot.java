@@ -1061,7 +1061,7 @@ public class TBot extends TelegramLongPollingBot {
 //                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
 //                    String[] entryParts = entry.getValue().split("_");
 //                    String station = entryParts[2];
-//                    String substation = entryParts[3];
+//                    String substation = entryParts [3];
 //                    Optional<String> keyOpt = savingPaths.entrySet().stream()
 //                            .filter(e -> e.getValue().contains(station) && e.getValue().contains(substation))
 //                            .map(Map.Entry::getKey)
@@ -1207,13 +1207,6 @@ public class TBot extends TelegramLongPollingBot {
 
             case "meterChange" -> {
                 String mountingMeterNumber = dataParts[2];
-                Meter m = meterService.getMeterByNumber(deviceNumber);
-                Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
-                MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
-                mp.setMeter(nm);
-                meteringPointService.update(mp, mp.getId());
-                ptoService.changeMeterOnDc(m, nm);
-
                 Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
                 // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
                 if (mountingDeviceNumber instanceof Long) {
@@ -1221,6 +1214,20 @@ public class TBot extends TelegramLongPollingBot {
                 } else {
                     otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
                 }
+
+                Meter m = meterService.getMeterByNumber(deviceNumber);
+                Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
+                if (nm == null) {
+                    String[] nmData = ptoService.getMeterData(mountingMeterNumber).orElseThrow(() ->
+                            new IllegalArgumentException("Не найдены данные по " + mountingMeterNumber));
+                    nm = ptoService.constructMeter(nmData[0], nmData[2], m.getDc().getDcNumber());
+                    meterService.create(nm);
+                }
+                MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
+                mp.setMeter(nm);
+                meteringPointService.update(mp, mp.getId());
+                ptoService.changeMeterOnDc(m, nm);
+
                 yield deviceNumber + " (" + dataParts[1]
                         + " кВт) на " + dataParts[2] + " (" + dataParts[3] + " кВт). Причина замены: " + dataParts[4] + ".";
             }
