@@ -37,7 +37,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static jngvarr.ru.pto_ackye_rzhd.services.PtoService.*;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.TBotService.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
@@ -49,11 +49,10 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private final TBotService tBotService;
     private final MeteringPointService meteringPointService;
     private final MeterService meterService;
     private final SubstationService substationService;
-    private final PtoService ptoService;
+    private final TBotService tBotService;
     private UserServiceImpl userService;
     static final String ERROR_TEXT = "Error occurred: ";
     private Map<Long, Integer> sendMessagesIds = new HashMap<>();
@@ -105,14 +104,13 @@ public class TBot extends TelegramLongPollingBot {
 //    private boolean isMeterInstalled;
 
 
-    public TBot(BotConfig config, TBotService tBotService, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, PtoService ptoService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
+    public TBot(BotConfig config, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, TBotService tBotService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
-        this.tBotService = tBotService;
         this.meteringPointService = meteringPointService;
         this.meterService = meterService;
         this.substationService = substationService;
-        this.ptoService = ptoService;
+        this.tBotService = tBotService;
         this.userService = userService;
         this.excelFileService = excelFileService;
         this.preparingPhotoService = preparingPhotoService;
@@ -446,7 +444,7 @@ public class TBot extends TelegramLongPollingBot {
             // Проверка типа прибора учета
             if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
                     && sequenceNumber == 4
-                    && !ptoService.MeterType.contains(msgText.toUpperCase())) {
+                    && !tBotService.MeterType.contains(msgText.toUpperCase())) {
 
                 sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
                 sequenceNumber--;
@@ -1041,55 +1039,7 @@ public class TBot extends TelegramLongPollingBot {
         return null;
     }
 
-    private void sheetsFilling(long userId) {
-        if (otoLog.isEmpty()) return;
-        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
-             Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
-             FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
-             FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
-        ) {
 
-            boolean isDcWorks = containsDcWorks();
-            boolean isDcChange = containsDcChange();
-
-            Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
-            Sheet operationLogSheet = operationLog.getSheet("ОЖ");
-
-            String taskOrder = dataPreparing(operationLogSheet, meterWorkSheet, isDcWorks);
-
-//            if (isMounting && !isDcLocation) {
-//                for (Map.Entry<String, String> entry : otoLog.entrySet()) {
-//                    String[] entryParts = entry.getValue().split("_");
-//                    String station = entryParts[2];
-//                    String substation = entryParts [3];
-//                    Optional<String> keyOpt = savingPaths.entrySet().stream()
-//                            .filter(e -> e.getValue().contains(station) && e.getValue().contains(substation))
-//                            .map(Map.Entry::getKey)
-//                            .findAny()
-//                            .or(() -> savingPaths.entrySet().stream()
-//                                    .filter(e -> e.getValue().contains(station))
-//                                    .map(Map.Entry::getKey)
-//                                    .findAny()
-//                            );
-//
-//                    keyOpt.ifPresent(key -> {
-//                        // Используй найденный key
-//                        System.out.println("Найден ключ: " + key);
-//                    });
-//                }
-//            }
-
-            if (isDcWorks) {
-                fillDcSection(planOTOWorkbook.getSheet("ИВКЭ"), taskOrder, isDcChange);
-            }
-            operationLog.write(fileOut);
-            planOTOWorkbook.write(fileOtoOut);
-            otoLog.clear();
-
-        } catch (IOException ex) {
-            log.error("Error processing workbook", ex);
-        }
-    }
 
     private String dataPreparing(Sheet operationLogSheet, Sheet meterSheet, boolean isDcWorks) {
         int orderColumnNumber = excelFileService.findColumnIndex(meterSheet, "Отчет бригады о выполнении ОТО");
@@ -1187,200 +1137,6 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-    private String addOtoData(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123, int orderColumnNumber) {
-        String workType = logData.substring(0, logData.indexOf("_"));
-        String[] dataParts = logData.split("_");
-        List<String> columns = getStrings(workType);
-
-        String taskOrder = straightFormattedCurrentDate + " - " + columns.get(2) + switch (workType) {
-
-            case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
-                if (dataParts.length > 1) {
-                    if (!dataContainsNot123) yield " " + dataParts[1];
-                    else {
-                        int firstSpace = dataParts[1].indexOf(" ");
-                        int secondSpace = dataParts[1].indexOf(" ", firstSpace + 1);
-                        yield dataParts[1].substring(0, secondSpace) + " № " + deviceNumber + dataParts[1].substring(secondSpace);
-                    }
-                } else yield "";
-            }
-
-            case "meterChange" -> {
-                String mountingMeterNumber = dataParts[2];
-                Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
-                // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
-                if (mountingDeviceNumber instanceof Long) {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
-                } else {
-                    otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
-                }
-
-                Meter m = meterService.getMeterByNumber(deviceNumber);
-                Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
-                if (nm == null) {
-                    String[] nmData = ptoService.getMeterData(mountingMeterNumber).orElseThrow(() ->
-                            new IllegalArgumentException("Не найдены данные по " + mountingMeterNumber));
-                    nm = ptoService.constructMeter(nmData[0], nmData[2], m.getDc().getDcNumber());
-                    meterService.create(nm);
-                }
-                MeteringPoint mp = meteringPointService.getIikByMeterId(m.getId());
-                mp.setMeter(nm);
-                meteringPointService.update(mp, mp.getId());
-                ptoService.changeMeterOnDc(m, nm);
-
-                yield deviceNumber + " (" + dataParts[1]
-                        + " кВт) на " + dataParts[2] + " (" + dataParts[3] + " кВт). Причина замены: " + dataParts[4] + ".";
-            }
-            case "ttChange" ->
-                    String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
-                            dataParts[1], dataParts[2], dataParts[3], dataParts[4],
-                            dataParts[5], dataParts[6], dataParts[7], dataParts[8]);
-            case "dcChange" -> {
-                otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
-                yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
-            }
-            case "iikMount" -> {
-                createNewMeteringPointInDb(dataParts, otoRow);
-                createNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
-                yield "";
-            }
-            default -> null;
-        };
-        copyAndFillLogRow(otoRow, newLogRow, orderColumnNumber, taskOrder, columns);
-
-        return taskOrder;
-    }
-
-    private void copyAndFillLogRow(Row otoRow, Row newLogRow, int orderColumnNumber, String taskOrder, List<String> columns) {
-        excelFileService.copyRow(otoRow, newLogRow, orderColumnNumber);
-        Cell date = newLogRow.getCell(16);
-        excelFileService.setDateCellStyle(date);
-        newLogRow.getCell(17).setCellValue(columns.get(0));
-        newLogRow.getCell(18).setCellValue(columns.get(1));
-        newLogRow.createCell(19);
-//        newLogRow.getCell(19).setCellValue("");
-        newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по userId
-        newLogRow.getCell(21).setCellValue(taskOrder);
-        otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
-//      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
-    }
-
-    private void createNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
-        String deviceNumber = dataParts[0];
-        String mountingMeterNumber = dataParts[3];
-        String meterType = dataParts[4].toUpperCase();
-        String meteringPointName = dataParts[5];
-        String meteringPointAddress = dataParts[6];
-        String meterPlacement = dataParts[7];
-        String mountOrg = dataParts[9];
-        String date = dataParts[10];
-        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber); //Номер счетчика
-        if (mountingDeviceNumber instanceof Long) {
-            otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
-        } else {
-            otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
-        }
-        otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
-        otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
-        otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
-        otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
-//        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
-//        if (mountDeviceNumber instanceof Long) {
-//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
-//        } else {
-//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
-//        }
-
-        otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
-        Cell mountDateCell = otoRow.getCell(15);
-        mountDateCell.setCellValue(date); // Дата монтажа ТУ
-        excelFileService.setDateCellStyle(mountDateCell);
-        otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
-    }
-
-    private void createNewMeteringPointInDb(String[] dataParts, Row otoRow) {
-        MeteringPoint nmp = new MeteringPoint();
-        String stationName = dataParts[1];
-        String substationName = dataParts[2];
-        String mountingMeterNumber = dataParts[3];
-        String meterType = dataParts[4].toUpperCase();
-        String meteringPointName = dataParts[5];
-        String meteringPointAddress = dataParts[6];
-        String meterPlacement = dataParts[7];
-        String mountOrg = dataParts[9];
-        String date = dataParts[10];
-        LocalDate meteringPointMountDate = LocalDate.parse(date, FileManagement.DD_MM_YYYY);
-        Substation s = substationService.findByName(substationName, stationName).orElse(null);
-        if (s == null) {
-            s = ptoService.createSubstationIfNotExists(otoRow);
-        }
-
-        nmp.setId(meteringPointService.getNextId());
-        nmp.setInstallationDate(meteringPointMountDate);
-        nmp.setSubstation(s);
-        nmp.setName(meteringPointName);
-        nmp.setMeteringPointAddress(meteringPointAddress);
-        nmp.setMeterPlacement(meterPlacement);
-        nmp.setMountOrganization(mountOrg);
-        Meter newMeteringPointMeter = ptoService.getOrCreateMeter(mountingMeterNumber, meterType, dataParts[0]);
-
-        if (!isMeterInstalled(mountingMeterNumber)) {
-            nmp.setMeter(newMeteringPointMeter);
-        } else {
-            log.warn("Данный прибор учета уже установлен на другой точке учёта");
-        }
-
-        meteringPointService.create(nmp);
-    }
-
-    private boolean isMeterInstalled(String meterNum) {
-        return ptoService.entityCache
-                .get(PtoService.EntityType.METERING_POINT)
-                .values()
-                .stream()
-                .map(o -> (MeteringPoint) o)
-                .map(MeteringPoint::getMeter)
-                .filter(Objects::nonNull)
-                .anyMatch(m -> meterNum.equals(m.getMeterNumber()));
-    }
-
-    private static List<String> getStrings(String data) {
-        return fillingData.get(data);
-    }
-
-    private String actionConfirmation(Long userId) {
-        StringBuilder resultStr = new StringBuilder("Выполнены следующие действия:\n");
-        int lineCounter = 0;
-
-        for (Map.Entry<String, String> entry : otoLog.entrySet()) {
-            String key = entry.getKey();
-            String[] str = entry.getValue().split("_");
-            str[4] = str[4].toUpperCase();
-            String actionType = str[0];
-            List<String> strings = getStrings(actionType);
-
-            resultStr.append(++lineCounter).append(". ").append(strings.get(2));
-            switch (actionType) {
-                case "meterChange" -> resultStr.append(String.format(
-                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s. Причина: %s.", key, str[1], str[2], str[3], str[4]));
-                case "ttChange" -> resultStr.append(String.format(
-                        "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина: %s.",
-                        str[1], str[2], str[3], str[4], str[5], str[6], str[7], str[8]));
-                case "dcChange" -> resultStr.append(String.format(
-                        "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
-                case "iikMount" -> resultStr.append(String.format(
-                        "\nНаименование ТУ: %s, \nПрибор учёта: %s №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
-                        str[5], str[4], str[3], str[1], str[2], str[6], str[10]));
-                default -> {
-                    String device = ProcessState.IIK_WORKS.equals(processStates.get(userId)) ? " ПУ" : " Концентратор";
-                    resultStr.append(String.format(device + " № %s - ", key));
-                    if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
-                }
-            }
-            resultStr.append("\n");
-        }
-        return resultStr.toString();
-    }
 
     private void formingOtoLog(String deviceInfo, Object typeIndicator) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
@@ -1411,15 +1167,6 @@ public class TBot extends TelegramLongPollingBot {
         return "unknown";
     }
 
-
-    // Метод для проверки и преобразования номера счетчика
-    private Object parseMeterNumber(String meterNumberStr) {
-        try {
-            return Long.parseLong(meterNumberStr);
-        } catch (NumberFormatException e) {
-            return meterNumberStr;
-        }
-    }
 
     @Override
     public void onUpdatesReceived(List<Update> updates) {

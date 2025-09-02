@@ -1,6 +1,5 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
-import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
 import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
@@ -59,8 +58,6 @@ public class MeterService {
         meterRepository.saveAll(meters);
     }
 
-
-
     public MeterDTO create(MeterDTO meterDTO) {
         if (meterDTO.getId() == null
                 && meterDTO.getMeterNumber() != null
@@ -109,7 +106,7 @@ public class MeterService {
         } else throw new IllegalArgumentException("Meter not found");
     }
 
-    public Meter updateMeter(Meter newData, Long id) {
+    public void updateMeter(Meter newData, Long id) {
         Optional<Meter> oldMeter = meterRepository.findById(id);
         if (oldMeter.isPresent()) {
             Meter newMeter = oldMeter.get();
@@ -122,7 +119,7 @@ public class MeterService {
                     log.error("Something went wrong {}: ", e.getMessage());
                 }
             }
-            return meterRepository.save(newMeter);
+            meterRepository.save(newMeter);
         } else throw new IllegalArgumentException("Meter not found");
     }
 

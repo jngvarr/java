@@ -119,7 +119,7 @@ public class PtoTelegramBotContent {
             "ВСЕГО счетчиков на УСПД",
             "Статус счетчика в Горизонте на",
             "Задание на ОТО от диспетчера"};
-    static final Map<String, List<String>> fillingData = Map.of(
+    static final Map<String, List<String>> stringsByActionType = Map.of(
             "WK", List.of("Нет связи со счетчиком",
                     "Ошибка ключа - WrongKey (сделана прошивка счетчика)",
                     " Сброшена ошибка ключа WrongKey (счетчик не на связи). "),
@@ -138,7 +138,7 @@ public class PtoTelegramBotContent {
             "dcMount", List.of("Монтаж нового концентратора. \n", "Монтаж нового концентратора.", " Монтаж нового концентратора.")
     );
 
-    static final Map<String, String> eelToNtel = Map.of(
+    public static final Map<String, String> eelToNtel = Map.of(
             "ЭЭЛ-1", "НТЭЛ-1",
             "НЭЭЛ-1", "НТЭЛ-1.1",
             "ЭЭЛ-2", "НТЭЛ-2",

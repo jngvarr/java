@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.services;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -7,15 +7,17 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.PLAN_OTO_PATH;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.straightFormattedCurrentDate;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.OPERATION_LOG_PATH;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.eelToNtel;
 
 @Data
@@ -24,7 +26,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.eelToNtel
 //@RequiredArgsConstructor
 public class ExcelFileService {
 
-    void copyRow(Row sourceRow, Row targetRow, int columnCount) {
+    public void copyRow(Row sourceRow, Row targetRow, int columnCount) {
         for (int i = 0; i <= columnCount; i++) {
             Cell sourceCell = sourceRow.getCell(i);
             Cell targetCell = targetRow.createCell(i);
@@ -99,7 +101,7 @@ public class ExcelFileService {
      *
      * @param date Cell, ячейка содержащая значеие даты.
      */
-    void setDateCellStyle(Cell date) {
+    public void setDateCellStyle(Cell date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
         CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
         try {
@@ -110,12 +112,12 @@ public class ExcelFileService {
         date.setCellStyle(dateStyle);
     }
 
-    void clearCellData(int[] ints, Row row) {
+    public void clearCellData(int[] ints, Row row) {
         for (int anInt : ints) {
             row.createCell(anInt).setCellValue("");
         }
     }
-    String getCellStringValue(Cell cell) {
+    public String getCellStringValue(Cell cell) {
         if (cell != null) {
             switch (cell.getCellType()) {
                 case STRING:
@@ -136,7 +138,7 @@ public class ExcelFileService {
         return null;
     }
 
-    int findColumnIndex(Sheet sheet, String columnName) {
+    public int findColumnIndex(Sheet sheet, String columnName) {
         Row headerRow = sheet.getRow(0); // Заголовок на первой строке
         if (headerRow == null) return -1;
 
@@ -149,7 +151,7 @@ public class ExcelFileService {
         return -1;
     }
 
-    Map<String, String> getPhotoSavingPathFromExcel() {
+    public Map<String, String> getPhotoSavingPathFromExcel() {
 
         ExcelFileService excelFileService = new ExcelFileService();
 
@@ -184,5 +186,56 @@ public class ExcelFileService {
             log.error("Error processing workbook", ex);
         }
         return paths;
+    }
+
+    // Метод для проверки и преобразования номера счетчика
+    public Object parseMeterNumber(String meterNumberStr) {
+        try {
+            return Long.parseLong(meterNumberStr);
+        } catch (NumberFormatException e) {
+            return meterNumberStr;
+        }
+    }
+
+    private void sheetsFilling(long userId) {
+        if (otoLog.isEmpty()) return;
+        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
+             Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
+             FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
+             FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
+        ) {
+
+            boolean isDcWorks = containsDcWorks();
+            boolean isDcChange = containsDcChange();
+
+            Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
+            Sheet operationLogSheet = operationLog.getSheet("ОЖ");
+
+            String taskOrder = dataPreparing(operationLogSheet, meterWorkSheet, isDcWorks);
+
+            if (isDcWorks) {
+                fillDcSection(planOTOWorkbook.getSheet("ИВКЭ"), taskOrder, isDcChange);
+            }
+            operationLog.write(fileOut);
+            planOTOWorkbook.write(fileOtoOut);
+            otoLog.clear();
+
+        } catch (IOException ex) {
+            log.error("Error processing workbook", ex);
+        }
+    }
+
+    public void copyAndFillLogRow(Row otoRow, Row newLogRow, int orderColumnNumber, String taskOrder, List<String> columns) {
+        copyRow(otoRow, newLogRow, orderColumnNumber);
+        Cell date = newLogRow.getCell(16);
+        setDateCellStyle(date);
+        newLogRow.getCell(17).setCellValue(columns.get(0));
+        newLogRow.getCell(18).setCellValue(columns.get(1));
+        newLogRow.createCell(19);
+//        newLogRow.getCell(19).setCellValue("");
+        newLogRow.getCell(20).setCellValue("Исполнитель"); //TODO: взять исполнителя из БД по userId
+        newLogRow.getCell(21).setCellValue(taskOrder);
+        otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
+//      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
     }
 }

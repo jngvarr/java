@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DataInitializer implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final PtoService ptoService;
+    private final jngvarr.ru.pto_ackye_rzhd.telegram.TBotService TBotService;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -22,7 +22,7 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
             String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
 
             try {
-                ptoService.addDataFromExcelFile(filePath);
+                TBotService.addDataFromExcelFile(filePath);
                 log.info("Загрузка данных из Excel завершена.");
             } catch (Exception e) {
                 log.error("Ошибка при загрузке данных из Excel-файла", e);
