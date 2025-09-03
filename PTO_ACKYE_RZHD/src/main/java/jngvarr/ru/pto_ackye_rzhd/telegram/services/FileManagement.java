@@ -1,6 +1,10 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.telegram.services;
 
 import jngvarr.ru.pto_ackye_rzhd.services.ExcelFileService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PendingPhoto;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.util.StringUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +19,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.PHOTO_SUBDIRS_NAME;
 
@@ -24,6 +27,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.PHOTO_SUB
 @Component
 @RequiredArgsConstructor
 public class FileManagement {
+    private  final TBot tBot;
     private final StringUtils stringUtils;
     private final ExcelFileService excelFileService;
 
@@ -39,7 +43,7 @@ public class FileManagement {
     public static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
     public static final String OPERATION_LOG_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
 
-    void doSave(long userId, long chatId, PendingPhoto pending) {
+    public void doSave(long userId, long chatId, PendingPhoto pending) {
 //        OtoType operationType = otoTypes.get(userId);
         try {
             Path userDir = Paths.get(stringUtils.createSavingPath(pending, userId));
@@ -51,15 +55,15 @@ public class FileManagement {
 
             // Сохранение
             Files.move(pending.getTempFilePath(), destination, StandardCopyOption.REPLACE_EXISTING);
-            editMessage(chatId, userId, "Фото сохранено!\nФайл: " + newFileName);
+            tBot.editMessage(chatId, userId, "Фото сохранено!\nФайл: " + newFileName);
         } catch (IOException e) {
             log.error("❌ Ошибка сохранения фото для userId {}: {}", userId, e.getMessage(), e);
-            sendMessage(chatId, userId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
+            tBot.sendMessage(chatId, userId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
         }
     }
 
-    void savePhoto(long userId, long chatId, PendingPhoto pending) {
-        TBot.OtoType operationType = otoTypes.get(userId);
+    public void savePhoto(long userId, long chatId, PendingPhoto pending) {
+        OtoType operationType = otoTypes.get(userId);
         String deviceNumber = pending.getDeviceNumber();
         // Получаем состояние загрузки фото (если нет, создаем новое)
         PhotoState photoState = photoStates.computeIfAbsent(userId, key -> new PhotoState(deviceNumber));

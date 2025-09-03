@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.telegram.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

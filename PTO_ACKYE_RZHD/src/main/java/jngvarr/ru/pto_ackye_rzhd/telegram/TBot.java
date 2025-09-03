@@ -2,16 +2,16 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
 import jngvarr.ru.pto_ackye_rzhd.entities.User;
+import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.CallbackQueryHandler;
+import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.PhotoMessageHandler;
+import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.TextMessageHandler;
 import jngvarr.ru.pto_ackye_rzhd.services.*;
-import jngvarr.ru.pto_ackye_rzhd.util.DateUtils;
-import jngvarr.ru.pto_ackye_rzhd.util.StringUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -23,15 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
@@ -44,51 +36,18 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private final MeteringPointService meteringPointService;
-    private final MeterService meterService;
-    private final SubstationService substationService;
-    private final TBotService tBotService;
     private UserServiceImpl userService;
-    private final FileManagement fileManagement;
-    static final String ERROR_TEXT = "Error occurred: ";
-    private Map<Long, Integer> sendMessagesIds = new HashMap<>();
+    private final CallbackQueryHandler callbackQueryHandler;
+    private final TextMessageHandler textMessageHandler;
+    private final PhotoMessageHandler photoMessageHandler;
+    private Map<Long, Integer> sentMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
-    private final ExcelFileService excelFileService;
-    private final DateUtils dateUtils;
-    private final StringUtils stringUtils;
-    private final PreparingPhotoService preparingPhotoService;
 
-    // Карта для хранения информации о фото, ожидающих подтверждения
-    private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
     private static final long ADMIN_CHAT_ID = 199867696L;
 
-    public enum ProcessState {
-        WAITING_FOR_METER_PHOTO,
-        WAITING_FOR_DC_PHOTO,
-        WAITING_FOR_TT_PHOTO,
-        MANUAL_INSERT_METER_NUMBER,
-        MANUAL_INSERT_METER_INDICATION,
-        IIK_WORKS,
-        DC_WORKS,
-        IIK_MOUNT,
-        DC_MOUNT,
-        REGISTRATION
-    }
-
-    private void handleStartCommand(long chatId, long userId) {
-        sendTextMessage(MAIN_MENU, startMenuButtons, chatId, userId, 1);
-    }
-
-    // Мапа для хранения состояния диалога по userId
-    private Map<Long, ProcessState> processStates = new HashMap<>();
-    private Map<Long, OtoType> otoTypes = new HashMap<>();
-    private Map<String, String> otoLog = new HashMap<>();
-    private Map<Long, PhotoState> photoStates = new HashMap<>();
 
 
-    public enum OtoType {
-        WK_DROP, METER_CHANGE, SET_NOT, SUPPLY_RESTORING, TT_CHANGE, DC_CHANGE, DC_RESTART
-    }
+
 
     private boolean isPTO;
     private int sequenceNumber = 0;
@@ -96,25 +55,20 @@ public class TBot extends TelegramLongPollingBot {
     private boolean isDcLocation;
 
 
-    public TBot(BotConfig config, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, TBotService tBotService, UserServiceImpl userService, FileManagement fileManagement, ExcelFileService excelFileService, DateUtils dateUtils, StringUtils stringUtils, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
+    public TBot(BotConfig config, UserServiceImpl userService, CallbackQueryHandler callbackQueryHandler,
+                TextMessageHandler textMessageHandler, PhotoMessageHandler photoMessageHandler) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
-        this.meteringPointService = meteringPointService;
-        this.meterService = meterService;
-        this.substationService = substationService;
-        this.tBotService = tBotService;
         this.userService = userService;
-        this.fileManagement = fileManagement;
-        this.excelFileService = excelFileService;
-        this.dateUtils = dateUtils;
-        this.stringUtils = stringUtils;
-        this.preparingPhotoService = preparingPhotoService;
+        this.callbackQueryHandler = callbackQueryHandler;
+        this.textMessageHandler = textMessageHandler;
+        this.photoMessageHandler = photoMessageHandler;
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Начать работу"));
-        listOfCommands.add(new BotCommand("/help", "немного информации по использованию бота"));
-        listOfCommands.add(new BotCommand("/stop", "сбросить всё, начать заново"));
-        listOfCommands.add(new BotCommand("/register", "регистрация нового пользователя"));
+        listOfCommands.add(new BotCommand("/help", "Немного информации по использованию бота"));
+        listOfCommands.add(new BotCommand("/stop", "Сбросить всё, начать заново"));
+        listOfCommands.add(new BotCommand("/register", "Регистрация нового пользователя"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -157,12 +111,12 @@ public class TBot extends TelegramLongPollingBot {
 
         if (update.hasMessage()) {
             if (update.getMessage().hasText()) {
-                handleTextMessage(update);
+                textMessageHandler.handleTextMessage(update);
             } else if (update.getMessage().hasPhoto()) {
-                handlePhotoMessage(update);
+                photoMessageHandler.handlePhotoMessage(update);
             }
         } else if (update.hasCallbackQuery()) {
-            handleCallbackQuery(update);
+            callbackQueryHandler.handleCallbackQuery(update);
         }
     }
 
@@ -179,620 +133,18 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void handlePhotoMessage(Update update) {
-        long userId = update.getMessage().getFrom().getId();
-        long chatId = update.getMessage().getChatId();
 
-        // Проверяем, есть ли подпись к фото
-        String manualInput = update.getMessage().getCaption();
-
-        // Если фото не запрашивалось
-        if (!processStates.containsKey(userId)) {
-            sendMessage(chatId, userId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
-            return;
-        }
-        sendMessage(chatId, userId, "Подождите, идёт обработка фото....");
-        ProcessState currentState = processStates.get(userId);
-        // Получаем самое большое фото
-        var photos = update.getMessage().getPhoto();
-        var photo = photos.get(photos.size() - 1);
-        String fileId = photo.getFileId();
-
-        try {
-            // Скачивание файла с сервера Telegram
-            GetFile getFileMethod = new GetFile();
-            getFileMethod.setFileId(fileId);
-            org.telegram.telegrambots.meta.api.objects.File telegramFile = execute(getFileMethod);
-            String filePath = telegramFile.getFilePath();
-            String fileUrl = "https://api.telegram.org/file/bot" + config.getBotToken() + "/" + filePath;
-
-            // 2. Сохраняем фото в папку пользователя
-            Path userDir = Paths.get("photos", String.valueOf(userId));
-            if (!Files.exists(userDir)) {
-                Files.createDirectories(userDir);
-
-                // Сохраняем файл во временное хранилище
-            }
-            Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
-            try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            // 3. Читаем изображение
-            BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
-            if (bufferedImage == null) {
-                sendMessage(chatId, userId, "Не удалось обработать изображение.");
-                return;
-            }
-
-            String barcodeText = "";
-            if (currentState.equals(ProcessState.WAITING_FOR_METER_PHOTO)) {
-                // 4. Декодируем штрихкод
-                barcodeText = preparingPhotoService.decodeBarcode(bufferedImage);
-                if (barcodeText == null) {
-                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.resizeImage(bufferedImage,
-                            bufferedImage.getWidth() * 2, bufferedImage.getHeight() * 2));
-                }
-                if (barcodeText == null) {
-                    barcodeText = preparingPhotoService.decodeBarcode(preparingPhotoService.convertToGrayscale(bufferedImage));
-                }
-            } else if (currentState.equals(ProcessState.WAITING_FOR_TT_PHOTO)) {
-                barcodeText = processInfo.substring(0, processInfo.indexOf("_"));
-            }
-
-            // 5. Определяем тип фото (счётчик, тт или концентратор)
-            String type = switch (currentState) {
-                case WAITING_FOR_METER_PHOTO -> "counter";
-                case WAITING_FOR_DC_PHOTO -> "concentrator";
-                case WAITING_FOR_TT_PHOTO -> "tt";
-                default -> throw new IllegalStateException("Неизвестный тип оборудования: " + currentState);
-            };
-
-            // 6. Создаём объект для хранения фото
-            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
-            pendingPhotos.put(userId, pendingPhoto);
-            if (type.equals("counter")) {
-                if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
-
-                // 7. Если штрихкод найден и есть показания – сразу сохраняем
-                if (barcodeText != null && pendingPhoto.getAdditionalInfo() != null) {
-                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
-                    return;
-                }
-                if (barcodeText == null) {
-                    sendMessage(chatId, userId, "Штрихкод не найден. Введите номер ПУ вручную:");
-                    processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
-                    return;
-                }
-                if (manualInput == null) {
-                    sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
-                    processStates.put(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
-                }
-
-            } else if (type.equals("tt")) {
-                if (manualInput != null) {
-                    pendingPhoto.setAdditionalInfo(manualInput);
-                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
-                } else {
-                    PhotoState photoState = photoStates.get(userId);
-                    OtoType otoType = otoTypes.get(userId);
-                    sendMessage(chatId, userId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
-                    sendNextPhotoInstruction(userId, chatId, photoState.getNextPhotoType(otoType));
-                }
-            } else {
-                if (manualInput != null) {
-                    pendingPhoto.setDeviceNumber(manualInput.trim());
-                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
-                } else {
-                    pendingPhoto.setAdditionalInfo("Данные не требуются.");
-                    PhotoState photoState = photoStates.get(userId);
-                    OtoType otoType = otoTypes.get(userId);
-                    sendMessage(chatId, userId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
-                    processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
-//                    sendNextPhotoInstruction(userId, photoState.getNextPhotoType(otoType));
-                }
-            }
-        } catch (Exception e) {
-            log.error("Ошибка обработки фото: " + e.getMessage());
-            sendMessage(chatId, userId, "Произошла ошибка при обработке фото.");
-        }
-    }
-
-
-    private void handleTextMessage(Update update) {
-        String msgText = update.getMessage().getText();
-        long userId = update.getMessage().getFrom().getId();
-        long chatId = update.getMessage().getChatId();
-        ProcessState processState = processStates.get(userId);
-        OtoType otoType = otoTypes.get(userId);
-        switch (msgText) {
-            case "/start" -> {
-                handleStartCommand(chatId, userId);
-                clearData();
-                return;
-            }
-            case "/help" -> {
-                sendMessage(chatId, userId, HELP);
-                return;
-            }
-//            case "/register" -> {
-//                processStates.put(userId, ProcessState.REGISTRATION);
-//                registerUser(update);
-//                clearData();
-//                return;
-//            }
-            case "/stop" -> {
-                sendMessage(chatId, userId, "Работа прервана, для продолжения нажмите /start");
-                clearData();
-                return;
-            }
-//            case "/accept" -> {
-//
-//                sendMessage(chatId, "Работа прервана, для продолжения нажмите /start");
-//                clearData();
-//                return;
-//            }
-        }
-
-        if (processState != null) {
-            switch (processState) {
-                case MANUAL_INSERT_METER_NUMBER, MANUAL_INSERT_METER_INDICATION -> {
-                    handleManualInsert(userId, chatId, msgText);
-                    return;
-                }
-                case IIK_MOUNT, DC_MOUNT -> {
-                    handleEquipmentMount(userId, chatId, msgText, processState);
-                    return;
-                }
-            }
-        }
-        if (otoType != null) {
-            switch (otoType) {
-                case TT_CHANGE, METER_CHANGE, DC_CHANGE -> {
-                    handleEquipmentChange(userId, chatId, msgText, otoType);
-                    return;
-                }
-                case WK_DROP, SET_NOT, SUPPLY_RESTORING, DC_RESTART -> {
-                    handleOtherOtoTypes(userId, chatId, msgText);
-                    return;
-                }
-            }
-        }
-        sendMessage(chatId, userId, "Команда не распознана. Попробуйте еще раз.");
-
-    }
-
-    private void handleOtherOtoTypes(long userId, long chatId, String msgText) {
-        OtoType currentOtoType = otoTypes.get(userId);
-        String messageText = msgText.trim();
-
-        switch (currentOtoType) {
-            case WK_DROP -> {
-                otoLog.put(messageText, "WK_");
-                editTextAndButtons("Введите номер следующего прибора учета или закончите ввод.", CompleteButton, chatId, userId, 1);
-            }
-            case SET_NOT -> {
-                processInfo += msgText + "_";
-                if (sequenceNumber == 0) {
-                    if (ProcessState.DC_WORKS.equals(processStates.get(userId))) {
-                        sendMessage(chatId, userId, "Введите причину отключения: ");
-                    } else {
-                        chooseNotType(chatId, userId);
-                    }
-                    sequenceNumber++;
-                } else {
-                    formingOtoLog(processInfo, currentOtoType);
-                    sendTextMessage(actionConfirmation(userId), confirmMenu, chatId, userId, 2);
-                }
-            }
-            case SUPPLY_RESTORING, DC_RESTART -> {
-                if (currentOtoType.equals(OtoType.SUPPLY_RESTORING)) {
-                    processInfo += msgText + "_";
-                    if (sequenceNumber == 0) {
-                        sendMessage(chatId, userId, "Опишите причину неисправности: ");
-                        sequenceNumber++;
-                    } else {
-                        formingOtoLog(processInfo, currentOtoType);
-                        sendTextMessage(actionConfirmation(userId), confirmMenu, chatId, userId, 2);
-                    }
-                } else {
-                    otoLog.put(messageText, "dcRestart_");
-                    sendTextMessage(actionConfirmation(userId), confirmMenu, chatId, userId, 2);
-                }
-            }
-        }
-    }
-
-    private void chooseNotType(Long chatId, Long userId) {
-        sendTextMessage("Выберите причину отключения: ",
-                Map.of(
-                        "Потребитель отключен.", "NOT",
-                        "Сезонный потребитель.", "seasonNOT",
-                        "Низкий уровень PLC сигнала", "lowPLC",
-                        "Прибор учета демонтирован (НОТ3)", "NOT3",
-                        "Прибор учета сгорел (НОТ2)", "NOT2",
-                        "Местонахождения ПУ неизвестно (НОТ1 украден?)", "NOT1"),
-                chatId, userId, 1);
-    }
-
-    private void handleEquipmentChange(long userId, long chatId, String msgText, OtoType otoType) {
-        Map<Integer, String> replacedEquipmentData = replacedEquipmentDatum.get(otoType);
-        if (msgText != null && !msgText.trim().isEmpty()) {
-            processInfo += msgText + "_";
-        }
-        if (sequenceNumber < replacedEquipmentData.size()) {
-            if (processStates.get(userId).equals(ProcessState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
-                sendMessage(chatId, userId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
-            } else {
-                sendMessage(chatId, userId, replacedEquipmentData.get(sequenceNumber));
-            }
-            sequenceNumber++;
-        } else concludeDeviceOperation(userId, chatId);
-    }
-
-    private void handleEquipmentMount(long userId, long chatId, String msgText, ProcessState state) {
-        Map<Integer, String> mountedEquipmentData = mountedEquipmentDatum.get(state);
-        boolean hasWrongInput = false;
-        if (msgText != null && !msgText.trim().isEmpty()) {
-
-            // Проверка типа прибора учета
-            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
-                    && sequenceNumber == 4
-                    && !tBotService.MeterType.contains(msgText.toUpperCase())) {
-
-                sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
-                sequenceNumber--;
-                hasWrongInput = true;
-            }
-
-            // Для всех остальных шагов (кроме даты на шаге 9) добавляем текст как есть
-            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
-                    && sequenceNumber != 10
-                    && !hasWrongInput) {
-                processInfo += msgText + "_";
-            }
-
-            // Обработка по шагам
-            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))) {
-                switch (sequenceNumber) {
-                    case 0 -> {
-                        String path = stringUtils.getSavingPaths().get(msgText);
-                        if (path != null) {
-                            sequenceNumber += 2;
-                            addPathToProcessInfo(path);
-                        }
-                    }
-                    case 10 -> {
-                        // Нормализация и проверка даты
-                        String normalizedDate = dateUtils.normalizeDate(msgText);
-                        if (normalizedDate == null) {
-                            sendMessage(chatId, userId, "Формат даты указан неверно!!!");
-                            sequenceNumber--;
-                        } else {
-                            processInfo += normalizedDate + "_"; // сохраняем уже нормализованную дату
-                        }
-                    }
-                }
-            }
-        }
-
-        // Следующий шаг или завершение процесса
-        if (sequenceNumber < mountedEquipmentData.size()) {
-            sendMessage(chatId, userId, mountedEquipmentData.get(sequenceNumber));
-            sequenceNumber++;
-        } else {
-            concludeDeviceOperation(userId, chatId);
-        }
-    }
-
-
-
-
-
-
-    private void addPathToProcessInfo(String path) {
-        String[] pathParts = path.split("\\\\");
-        processInfo = processInfo + pathParts[pathParts.length - 2] + "_" + pathParts[pathParts.length - 1] + "_";
-        isDcLocation = true;
-    }
-
-    private void handleManualInsert(long userId, long chatId, String deviceNumber) {
-        String manualInput = deviceNumber.trim();
-        PendingPhoto pending = pendingPhotos.get(userId);
-        if (pending != null) {
-            if (processStates.get(userId).equals(ProcessState.MANUAL_INSERT_METER_INDICATION)) {
-                pending.setAdditionalInfo(manualInput);
-            } else {
-                pending.setDeviceNumber(manualInput);
-            }
-            boolean isDataFull = pending.getDeviceNumber() != null && pending.getAdditionalInfo() != null;
-            if (isDataFull) {
-                fileManagement.savePhoto(userId, chatId, pending);
-            } else if (pending.getDeviceNumber() == null) {
-                sendMessage(chatId, userId, "Заводской номер не найден. Введите номер вручную:");
-                processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
-            } else {
-                sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
-                processStates.put(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
-            }
-        } else {
-            sendMessage(chatId, userId, "Ошибка: нет ожидающих фото для привязки показаний.");
-        }
-    }
-
-    private void handleCallbackQuery(Update update) {
-        String callbackData = update.getCallbackQuery().getData();
-        long userId = update.getCallbackQuery().getFrom().getId();
-        long chatId = update.getCallbackQuery().getMessage().getChatId();
-
-        switch (callbackData) {
-            case "mount" -> {
-                editTextAndButtons(NEW_TU, modes.get(callbackData), chatId, userId, 1);
-//                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
-            }
-            case "pto" -> {
-                isPTO = true;
-                editTextAndButtons(PTO, modes.get(callbackData), chatId, userId, 2);
-//                sendTextMessage(PTO, modes.get(callbackData), chatId, 2);
-            }
-            case "oto" -> {
-//                sendTextMessage(OTO, modes.get(callbackData), chatId, 2);
-                editTextAndButtons(OTO, modes.get(callbackData), chatId, userId, 2);
-            }
-
-            // Обработка выбора для ПТО счетчика и концентратора
-            case "ptoIIK", "ptoIVKE" -> {
-                String textToSend;
-                if ("ptoIIK".equals(callbackData)) {
-                    textToSend = "Пожалуйста, загрузите фото счетчика и введите показания.";
-                    processStates.put(userId, ProcessState.WAITING_FOR_METER_PHOTO);
-                } else {
-                    textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
-                    processStates.put(userId, ProcessState.WAITING_FOR_DC_PHOTO);
-                }
-                editMessage(chatId, userId, textToSend);
-            }
-
-            case "otoIIK", "otoIVKE" -> {
-                if (callbackData.equals("otoIIK")) {
-                    editTextAndButtons("Выберите вид ОТО ИИК: ", otoIIKButtons, chatId, userId, 2);
-                    processStates.put(userId, ProcessState.IIK_WORKS);
-                } else {
-                    editTextAndButtons("Выберите вид ОТО ИВКЭ: ", otoIVKEButtons, chatId, userId, 2);
-                    processStates.put(userId, ProcessState.DC_WORKS);
-                }
-            }
-
-            case "wkDrop", "setNot", "powerSupplyRestoring", "dcRestart" -> {
-                switch (callbackData) {
-                    case "wkDrop" -> {
-                        editMessage(chatId, userId, "Введите номер прибора учета: ");
-                        otoTypes.put(userId, OtoType.WK_DROP);
-                    }
-                    case "dcRestart" -> {
-                        editMessage(chatId, userId, "Введите номер концентратора: ");
-                        otoTypes.put(userId, OtoType.DC_RESTART);
-                    }
-                    case "setNot" -> {
-                        String textToSend = processStates.get(userId).equals(ProcessState.IIK_WORKS) ?
-                                "Введите номер прибора учета: " : "Введите номер концентратора: ";
-                        editMessage(chatId, userId, textToSend);
-                        otoTypes.put(userId, OtoType.SET_NOT);
-                    }
-                    default -> {
-                        String textToSend = processStates.get(userId).equals(ProcessState.IIK_WORKS) ?
-                                "Введите номер прибора учета: " : "Введите номер концентратора: ";
-                        editMessage(chatId, userId, textToSend);
-                        otoTypes.put(userId, OtoType.SUPPLY_RESTORING);
-                    }
-                }
-            }
-
-            case "meterChange", "ttChange", "dcChange" -> {
-                String value1 = "";
-                String value2 = "";
-                if (callbackData.equals("meterChange")) {
-                    value1 = "meterChangeWithPhoto";
-                    value2 = "meterChangeWithoutPhoto";
-                } else if ("ttChange".equals(callbackData)) {
-                    value1 = "ttChangeWithPhoto";
-                    value2 = "ttChangeWithOutPhoto";
-                } else {
-                    value1 = "dcChangeWithPhoto";
-                    value2 = "dcChangeWithOutPhoto";
-                }
-                editTextAndButtons("Вид передачи данных: ",
-                        Map.of("С приложением фото.", value1,
-                                "Без приложения фото.", value2), chatId, userId, 2);
-            }
-
-            case "ttChangeWithPhoto", "ttChangeWithOutPhoto" -> {
-                if ("ttChangeWithPhoto".equals(callbackData))
-                    processStates.put(userId, ProcessState.WAITING_FOR_TT_PHOTO);
-                editMessage(chatId, userId, "Введите номер прибора учета: ");
-                otoTypes.put(userId, OtoType.TT_CHANGE);
-            }
-
-            case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
-                String textToSend = "";
-                otoTypes.put(userId, OtoType.DC_CHANGE);
-                if ("dcChangeWithPhoto".equals(callbackData)) {
-                    processStates.put(userId, ProcessState.WAITING_FOR_DC_PHOTO);
-                    textToSend = "Загрузите фото демонтируемого концентратора и введите его номер: ";
-                } else textToSend = "Введите номер демонтируемого концентратора: ";
-                editMessage(chatId, userId, textToSend);
-            }
-
-            case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
-                String textToSend = "";
-                otoTypes.put(userId, OtoType.METER_CHANGE);
-
-                if ("meterChangeWithPhoto".equals(callbackData)) {
-                    textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
-                    processStates.put(userId, ProcessState.WAITING_FOR_METER_PHOTO);
-                } else textToSend = "Введите номер демонтируемого прибора учета: ";
-                editMessage(chatId, userId, textToSend);
-            }
-
-            case "LOADING_COMPLETE" -> {
-                if (isPTO) {
-                    clearData();
-                    sendMessage(chatId, userId, "Для продолжения снова нажмите /start");
-                } else {
-                    editTextAndButtons(actionConfirmation(userId), confirmMenu, chatId, userId, 2);
-                }
-            }
-
-            case "confirm", "cancel" -> {
-                String textToSend;
-                if ("confirm".equals(callbackData)) {
-                    textToSend = "Информация сохранена.";
-                    sendMessage(chatId, userId, "Подождите, идёт загрузка данных...");
-                    sheetsFilling(userId);
-                } else {
-                    textToSend = "Информация не сохранена.";
-                }
-                editMessage(chatId, userId, textToSend);
-                clearData();
-                sendMessage(chatId, userId, "Для продолжения снова нажмите /start");
-            }
-
-            case "NOT", "lowPLC", "NOT3", "NOT2", "seasonNOT", "NOT1" -> {
-                processInfo += Map.of(
-                        "NOT", "НОТ. Потребитель отключен.",
-                        "seasonNOT", "НОТ. Сезонный потребитель.",
-                        "lowPLC", "НОТ. Низкий уровень PLC сигнала.",
-                        "NOT3", "Прибор учета демонтирован (НОТ3).",
-                        "NOT2", "Прибор учета сгорел (НОТ2).",
-                        "NOT1", "Местонахождения ПУ неизвестно (НОТ1).").get(callbackData);
-                formingOtoLog(processInfo, OtoType.SET_NOT);
-                editTextAndButtons("Введите номер следующего ПУ или закончите ввод.", CompleteButton, chatId, userId, 1);
-            }
-            case "iikMount", "dcMount" -> {
-                String textToSend = "";
-                if ("iikMount".equals(callbackData)) {
-                    textToSend = " номер концентратора, к которому привязан ИИК (если номер не известен - введите \\\"0\\\"): \"";
-                    processStates.put(userId, ProcessState.IIK_MOUNT);
-                } else {
-                    textToSend = "наименование станции";
-                    processStates.put(userId, ProcessState.DC_MOUNT);
-                }
-                editMessage(chatId, userId, "Введите " + textToSend + ": ");
-            }
-            default -> sendMessage(chatId, userId, "Неизвестное действие. Попробуйте еще раз.");
-        }
-    }
-
-    private void concludeDeviceOperation(long userId, long chatId) {
-        OtoType otoType = otoTypes.get(userId);
-        Object typeIndicator = otoType != null ? otoType : processStates.get(userId);
-        formingOtoLog(processInfo, typeIndicator);
-        editTextAndButtons(actionConfirmation(null), confirmMenu, chatId, userId, 2);
-    }
-
-    private void clearData() {
-        otoLog.clear();
-        sequenceNumber = 0;
-        processStates.clear();
-        otoTypes.clear();
-        processInfo = "";
-        isPTO = false;
-    }
-
-
-
-    /**
-     * Обрабатывает фото, без дополнительных параметров сохранения
-     */
-    private void handleUncontrolledPhoto(long userId, long chatId, PendingPhoto pending) {
-        fileManagement.doSave(userId, chatId, pending);
-        pendingPhotos.remove(userId);
-        editTextAndButtons("📸 Загрузите следующее фото или завершите загрузку.", CompleteButton, chatId, userId, 1);
-    }
-
-    /**
-     * Обрабатывает фото, связанных с заменой оборудования
-     */
-    private void handleChangingEquipmentPhoto(long userId, long chatId, PendingPhoto pending, OtoType operationType, PhotoState photoState) {
-        // Определяем, необходимость загрузки нового фото
-        String photoPhase = photoState.getNextPhotoType(operationType);
-        if (photoPhase == null) {
-            editMessage(chatId, userId, "⚠ Ошибка: уже загружены все необходимые фото.");
-            return;
-        }
-        // Сохранение фото
-        fileManagement.doSave(userId, chatId, pending);
-        photoState.markPhotoUploaded(photoPhase);
-
-        addChangingInfo(pending);
-        pendingPhotos.remove(userId);
-
-        // Проверка необходимости продолжения загрузки фото
-        if (photoState.isComplete(operationType)) {
-            sendMessage(chatId, userId, "✅ Все фото загружены!");
-            changeReasonInput(chatId, userId, operationType);
-
-            photoStates.remove(userId);
-        } else {
-            // Рекомендации по загрузке фото
-            sendNextPhotoInstruction(userId, chatId, photoState.getNextPhotoType(operationType));
-            setProcessState(operationType, userId);
-        }
-    }
-
-    private void changeReasonInput(long chatId, long userId, OtoType operationType) {
-        editMessage(chatId, userId, "Введите причину замены: ");
-        sequenceNumber = replacedEquipmentDatum.get(operationType).size();
-        processStates.clear();
-    }
-
-    private void setProcessState(OtoType operationType, long userId) {
-        switch (operationType) {
-            case METER_CHANGE -> processStates.put(userId, ProcessState.WAITING_FOR_METER_PHOTO);
-            case TT_CHANGE -> processStates.put(userId, ProcessState.WAITING_FOR_TT_PHOTO);
-            default -> {
-            }
-        }
-    }
-
-    private void sendNextPhotoInstruction(long userId, long chatId, String nextPhotoType) {
-        if (nextPhotoType == null) return;
-
-        String message = switch (nextPhotoType) {
-            case "демонтирован" -> "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
-            case "установлен" -> "📸 Пожалуйста, загрузите фото **УСТАНОВЛЕННОГО** прибора и введите "
-                    + (processStates.get(userId).equals(ProcessState.IIK_WORKS) ? "показания" : "его номер");
-            case "ф.A" -> "📸 Прикрепите фото **ТТ фазы A** и введите его номер:";
-            case "ф.B" -> "📸 Прикрепите фото **ТТ фазы B** и введите его номер:";
-            case "ф.C" -> "📸 Прикрепите фото **ТТ фазы C** и введите его номер:";
-            default -> null;
-        };
-
-        if (message != null) {
-            sendMessage(chatId, userId, message);
-        }
-    }
-
-    private void addChangingInfo(PendingPhoto pending) {
-        if (pending.getType().equals("counter")) {
-            processInfo += pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_";
-        } else
-            processInfo += pending.getType().equals("concentrator") ? pending.getDeviceNumber() + "_" : pending.getAdditionalInfo() + "_";
-    }
-
-
-
-    private void sendMessage(long chatId, long userId, String textToSend) {
+    public void sendMessage(long chatId, long userId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(textToSend);
         executeMessage(message, chatId);
     }
 
-    private void editMessage(long chatId, long userId, String newTextToReplace) {
+    public void editMessage(long chatId, long userId, String newTextToReplace) {
         EditMessageText editMessage = new EditMessageText();
         editMessage.setChatId(chatId);
-        editMessage.setMessageId(sendMessagesIds.get(userId));
+        editMessage.setMessageId(sentMessagesIds.get(userId));
         editMessage.setText(newTextToReplace);
 
         try {
@@ -805,7 +157,7 @@ public class TBot extends TelegramLongPollingBot {
     private void executeMessage(SendMessage message, long userId) {
         try {
             Message sentMessage = execute(message); // Отправляем сообщение в Telegram
-            sendMessagesIds.put(userId, sentMessage.getMessageId());
+            sentMessagesIds.put(userId, sentMessage.getMessageId());
         } catch (TelegramApiException e) {
             log.error(ERROR_TEXT + e.getMessage());
         }
@@ -817,14 +169,14 @@ public class TBot extends TelegramLongPollingBot {
             var task = sendApiMethodAsync(message);
             Message sentMessage = task.get();
             this.sentMessages.add(sentMessage);
-            sendMessagesIds.put(userId, sentMessage.getMessageId());
+            sentMessagesIds.put(userId, sentMessage.getMessageId());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public void editTextAndButtons(String text, Map<String, String> buttons, Long chatId, Long userId, int columns) {
-        Integer messageId = sendMessagesIds.get(userId);
+        Integer messageId = sentMessagesIds.get(userId);
         if (messageId == null) {
             log.warn("Нет messageId для userId {}", userId);
             return;

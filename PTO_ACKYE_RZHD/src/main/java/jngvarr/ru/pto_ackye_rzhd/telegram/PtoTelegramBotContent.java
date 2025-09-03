@@ -1,10 +1,14 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
+
 import java.util.List;
 import java.util.Map;
 
 public class PtoTelegramBotContent {
+    static final String ERROR_TEXT = "Error occurred: ";
+
     public static final String MAIN_MENU = """
                 Выбери вид работ:
             """;
@@ -37,7 +41,7 @@ public class PtoTelegramBotContent {
             *Монтажные/демонтажные работы: *\s
             """;
 
-    static final String HELP = "This bot was created to facilitate data processing during\n " +
+    public static String HELP = "This bot was created to facilitate data processing during\n " +
             "maintenance of the commercial electricity metering system\n " +
             "of the West Siberian Railway of Russian Railways by the\n" +
             "personnel of CPC Management Company LLC CC CTC\n\n" +
@@ -46,18 +50,8 @@ public class PtoTelegramBotContent {
 //            "Type /mydata to see data stored about yourself\n\n" +
             "Type /help to see this message again\n\n";
 
-    static final Map<Integer, String> registrationMenu = Map.of(
-            0, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",
-            1, "Введите коэффициент трансформации (пример: 300/5): ",
-            2, "Введите класс точности (пример: 0,5 или 0,5S): ",
-            3, "Введите год выпуска трансформаторов (пример: 2025): ",
-            4, "Введите номер ТТ ф.A: ",
-            5, "Введите номер ТТ ф.B: ",
-            6, "Введите номер ТТ ф.C: ",
-            7, "Опишите причину замены: ");
-
-    static final Map<TBot.OtoType, Map<Integer, String>> replacedEquipmentDatum = Map.of(
-            TBot.OtoType.TT_CHANGE, Map.of(
+    public static final Map<OtoType, Map<Integer, String>> REPLACED_EQUIPMENT_DATUM = Map.of(
+            OtoType.TT_CHANGE, Map.of(
                     0, "Введите тип трансформаторов тока (пример: ТШП-0,66): ",
                     1, "Введите коэффициент трансформации (пример: 300/5): ",
                     2, "Введите класс точности (пример: 0,5 или 0,5S): ",
@@ -66,12 +60,12 @@ public class PtoTelegramBotContent {
                     5, "Введите номер ТТ ф.B: ",
                     6, "Введите номер ТТ ф.C: ",
                     7, "Опишите причину замены: "),
-            TBot.OtoType.METER_CHANGE, Map.of(
+            OtoType.METER_CHANGE, Map.of(
                     0, "Введите показания демонтируемого прибора учета:",
                     1, "Введите номер устанавливаемого прибора учета:",
                     2, "Введите показания устанавливаемого прибора учета:",
                     3, "Опишите причину замены: "),
-            TBot.OtoType.DC_CHANGE, Map.of(
+            OtoType.DC_CHANGE, Map.of(
                     0, "Введите номер устанавливаемого концентратора.",
                     1, "Опишите причину замены: ")
     );
@@ -138,7 +132,7 @@ public class PtoTelegramBotContent {
             "dcMount", List.of("Монтаж нового концентратора. \n", "Монтаж нового концентратора.", " Монтаж нового концентратора.")
     );
 
-    public static final Map<String, String> eelToNtel = Map.of(
+    public static final Map<String, String> EEL_TO_NTEL = Map.of(
             "ЭЭЛ-1", "НТЭЛ-1",
             "НЭЭЛ-1", "НТЭЛ-1.1",
             "ЭЭЛ-2", "НТЭЛ-2",
@@ -150,13 +144,21 @@ public class PtoTelegramBotContent {
             "ЭЭЛ-4", "НТЭЛ-4"
     );
 
-    static final Map<String, String> startMenuButtons = Map.of(
+    public static final Map<String, String> DISCONNECT_REASON = Map.of(
+            "Потребитель отключен.", "NOT",
+            "Сезонный потребитель.", "seasonNOT",
+            "Низкий уровень PLC сигнала", "lowPLC",
+            "Прибор учета демонтирован (НОТ3)", "NOT3",
+            "Прибор учета сгорел (НОТ2)", "NOT2",
+            "Местонахождения ПУ неизвестно (НОТ1 украден?)", "NOT1");
+
+    public static final Map<String, String> START_MENU_BUTTONS = Map.of(
             "ПТО", "pto",
             "ОТО", "oto",
             "Монтаж новой ТУ / концентратора", "mount"
     );
 
-    static final Map<String, Map<String, String>> modes = Map.of(
+    public static final Map<String, Map<String, String>> MODES = Map.of(
             "pto", Map.of(
                     "Добавление фото счетчика", "ptoIIK",
                     "Добавление фото ИВКЭ", "ptoIVKE"),
@@ -168,30 +170,30 @@ public class PtoTelegramBotContent {
                     "Монтаж нового концентратора (ИВКЭ)", "dcMount")
     );
 
-    static final Map<String, String> otoIIKButtons = Map.of(
+    public static final Map<String, String> OTO_IIK_BUTTONS = Map.of(
             "Сброшена ошибка ключа (WK)", "wkDrop",
             "Замена счетчика", "meterChange",
             "Замена трансформаторов тока", "ttChange",
             "Восстановление питания ТУ", "powerSupplyRestoring",
             "Присвоение статуса НОТ", "setNot");
 
-    static final Map<String, String> otoIVKEButtons = Map.of(
+    public static final Map<String, String> OTO_IVKE_BUTTONS = Map.of(
             "Замена концентратора", "dcChange",
             "Перезагрузка концентратора", "dcRestart",
             "Концентратор отключен (без питания)", "setNot",
             "Восстановление питания", "powerSupplyRestoring");
 
-    static final Map<String, String> confirmMenu = Map.of(
+    public static final Map<String, String> CONFIRM_MENU = Map.of(
             "Подтвердить выполнение", "confirm",
             "Отменить выполнение", "cancel");
 
-    static final Map<String, String> CompleteButton = Map.of(
+    public static  final Map<String, String> COMPLETE_BUTTON = Map.of(
             "Завершить загрузку данных", "LOADING_COMPLETE");
 
-    public static final Map<TBot.OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
-            TBot.OtoType.METER_CHANGE, "Замена ПУ",
-            TBot.OtoType.TT_CHANGE, "Замена ТТ",
-            TBot.OtoType.DC_CHANGE, "Замена концентратора"
+    public static final Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
+            OtoType.METER_CHANGE, "Замена ПУ",
+            OtoType.TT_CHANGE, "Замена ТТ",
+            OtoType.DC_CHANGE, "Замена концентратора"
     );
 }
 

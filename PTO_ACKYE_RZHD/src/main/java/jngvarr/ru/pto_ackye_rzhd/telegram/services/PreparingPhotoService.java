@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.telegram.services;
 
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
@@ -20,7 +20,7 @@ public class PreparingPhotoService {
      * @param image BufferedImage, считанное из файла.
      * @return текст штрихкода или null, если декодирование не удалось.
      */
-    String decodeBarcode(BufferedImage image) {
+    public String decodeBarcode(BufferedImage image) {
         try {
             LuminanceSource source = new BufferedImageLuminanceSource(image);
             BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
@@ -68,7 +68,7 @@ public class PreparingPhotoService {
         g2d.dispose();
         return rotated;
     }
-    BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
+    public BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
         BufferedImage resizedImage = new BufferedImage(width, height, originalImage.getType());
         Graphics2D g2d = resizedImage.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -78,7 +78,7 @@ public class PreparingPhotoService {
     }
 
     // Преобразование цветного изображение в оттенки серого
-    BufferedImage convertToGrayscale(BufferedImage src) {
+    public BufferedImage convertToGrayscale(BufferedImage src) {
         BufferedImage gray = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
         Graphics g = gray.getGraphics();
         g.drawImage(src, 0, 0, null);

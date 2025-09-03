@@ -16,9 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.OPERATION_LOG_PATH;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.eelToNtel;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.*;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.OPERATION_LOG_PATH;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.EEL_TO_NTEL;
 
 @Data
 @Slf4j
@@ -170,14 +170,14 @@ public class ExcelFileService {
                 String dcNum = excelFileService.getCellStringValue(row.getCell(dcNumberColumnIndex));
                 if (meterNum != null) {
                     paths.put(meterNum,
-                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
+                            EEL_TO_NTEL.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
                                     row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
                                     row.getCell(substationColumnIndex).getStringCellValue() + "\\" +
                                     row.getCell(meterPointIndex).getStringCellValue());
                 }
                 if (dcNum != null) {
                     paths.putIfAbsent(dcNum,
-                            eelToNtel.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
+                            EEL_TO_NTEL.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
                                     row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
                                     row.getCell(substationColumnIndex).getStringCellValue() + "\\");
                 }

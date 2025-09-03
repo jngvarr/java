@@ -3,6 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
 import jngvarr.ru.pto_ackye_rzhd.services.*;
+import jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -19,7 +20,7 @@ import java.time.format.ResolverStyle;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.straightFormattedCurrentDate;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.straightFormattedCurrentDate;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.not123ColumnsToClear;
 
@@ -449,7 +450,7 @@ public class TBotService {
 
 
 
-    private void formingOtoLog(String deviceInfo, Object typeIndicator) {
+    void formingOtoLog(String deviceInfo, Object typeIndicator) {
         String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
         String workType = setWorkType(typeIndicator, deviceNumber);
         otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
@@ -458,7 +459,7 @@ public class TBotService {
     }
 
     private String setWorkType(Object typeIndicator, String deviceNumber) {
-        if (typeIndicator instanceof TBot.OtoType otoType) {
+        if (typeIndicator instanceof OtoType otoType) {
             return switch (otoType) {
                 case METER_CHANGE -> "meterChange";
                 case TT_CHANGE -> "ttChange";
@@ -520,7 +521,7 @@ public class TBotService {
         return taskOrder;
     }
 
-    private String actionConfirmation(Long userId) {
+    String actionConfirmation(Long userId) {
         StringBuilder resultStr = new StringBuilder("Выполнены следующие действия:\n");
         int lineCounter = 0;
 
