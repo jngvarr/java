@@ -48,9 +48,28 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-
+    public void registerUser(Update update) {
+        User newUser = createUser(update);
+        registerUser(newUser);
+//        if (sequenceNumber < registrationMenu.size()) {
+//            sendMessage(chatId, registrationMenu.get(sequenceNumber));
+//            sequenceNumber++;
+//        }
+    }
     public List<User> getUsers() {
         return repository.findAll();
+    }
+
+    public Long getCurrentuserId(Update update) {
+        if (update.hasMessage()) {
+            return update.getMessage().getFrom().getId();
+        }
+
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getFrom().getId();
+        }
+
+        return null;
     }
 
     @Transactional

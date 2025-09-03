@@ -187,6 +187,12 @@ public class PtoTelegramBotContent {
 
     static final Map<String, String> CompleteButton = Map.of(
             "Завершить загрузку данных", "LOADING_COMPLETE");
+
+    public static final Map<TBot.OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
+            TBot.OtoType.METER_CHANGE, "Замена ПУ",
+            TBot.OtoType.TT_CHANGE, "Замена ТТ",
+            TBot.OtoType.DC_CHANGE, "Замена концентратора"
+    );
 }
 
 

@@ -197,6 +197,20 @@ public class ExcelFileService {
         }
     }
 
+    private void fillDcSection(Sheet dcWorkSheet, String taskOrder, boolean isDcChange) { // заполнение данных на вкладке "ИВКЭ"
+        int dcNumberColIndex = findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
+        int dcCurrentStateColIndex = findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
+
+        for (Row row : dcWorkSheet) {
+            String deviceNumber = getCellStringValue(row.getCell(dcNumberColIndex));
+            String logData = otoLog.getOrDefault(deviceNumber, "");
+            if (!logData.isEmpty()) {
+                row.createCell(dcCurrentStateColIndex).setCellValue(taskOrder);
+                if (isDcChange) row.getCell(dcNumberColIndex).setCellValue(logData.split("_")[1]);
+            }
+        }
+    }
+
     private void sheetsFilling(long userId) {
         if (otoLog.isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));

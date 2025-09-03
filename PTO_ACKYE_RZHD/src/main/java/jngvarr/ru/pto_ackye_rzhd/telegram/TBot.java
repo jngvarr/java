@@ -1,13 +1,13 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
-import jngvarr.ru.pto_ackye_rzhd.entities.*;
+import jngvarr.ru.pto_ackye_rzhd.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.services.*;
+import jngvarr.ru.pto_ackye_rzhd.util.DateUtils;
+import jngvarr.ru.pto_ackye_rzhd.util.StringUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
@@ -25,20 +25,15 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.stream.Stream;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.TBotService.*;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.FileManagement.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 
@@ -54,14 +49,17 @@ public class TBot extends TelegramLongPollingBot {
     private final SubstationService substationService;
     private final TBotService tBotService;
     private UserServiceImpl userService;
+    private final FileManagement fileManagement;
     static final String ERROR_TEXT = "Error occurred: ";
     private Map<Long, Integer> sendMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
     private final ExcelFileService excelFileService;
+    private final DateUtils dateUtils;
+    private final StringUtils stringUtils;
     private final PreparingPhotoService preparingPhotoService;
+
     // Карта для хранения информации о фото, ожидающих подтверждения
     private Map<Long, PendingPhoto> pendingPhotos = new HashMap<>();
-    private Map<String, String> savingPaths;
     private static final long ADMIN_CHAT_ID = 199867696L;
 
     public enum ProcessState {
@@ -86,25 +84,19 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, OtoType> otoTypes = new HashMap<>();
     private Map<String, String> otoLog = new HashMap<>();
     private Map<Long, PhotoState> photoStates = new HashMap<>();
-    private Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
-            OtoType.METER_CHANGE, "Замена ПУ",
-            OtoType.TT_CHANGE, "Замена ТТ",
-            OtoType.DC_CHANGE, "Замена концентратора"
-    );
+
 
     public enum OtoType {
         WK_DROP, METER_CHANGE, SET_NOT, SUPPLY_RESTORING, TT_CHANGE, DC_CHANGE, DC_RESTART
     }
 
     private boolean isPTO;
-    String chgePath;
     private int sequenceNumber = 0;
     private String processInfo = "";
     private boolean isDcLocation;
-//    private boolean isMeterInstalled;
 
 
-    public TBot(BotConfig config, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, TBotService tBotService, UserServiceImpl userService, ExcelFileService excelFileService, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
+    public TBot(BotConfig config, MeteringPointService meteringPointService, MeterService meterService, SubstationService substationService, TBotService tBotService, UserServiceImpl userService, FileManagement fileManagement, ExcelFileService excelFileService, DateUtils dateUtils, StringUtils stringUtils, PreparingPhotoService preparingPhotoService) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
         this.meteringPointService = meteringPointService;
@@ -112,9 +104,11 @@ public class TBot extends TelegramLongPollingBot {
         this.substationService = substationService;
         this.tBotService = tBotService;
         this.userService = userService;
+        this.fileManagement = fileManagement;
         this.excelFileService = excelFileService;
+        this.dateUtils = dateUtils;
+        this.stringUtils = stringUtils;
         this.preparingPhotoService = preparingPhotoService;
-        savingPaths = excelFileService.getPhotoSavingPathFromExcel();//TODO подумать
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Начать работу"));
@@ -149,7 +143,7 @@ public class TBot extends TelegramLongPollingBot {
                 : "";
 
         if (user == null && "/register".equals(incomingText)) {
-            registerUser(update);
+            userService.registerUser(update);
             sendMessage(chatId, userId, "Пользователь успешно зарегистрирован.");
             return;
         } else if ("/register".equals(incomingText)) {
@@ -262,7 +256,7 @@ public class TBot extends TelegramLongPollingBot {
 
                 // 7. Если штрихкод найден и есть показания – сразу сохраняем
                 if (barcodeText != null && pendingPhoto.getAdditionalInfo() != null) {
-                    savePhoto(userId, chatId, pendingPhoto);
+                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
                     return;
                 }
                 if (barcodeText == null) {
@@ -278,7 +272,7 @@ public class TBot extends TelegramLongPollingBot {
             } else if (type.equals("tt")) {
                 if (manualInput != null) {
                     pendingPhoto.setAdditionalInfo(manualInput);
-                    savePhoto(userId, chatId, pendingPhoto);
+                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
                 } else {
                     PhotoState photoState = photoStates.get(userId);
                     OtoType otoType = otoTypes.get(userId);
@@ -288,7 +282,7 @@ public class TBot extends TelegramLongPollingBot {
             } else {
                 if (manualInput != null) {
                     pendingPhoto.setDeviceNumber(manualInput.trim());
-                    savePhoto(userId, chatId, pendingPhoto);
+                    fileManagement.savePhoto(userId, chatId, pendingPhoto);
                 } else {
                     pendingPhoto.setAdditionalInfo("Данные не требуются.");
                     PhotoState photoState = photoStates.get(userId);
@@ -449,7 +443,6 @@ public class TBot extends TelegramLongPollingBot {
                 sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
                 sequenceNumber--;
                 hasWrongInput = true;
-//                return; // сразу выходим, чтобы не продолжать дальше
             }
 
             // Для всех остальных шагов (кроме даты на шаге 9) добавляем текст как есть
@@ -463,7 +456,7 @@ public class TBot extends TelegramLongPollingBot {
             if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))) {
                 switch (sequenceNumber) {
                     case 0 -> {
-                        String path = savingPaths.get(msgText);
+                        String path = stringUtils.getSavingPaths().get(msgText);
                         if (path != null) {
                             sequenceNumber += 2;
                             addPathToProcessInfo(path);
@@ -471,11 +464,10 @@ public class TBot extends TelegramLongPollingBot {
                     }
                     case 10 -> {
                         // Нормализация и проверка даты
-                        String normalizedDate = normalizeDate(msgText);
+                        String normalizedDate = dateUtils.normalizeDate(msgText);
                         if (normalizedDate == null) {
                             sendMessage(chatId, userId, "Формат даты указан неверно!!!");
                             sequenceNumber--;
-//                            return;
                         } else {
                             processInfo += normalizedDate + "_"; // сохраняем уже нормализованную дату
                         }
@@ -494,49 +486,9 @@ public class TBot extends TelegramLongPollingBot {
     }
 
 
-    /**
-     * Проверяет и нормализует дату в формат dd.MM.yyyy.
-     *
-     * @param msgText строка с датой
-     * @return нормализованная дата или null, если неверная
-     */
 
-    public static String normalizeDate(String msgText) {
-        if (msgText == null || msgText.trim().isEmpty()) {
-            return null;
-        }
 
-        msgText = msgText.trim();
 
-        // 1. Проверка на допустимый шаблон (дд.мм.гг или д.м.гггг)
-        if (!msgText.matches("^\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}$")) {
-            return null;
-        }
-
-        // 2. Разбираем строку на части
-        String[] parts = msgText.split("\\.");
-        if (parts.length != 3) return null;
-
-        String day = parts[0];
-        String month = parts[1];
-        String year = parts[2];
-
-        // Если год указан в виде 2 цифр → добавляем "20"
-        if (year.length() == 2) {
-            year = "20" + year;
-        }
-
-        String normalizedInput = day + "." + month + "." + year;
-
-        // 3. Парсим с гибким форматом
-        try {
-            LocalDate date = LocalDate.parse(normalizedInput, FLEXIBLE_FORMATTER);
-            // 4. Возвращаем нормализованную строку
-            return date.format(STRICT_FORMATTER);
-        } catch (DateTimeParseException e) {
-            return null;
-        }
-    }
 
     private void addPathToProcessInfo(String path) {
         String[] pathParts = path.split("\\\\");
@@ -555,7 +507,7 @@ public class TBot extends TelegramLongPollingBot {
             }
             boolean isDataFull = pending.getDeviceNumber() != null && pending.getAdditionalInfo() != null;
             if (isDataFull) {
-                savePhoto(userId, chatId, pending);
+                fileManagement.savePhoto(userId, chatId, pending);
             } else if (pending.getDeviceNumber() == null) {
                 sendMessage(chatId, userId, "Заводской номер не найден. Введите номер вручную:");
                 processStates.put(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
@@ -747,23 +699,13 @@ public class TBot extends TelegramLongPollingBot {
         isPTO = false;
     }
 
-    private void savePhoto(long userId, long chatId, PendingPhoto pending) {
-        OtoType operationType = otoTypes.get(userId);
-        String deviceNumber = pending.getDeviceNumber();
-        // Получаем состояние загрузки фото (если нет, создаем новое)
-        PhotoState photoState = photoStates.computeIfAbsent(userId, key -> new PhotoState(deviceNumber));
-        if (isPTO || !PHOTO_SUBDIRS_NAME.containsKey(operationType)) { // Только фото ПТО
-            handleUncontrolledPhoto(userId, chatId, pending);
-            return;
-        }
-        handleChangingEquipmentPhoto(userId, chatId, pending, operationType, photoState);
-    }
+
 
     /**
      * Обрабатывает фото, без дополнительных параметров сохранения
      */
     private void handleUncontrolledPhoto(long userId, long chatId, PendingPhoto pending) {
-        doSave(userId, chatId, pending);
+        fileManagement.doSave(userId, chatId, pending);
         pendingPhotos.remove(userId);
         editTextAndButtons("📸 Загрузите следующее фото или завершите загрузку.", CompleteButton, chatId, userId, 1);
     }
@@ -779,7 +721,7 @@ public class TBot extends TelegramLongPollingBot {
             return;
         }
         // Сохранение фото
-        doSave(userId, chatId, pending);
+        fileManagement.doSave(userId, chatId, pending);
         photoState.markPhotoUploaded(photoPhase);
 
         addChangingInfo(pending);
@@ -813,26 +755,6 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-
-    private void doSave(long userId, long chatId, PendingPhoto pending) {
-//        OtoType operationType = otoTypes.get(userId);
-        try {
-            Path userDir = Paths.get(createSavingPath(pending, userId));
-
-            Files.createDirectories(userDir);
-
-            String newFileName = createNewFileName(pending, userId);
-            Path destination = userDir.resolve(newFileName);
-
-            // Сохранение
-            Files.move(pending.getTempFilePath(), destination, StandardCopyOption.REPLACE_EXISTING);
-            editMessage(chatId, userId, "Фото сохранено!\nФайл: " + newFileName);
-        } catch (IOException e) {
-            log.error("❌ Ошибка сохранения фото для userId {}: {}", userId, e.getMessage(), e);
-            sendMessage(chatId, userId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
-        }
-    }
-
     private void sendNextPhotoInstruction(long userId, long chatId, String nextPhotoType) {
         if (nextPhotoType == null) return;
 
@@ -851,58 +773,6 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private String createSavingPath(PendingPhoto pending, long userId) {
-
-        OtoType operationType = otoTypes.get(userId);
-        String baseDir = PHOTO_PATH + File.separator;
-        String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
-
-        if (operationType != null) {
-            if (PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
-                baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
-            }
-        } else if (!processStates.get(userId).equals(ProcessState.WAITING_FOR_DC_PHOTO))
-            path = path.substring(0, path.lastIndexOf("\\"));
-
-        if (photoStates.get(userId).getUploadedPhotos().isEmpty()) chgePath = path;
-        else if (photoStates.get(userId).getUploadedPhotos().size() < 2) path = chgePath;
-        return baseDir + path;
-    }
-
-    private String createNewFileName(PendingPhoto pending, Long userId) {
-        OtoType operationType = otoTypes.get(userId);
-        String photoSuffix = "";
-        String additionalInfo = pending.getAdditionalInfo() != null ? "_" + pending.getAdditionalInfo() : "";
-        if (operationType != null) {
-            PhotoState photoState = photoStates.get(userId);
-            photoSuffix = getSavingPhotoSuffix(operationType, photoState);
-            if (operationType == OtoType.TT_CHANGE) {
-                additionalInfo = "_(" + photoState.getNextPhotoType(operationType) + additionalInfo.replace("_", ", №") + ")";
-            } else {
-                additionalInfo = "";
-            }
-        }
-        return formattedCurrentDate + "_" + getSavingPhotoPrefix(pending.getType()) + pending.getDeviceNumber() +
-                additionalInfo + photoSuffix + ".jpg";
-    }
-
-    private String getSavingPhotoPrefix(String type) {
-        return switch (type) {
-            case "counter" -> "ИИК_";
-            case "concentrator" -> "ИВКЭ_";
-            case "tt" -> "ТТ_";
-            default -> "unknown_";
-        };
-    }
-
-    private String getSavingPhotoSuffix(OtoType operationType, PhotoState state) {
-        if (operationType != null && (operationType.equals(OtoType.METER_CHANGE)
-                || operationType.equals(OtoType.DC_CHANGE))) {
-            return "_" + state.getNextPhotoType(operationType);
-        } else return "";
-    }
-
-
     private void addChangingInfo(PendingPhoto pending) {
         if (pending.getType().equals("counter")) {
             processInfo += pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_";
@@ -910,14 +780,7 @@ public class TBot extends TelegramLongPollingBot {
             processInfo += pending.getType().equals("concentrator") ? pending.getDeviceNumber() + "_" : pending.getAdditionalInfo() + "_";
     }
 
-    private void registerUser(Update update) {
-        User newUser = userService.createUser(update);
-        userService.registerUser(newUser);
-//        if (sequenceNumber < registrationMenu.size()) {
-//            sendMessage(chatId, registrationMenu.get(sequenceNumber));
-//            sequenceNumber++;
-//        }
-    }
+
 
     private void sendMessage(long chatId, long userId, String textToSend) {
         SendMessage message = new SendMessage();
@@ -1027,146 +890,10 @@ public class TBot extends TelegramLongPollingBot {
         message.setReplyMarkup(markup);
     }
 
-    public Long getCurrentuserId(Update update) {
-        if (update.hasMessage()) {
-            return update.getMessage().getFrom().getId();
-        }
-
-        if (update.hasCallbackQuery()) {
-            return update.getCallbackQuery().getFrom().getId();
-        }
-
-        return null;
-    }
-
-
-
-    private String dataPreparing(Sheet operationLogSheet, Sheet meterSheet, boolean isDcWorks) {
-        int orderColumnNumber = excelFileService.findColumnIndex(meterSheet, "Отчет бригады о выполнении ОТО");
-        int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
-        int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
-        int addedRows = 0;
-        boolean isLogFilled = false;
-        boolean isMounting = containsMountWork();
-        String taskOrder = "";
-
-        List<Row> meterRows = new ArrayList<>();
-        for (Row row : meterSheet) {
-            meterRows.add(row);
-        }
-
-        for (Row otoRow : meterRows) {
-//            log.info(String.valueOf(otoRow.getRowNum()));
-            String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
-            String logData = otoLog.getOrDefault(deviceNumber, "");
-            boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
-            boolean dataContainsNotNot5 = logData.contains("НОТ") || logData.contains("НОТ5");
-
-            if (!logData.isEmpty()) {
-                if (!isLogFilled) {
-                    Row newLogSheetRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
-                    if (isDcWorks) {
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newLogSheetRow); //удаление данных из ненужных ячеек
-                    }
-                    if (isMounting) {
-                        int meterSheetLastRowNumber = meterSheet.getLastRowNum();
-                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
-                        excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
-                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
-                    } else {
-                        excelFileService.copyRow(otoRow, newLogSheetRow, orderColumnNumber);
-                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
-                    }
-                    if (addedRows == otoLog.size()) isLogFilled = true;
-                }
-                if (dataContainsNot123) {
-                    excelFileService.clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterSheet), otoRow);
-                    String notType = taskOrder.substring(taskOrder.indexOf("(") + 1, taskOrder.indexOf("(") + 1 + 4);
-                    otoRow.getCell(excelFileService.findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
-                }
-                if (dataContainsNotNot5) {
-                    String notType = taskOrder.substring(taskOrder.indexOf("НОТ"), taskOrder.indexOf("НОТ") + 3);
-                    otoRow.getCell(excelFileService.findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
-                }
-            }
-        }
-        addedRows = 0;
-        return taskOrder;
-    }
-
-    private void prepareMountedDeviceRow(Row newOtoRow, String logData) {
-        String[] dataParts = logData.split("_");
-
-    }
-
-    private void fillDcSection(Sheet dcWorkSheet, String taskOrder, boolean isDcChange) { // заполнение данных на вкладке "ИВКЭ"
-        int dcNumberColIndex = excelFileService.findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
-        int dcCurrentStateColIndex = excelFileService.findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
-
-        for (Row row : dcWorkSheet) {
-            String deviceNumber = excelFileService.getCellStringValue(row.getCell(dcNumberColIndex));
-            String logData = otoLog.getOrDefault(deviceNumber, "");
-            if (!logData.isEmpty()) {
-                row.createCell(dcCurrentStateColIndex).setCellValue(taskOrder);
-                if (isDcChange) row.getCell(dcNumberColIndex).setCellValue(logData.split("_")[1]);
-            }
-        }
-    }
-
-
-    private boolean containsDcWorks() {
-        return Stream.concat(otoLog.keySet().stream(), otoLog.values().stream())
-                .anyMatch(val -> val.contains("LW") || val.contains("LJ"));
-    }
-
-    private boolean containsDcChange() {
-        return otoLog.values().stream().anyMatch(val -> val.contains("dcChange"));
-    }
-
-    private boolean containsMountWork() {
-        return otoLog.values().stream().anyMatch(v -> v.contains("Mount"));
-    }
-
-
-    private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet sheet) {
-        return Arrays.stream(columnNames)
-                .mapToInt(name -> excelFileService.findColumnIndex(sheet, name))
-                .filter(index -> index >= 0)
-                .toArray();
-    }
-
-
-
-    private void formingOtoLog(String deviceInfo, Object typeIndicator) {
-        String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String workType = resolveWorkType(typeIndicator, deviceNumber);
-        otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
-        processInfo = "";
-        sequenceNumber = 0;
-    }
-
-    private String resolveWorkType(Object typeIndicator, String deviceNumber) {
-        if (typeIndicator instanceof OtoType otoType) {
-            return switch (otoType) {
-                case METER_CHANGE -> "meterChange";
-                case TT_CHANGE -> "ttChange";
-                case DC_CHANGE -> "dcChange";
-                case SET_NOT -> "NOT";
-                case SUPPLY_RESTORING ->
-                        deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "dcSupply" : "meterSupply";
-                default -> "unknown";
-            };
-        } else if (typeIndicator instanceof ProcessState processState) {
-            return switch (processState) {
-                case IIK_MOUNT -> "iikMount";
-                case DC_MOUNT -> "dcMount";
-                default -> "unknown";
-            };
-        }
-        return "unknown";
-    }
-
+//    private void prepareMountedDeviceRow(Row newOtoRow, String logData) {
+//        String[] dataParts = logData.split("_");
+//
+//    }
 
     @Override
     public void onUpdatesReceived(List<Update> updates) {
