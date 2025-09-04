@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Data
 @Service
@@ -19,7 +20,7 @@ public class TBotConversationStateService {
     // Мапа для хранения состояния диалога по userId
     private Map<Long, ProcessState> processStates = new HashMap<>();
     private Map<Long, OtoType> otoTypes = new HashMap<>();
-    private Map<String, String> otoLog = new HashMap<>();
+    private Map<String, String> otoLog = new HashMap<>();                   //??
     private final Map<Long, Integer> sequenceNumbers = new HashMap<>();
     private final Map<Long, String> processInfos = new HashMap<>();
     private final Map<Long, Boolean> ptoFlags = new HashMap<>();
@@ -47,6 +48,10 @@ public class TBotConversationStateService {
         otoTypes.put(userId, type);
     }
 
+    public void clearOtoLog(){
+        otoLog.clear();
+    }
+
     public int getSequenceNumber(Long userId) {
         return sequenceNumbers.getOrDefault(userId, 0);
     }
@@ -63,8 +68,22 @@ public class TBotConversationStateService {
         sequenceNumbers.put(userId, 0);
     }
 
+    public boolean getPtoFlag(Long userId){
+        return ptoFlags.get(userId);
+    }
+
+    public void setPtoFlags(Long userId, boolean flag){
+        ptoFlags.put(userId, flag);
+    }
+
+    public void clearPtoFlags(Long userId){
+        ptoFlags.put(userId, false);
+    }
+
     public String getProcessInfo(Long userId) {
         return processInfos.getOrDefault(userId, "");
+    }    public void clearProcessInfo(Long userId) {
+         processInfos.remove(userId);
     }
 
     public void appendProcessInfo(Long userId, String value) {
@@ -105,4 +124,16 @@ public class TBotConversationStateService {
         dcLocationFlags.remove(userId);
     }
 
+    public boolean isOtoLogContainsDcWorks() {
+        return Stream.concat(otoLog.keySet().stream(), otoLog.values().stream())
+                .anyMatch(val -> val.contains("LW") || val.contains("LJ"));
+    }
+
+    public boolean isOtoLogContainsDcChange() {
+        return otoLog.values().stream().anyMatch(val -> val.contains("dcChange"));
+    }
+
+    public boolean isOtoLogContainsMountWork() {
+        return otoLog.values().stream().anyMatch(v -> v.contains("Mount"));
+    }
 }

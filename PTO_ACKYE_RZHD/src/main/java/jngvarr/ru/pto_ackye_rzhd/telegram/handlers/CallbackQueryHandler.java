@@ -1,6 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
+import jngvarr.ru.pto_ackye_rzhd.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
+import jngvarr.ru.pto_ackye_rzhd.telegram.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.util.TBotConversationUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +16,7 @@ import java.util.Map;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.COMPLETE_BUTTON;
+
 @Slf4j
 @Component
 @Data
@@ -18,6 +24,10 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.COMPLETE_
 public class CallbackQueryHandler {
 
     private final TBot tBot;
+    private final TBotConversationStateService conversationStateService;
+    private final ExcelFileService excelFileService;
+    private final TBotConversationUtils conversationUtils;
+
     public void handleCallbackQuery(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long userId = update.getCallbackQuery().getFrom().getId();
@@ -29,8 +39,8 @@ public class CallbackQueryHandler {
 //                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
             }
             case "pto" -> {
-                isPTO = true;
-                 tBot.editTextAndButtons(PTO, MODES.get(callbackData), chatId, userId, 2);
+                conversationStateService.setPtoFlags(userId, true);
+                tBot.editTextAndButtons(PTO, MODES.get(callbackData), chatId, userId, 2);
 //                sendTextMessage(PTO, modes.get(callbackData), chatId, 2);
             }
             case "oto" -> {
@@ -43,10 +53,10 @@ public class CallbackQueryHandler {
                 String textToSend;
                 if ("ptoIIK".equals(callbackData)) {
                     textToSend = "Пожалуйста, загрузите фото счетчика и введите показания.";
-                    processStates.put(userId, TBot.ProcessState.WAITING_FOR_METER_PHOTO);
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_METER_PHOTO);
                 } else {
                     textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
-                    processStates.put(userId, TBot.ProcessState.WAITING_FOR_DC_PHOTO);
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_DC_PHOTO);
                 }
                 tBot.editMessage(chatId, userId, textToSend);
             }
@@ -54,10 +64,10 @@ public class CallbackQueryHandler {
             case "otoIIK", "otoIVKE" -> {
                 if (callbackData.equals("otoIIK")) {
                     tBot.editTextAndButtons("Выберите вид ОТО ИИК: ", OTO_IIK_BUTTONS, chatId, userId, 2);
-                    processStates.put(userId, TBot.ProcessState.IIK_WORKS);
+                    conversationStateService.setProcessState(userId, ProcessState.IIK_WORKS);
                 } else {
                     tBot.editTextAndButtons("Выберите вид ОТО ИВКЭ: ", OTO_IVKE_BUTTONS, chatId, userId, 2);
-                    processStates.put(userId, TBot.ProcessState.DC_WORKS);
+                    conversationStateService.setProcessState(userId, ProcessState.DC_WORKS);
                 }
             }
 
@@ -65,23 +75,23 @@ public class CallbackQueryHandler {
                 switch (callbackData) {
                     case "wkDrop" -> {
                         tBot.editMessage(chatId, userId, "Введите номер прибора учета: ");
-                        otoTypes.put(userId, OtoType.WK_DROP);
+                        conversationStateService.setOtoType(userId, OtoType.WK_DROP);
                     }
                     case "dcRestart" -> {
                         tBot.editMessage(chatId, userId, "Введите номер концентратора: ");
-                        otoTypes.put(userId, OtoType.DC_RESTART);
+                        conversationStateService.setOtoType(userId, OtoType.DC_RESTART);
                     }
                     case "setNot" -> {
-                        String textToSend = processStates.get(userId).equals(TBot.ProcessState.IIK_WORKS) ?
+                        String textToSend = conversationStateService.getProcessState(userId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
                         tBot.editMessage(chatId, userId, textToSend);
-                        otoTypes.put(userId, OtoType.SET_NOT);
+                        conversationStateService.setOtoType(userId, OtoType.SET_NOT);
                     }
                     default -> {
-                        String textToSend = processStates.get(userId).equals(TBot.ProcessState.IIK_WORKS) ?
+                        String textToSend = conversationStateService.getProcessState(userId).equals(ProcessState.IIK_WORKS) ?
                                 "Введите номер прибора учета: " : "Введите номер концентратора: ";
                         tBot.editMessage(chatId, userId, textToSend);
-                        otoTypes.put(userId, OtoType.SUPPLY_RESTORING);
+                        conversationStateService.setOtoType(userId, OtoType.SUPPLY_RESTORING);
                     }
                 }
             }
@@ -94,28 +104,28 @@ public class CallbackQueryHandler {
                     value2 = "meterChangeWithoutPhoto";
                 } else if ("ttChange".equals(callbackData)) {
                     value1 = "ttChangeWithPhoto";
-                    value2 = "ttChangeWithOutPhoto";
+                    value2 = "ttChangeWithoutPhoto";
                 } else {
                     value1 = "dcChangeWithPhoto";
-                    value2 = "dcChangeWithOutPhoto";
+                    value2 = "dcChangeWithoutPhoto";
                 }
                 tBot.editTextAndButtons("Вид передачи данных: ",
                         Map.of("С приложением фото.", value1,
                                 "Без приложения фото.", value2), chatId, userId, 2);
             }
 
-            case "ttChangeWithPhoto", "ttChangeWithOutPhoto" -> {
+            case "ttChangeWithPhoto", "ttChangeWithoutPhoto" -> {
                 if ("ttChangeWithPhoto".equals(callbackData))
-                    processStates.put(userId, TBot.ProcessState.WAITING_FOR_TT_PHOTO);
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_TT_PHOTO);
                 tBot.editMessage(chatId, userId, "Введите номер прибора учета: ");
-                otoTypes.put(userId, OtoType.TT_CHANGE);
+                conversationStateService.setOtoType(userId, OtoType.TT_CHANGE);
             }
 
-            case "dcChangeWithPhoto", "dcChangeWithOutPhoto" -> {
+            case "dcChangeWithPhoto", "dcChangeWithoutPhoto" -> {
                 String textToSend = "";
-                otoTypes.put(userId, OtoType.DC_CHANGE);
+                conversationStateService.setOtoType(userId, OtoType.DC_CHANGE);
                 if ("dcChangeWithPhoto".equals(callbackData)) {
-                    processStates.put(userId, TBot.ProcessState.WAITING_FOR_DC_PHOTO);
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_DC_PHOTO);
                     textToSend = "Загрузите фото демонтируемого концентратора и введите его номер: ";
                 } else textToSend = "Введите номер демонтируемого концентратора: ";
                 tBot.editMessage(chatId, userId, textToSend);
@@ -123,21 +133,21 @@ public class CallbackQueryHandler {
 
             case "meterChangeWithPhoto", "meterChangeWithoutPhoto" -> {
                 String textToSend = "";
-                otoTypes.put(userId, OtoType.METER_CHANGE);
+                conversationStateService.setOtoType(userId, OtoType.METER_CHANGE);
 
                 if ("meterChangeWithPhoto".equals(callbackData)) {
                     textToSend = "📸 Пожалуйста, загрузите фото **ДЕМОНТИРОВАННОГО** прибора и введите показания.";
-                    processStates.put(userId, TBot.ProcessState.WAITING_FOR_METER_PHOTO);
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_METER_PHOTO);
                 } else textToSend = "Введите номер демонтируемого прибора учета: ";
                 tBot.editMessage(chatId, userId, textToSend);
             }
 
             case "LOADING_COMPLETE" -> {
-                if (isPTO) {
-                    clearData();
+                if (conversationStateService.getPtoFlag(userId)) {
+                    conversationStateService.clearUserData(userId);
                     tBot.sendMessage(chatId, userId, "Для продолжения снова нажмите /start");
                 } else {
-                    tBot.editTextAndButtons(actionConfirmation(userId), CONFIRM_MENU, chatId, userId, 2);
+                    tBot.editTextAndButtons(conversationUtils.actionConfirmation(userId), CONFIRM_MENU, chatId, userId, 2);
                 }
             }
 
@@ -146,28 +156,28 @@ public class CallbackQueryHandler {
                 if ("confirm".equals(callbackData)) {
                     textToSend = "Информация сохранена.";
                     tBot.sendMessage(chatId, userId, "Подождите, идёт загрузка данных...");
-                    sheetsFilling(userId);
+                    excelFileService.sheetsFilling(userId);
                 } else {
                     textToSend = "Информация не сохранена.";
                 }
                 tBot.editMessage(chatId, userId, textToSend);
-                clearData();
+                conversationStateService.clearUserData(userId);
                 tBot.sendMessage(chatId, userId, "Для продолжения снова нажмите /start");
             }
 
             case "NOT", "lowPLC", "NOT3", "NOT2", "seasonNOT", "NOT1" -> {
-                processInfo += GET_NOT.get(callbackData);
-                formingOtoLog(processInfo, OtoType.SET_NOT);
+                conversationStateService.appendProcessInfo(chatId, GET_STRING_NOT.get(callbackData));
+                conversationUtils.formingOtoLog(conversationStateService.getProcessInfo(userId), OtoType.SET_NOT, userId);
                 tBot.editTextAndButtons("Введите номер следующего ПУ или закончите ввод.", COMPLETE_BUTTON, chatId, userId, 1);
             }
             case "iikMount", "dcMount" -> {
                 String textToSend = "";
                 if ("iikMount".equals(callbackData)) {
                     textToSend = " номер концентратора, к которому привязан ИИК (если номер не известен - введите \\\"0\\\"): \"";
-                    processStates.put(userId, TBot.ProcessState.IIK_MOUNT);
+                    conversationStateService.setProcessState(userId, ProcessState.IIK_MOUNT);
                 } else {
                     textToSend = "наименование станции";
-                    processStates.put(userId, TBot.ProcessState.DC_MOUNT);
+                    conversationStateService.setProcessState(userId, ProcessState.DC_MOUNT);
                 }
                 tBot.editMessage(chatId, userId, "Введите " + textToSend + ": ");
             }

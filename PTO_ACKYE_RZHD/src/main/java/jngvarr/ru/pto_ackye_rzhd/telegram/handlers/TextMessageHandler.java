@@ -2,6 +2,8 @@ package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
 import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PendingPhoto;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
+import jngvarr.ru.pto_ackye_rzhd.telegram.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.util.TBotConversationUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,9 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.CONFIRM_M
 public class TextMessageHandler {
 
     private final TBot tBot;
+    private final PhotoMessageHandler photoMessageHandler;
+    private final TBotConversationUtils conversationUtils;
+    private final TBotConversationStateService conversationStateService;
 
     public void handleTextMessage(Update update) {
         String msgText = update.getMessage().getText();
@@ -41,7 +46,7 @@ public class TextMessageHandler {
                 return;
             }
 //            case "/register" -> {
-//                processStates.put(userId, ProcessState.REGISTRATION);
+//                conversationStateService.setProcessStates(userId, ProcessState.REGISTRATION);
 //                registerUser(update);
 //                clearData();
 //                return;
@@ -157,13 +162,13 @@ public class TextMessageHandler {
             }
             boolean isDataFull = pending.getDeviceNumber() != null && pending.getAdditionalInfo() != null;
             if (isDataFull) {
-                fileManagement.savePhoto(userId, chatId, pending);
+                photoMessageHandler.savePhoto(userId, chatId, pending);
             } else if (pending.getDeviceNumber() == null) {
                 tBot.sendMessage(chatId, userId, "Заводской номер не найден. Введите номер вручную:");
-                processStates.put(userId, TBot.ProcessState.MANUAL_INSERT_METER_NUMBER);
+                conversationStateService.setProcessStates(userId, TBot.ProcessState.MANUAL_INSERT_METER_NUMBER);
             } else {
                 tBot.sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
-                processStates.put(userId, TBot.ProcessState.MANUAL_INSERT_METER_INDICATION);
+                conversationStateService.setProcessStates(userId, TBot.ProcessState.MANUAL_INSERT_METER_INDICATION);
             }
         } else {
             tBot.sendMessage(chatId, userId, "Ошибка: нет ожидающих фото для привязки показаний.");
@@ -189,7 +194,7 @@ public class TextMessageHandler {
                     }
                     sequenceNumber++;
                 } else {
-                    tBotService.formingOtoLog(processInfo, currentOtoType);
+                    conversationUtils.formingOtoLog(conversationStateService.getProcessInfo(userId), currentOtoType, userId);
                     tBot.sendTextMessage(tBotService.actionConfirmation(userId), CONFIRM_MENU, chatId, userId, 2);
                 }
             }

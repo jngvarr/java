@@ -2,6 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 
 import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
 
 import java.util.List;
 import java.util.Map;
@@ -70,8 +71,8 @@ public class PtoTelegramBotContent {
                     1, "Опишите причину замены: ")
     );
 
-    static final Map<TBot.ProcessState, Map<Integer, String>> mountedEquipmentDatum = Map.of(
-            TBot.ProcessState.IIK_MOUNT, Map.of(
+    static final Map<ProcessState, Map<Integer, String>> mountedEquipmentDatum = Map.of(
+            ProcessState.IIK_MOUNT, Map.of(
                     0, "Введите наименование станции: ",
                     1, "Введите наименование подстанции: ",
                     2, "Введите номер прибора учёта: ",
@@ -82,7 +83,7 @@ public class PtoTelegramBotContent {
                     7, "Введите наименование монтажной организации: ",
                     8, "Введите ФИО монтажника: ",
                     9, "Введите дату монтажа (в формате: дд.мм.гггг): "),
-            TBot.ProcessState.DC_MOUNT, Map.of(
+            ProcessState.DC_MOUNT, Map.of(
                     0, "Введите наименование подстанции: ",
                     1, "Введите номер концентратора: ",
                     2, "Введите наименование монтажной организации: ",
@@ -90,7 +91,7 @@ public class PtoTelegramBotContent {
                     4, "Введите дату монтажа: ")
     );
 
-    static final String[] dcColumnsToClear = {
+    public static final String[] DC_COLUMNS_TO_CLEAR = {
             "Присоединение",
             "Точка учёта",
             "Место установки счетчика (Размещение счетчика)",
@@ -98,7 +99,7 @@ public class PtoTelegramBotContent {
             "Марка счётчика",
             "Номер счетчика"};
 
-    static final String[] not123ColumnsToClear = {
+    public static final String[] NOT_123_COLUMNS_TO_CLEAR = {
             "Марка счётчика",
             "Номер счетчика",
             "Номер УСПД",
@@ -107,13 +108,13 @@ public class PtoTelegramBotContent {
             "ВСЕГО счетчиков на УСПД",
             "Задание на ОТО от диспетчера"};
 
-    static final String[] meterMountColumnsToClear = {
+    public static final String[] METER_MOUNT_COLUMNS_TO_CLEAR = {
             "ID",
             "Счетчик в Горизонте отмечен как НОТ?",
             "ВСЕГО счетчиков на УСПД",
             "Статус счетчика в Горизонте на",
             "Задание на ОТО от диспетчера"};
-    static final Map<String, List<String>> stringsByActionType = Map.of(
+    public static final Map<String, List<String>> STRINGS_BY_ACTION_TYPE = Map.of(
             "WK", List.of("Нет связи со счетчиком",
                     "Ошибка ключа - WrongKey (сделана прошивка счетчика)",
                     " Сброшена ошибка ключа WrongKey (счетчик не на связи). "),
@@ -187,13 +188,22 @@ public class PtoTelegramBotContent {
             "Подтвердить выполнение", "confirm",
             "Отменить выполнение", "cancel");
 
-    public static  final Map<String, String> COMPLETE_BUTTON = Map.of(
+    public static final Map<String, String> COMPLETE_BUTTON = Map.of(
             "Завершить загрузку данных", "LOADING_COMPLETE");
 
     public static final Map<OtoType, String> PHOTO_SUBDIRS_NAME = Map.of(
             OtoType.METER_CHANGE, "Замена ПУ",
             OtoType.TT_CHANGE, "Замена ТТ",
             OtoType.DC_CHANGE, "Замена концентратора"
+    );
+
+    public static final Map<String, String> GET_STRING_NOT = Map.of(
+            "NOT", "НОТ. Потребитель отключен.",
+            "seasonNOT", "НОТ. Сезонный потребитель.",
+            "lowPLC", "НОТ. Низкий уровень PLC сигнала.",
+            "NOT3", "Прибор учета демонтирован (НОТ3).",
+            "NOT2", "Прибор учета сгорел (НОТ2).",
+            "NOT1", "Местонахождения ПУ неизвестно (НОТ1)."
     );
 }
 

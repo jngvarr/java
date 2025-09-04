@@ -3,13 +3,20 @@ package jngvarr.ru.pto_ackye_rzhd.util;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Map;
 
 import static jngvarr.ru.pto_ackye_rzhd.telegram.TBotService.FLEXIBLE_FORMATTER;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.TBotService.STRICT_FORMATTER;
 @Component
 public class DateUtils {
+
+    public static final LocalDate TODAY = LocalDate.now();
+    public static final DateTimeFormatter YYYY_MM_DD = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    public static final DateTimeFormatter DD_MM_YYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final DateTimeFormatter DD_MM_YY = DateTimeFormatter.ofPattern("dd.MM.yy");
+    public static final String FORMATTED_CURRENT_DATE = TODAY.format(YYYY_MM_DD);
+    public static final String STRAIGHT_FORMATTED_CURRENT_DATE = TODAY.format(DD_MM_YYYY);
 
 
     /**

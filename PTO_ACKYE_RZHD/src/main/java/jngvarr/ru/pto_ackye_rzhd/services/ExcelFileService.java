@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.services;
 
+import jngvarr.ru.pto_ackye_rzhd.telegram.services.TBotConversationStateService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -12,19 +13,19 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.*;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.OPERATION_LOG_PATH;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.EEL_TO_NTEL;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
+import static jngvarr.ru.pto_ackye_rzhd.util.DateUtils.STRAIGHT_FORMATTED_CURRENT_DATE;
 
 @Data
 @Slf4j
 @Component
 //@RequiredArgsConstructor
 public class ExcelFileService {
+    public static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+    public static final String OPERATION_LOG_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
+    private final TBotConversationStateService conversationStateService;
 
     public void copyRow(Row sourceRow, Row targetRow, int columnCount) {
         for (int i = 0; i <= columnCount; i++) {
@@ -105,7 +106,7 @@ public class ExcelFileService {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
         CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
         try {
-            date.setCellValue(sdf.parse(straightFormattedCurrentDate));
+            date.setCellValue(sdf.parse(STRAIGHT_FORMATTED_CURRENT_DATE));
         } catch (ParseException e) {
             date.setCellStyle(dateStyle);
         }
@@ -159,15 +160,15 @@ public class ExcelFileService {
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))) {
             paths = new HashMap<>();
             Sheet iikSheet = planOTOWorkbook.getSheet("ИИК");
-            int meterNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер счетчика");
-            int dcNumberColumnIndex = excelFileService.findColumnIndex(iikSheet, "Номер УСПД");
-            int eelColumnIndex = excelFileService.findColumnIndex(iikSheet, "ЭЭЛ");
-            int stationColumnIndex = excelFileService.findColumnIndex(iikSheet, "Железнодорожная станция");
-            int substationColumnIndex = excelFileService.findColumnIndex(iikSheet, "ТП/КТП");
-            int meterPointIndex = excelFileService.findColumnIndex(iikSheet, "Точка учёта");
+            int meterNumberColumnIndex = findColumnIndex(iikSheet, "Номер счетчика");
+            int dcNumberColumnIndex = findColumnIndex(iikSheet, "Номер УСПД");
+            int eelColumnIndex = findColumnIndex(iikSheet, "ЭЭЛ");
+            int stationColumnIndex = findColumnIndex(iikSheet, "Железнодорожная станция");
+            int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
+            int meterPointIndex = findColumnIndex(iikSheet, "Точка учёта");
             for (Row row : iikSheet) {
-                String meterNum = excelFileService.getCellStringValue(row.getCell(meterNumberColumnIndex));
-                String dcNum = excelFileService.getCellStringValue(row.getCell(dcNumberColumnIndex));
+                String meterNum = getCellStringValue(row.getCell(meterNumberColumnIndex));
+                String dcNum = getCellStringValue(row.getCell(dcNumberColumnIndex));
                 if (meterNum != null) {
                     paths.put(meterNum,
                             EEL_TO_NTEL.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
@@ -203,7 +204,7 @@ public class ExcelFileService {
 
         for (Row row : dcWorkSheet) {
             String deviceNumber = getCellStringValue(row.getCell(dcNumberColIndex));
-            String logData = otoLog.getOrDefault(deviceNumber, "");
+            String logData = conversationStateService.getOtoLog().getOrDefault(deviceNumber, "");
             if (!logData.isEmpty()) {
                 row.createCell(dcCurrentStateColIndex).setCellValue(taskOrder);
                 if (isDcChange) row.getCell(dcNumberColIndex).setCellValue(logData.split("_")[1]);
@@ -211,16 +212,16 @@ public class ExcelFileService {
         }
     }
 
-    private void sheetsFilling(long userId) {
-        if (otoLog.isEmpty()) return;
+    public void sheetsFilling(long userId) {
+        if (conversationStateService.getOtoLog().isEmpty()) return;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH));
              Workbook operationLog = new XSSFWorkbook(new FileInputStream(OPERATION_LOG_PATH));
              FileOutputStream fileOut = new FileOutputStream(OPERATION_LOG_PATH);
              FileOutputStream fileOtoOut = new FileOutputStream(PLAN_OTO_PATH);
         ) {
 
-            boolean isDcWorks = containsDcWorks();
-            boolean isDcChange = containsDcChange();
+            boolean isDcWorks = conversationStateService.isOtoLogContainsDcWorks();
+            boolean isDcChange = conversationStateService.isOtoLogContainsDcChange();
 
             Sheet meterWorkSheet = planOTOWorkbook.getSheet("ИИК");
             Sheet operationLogSheet = operationLog.getSheet("ОЖ");
@@ -232,7 +233,7 @@ public class ExcelFileService {
             }
             operationLog.write(fileOut);
             planOTOWorkbook.write(fileOtoOut);
-            otoLog.clear();
+            conversationStateService.clearOtoLog();
 
         } catch (IOException ex) {
             log.error("Error processing workbook", ex);
@@ -251,5 +252,123 @@ public class ExcelFileService {
         newLogRow.getCell(21).setCellValue(taskOrder);
         otoRow.getCell(orderColumnNumber).setCellValue(taskOrder);
 //      newLogRow.createCell(22).setCellValue("Выполнено");   //TODO: добавить после реализации внесения корректировок в Горизонт либо БД
+    }
+
+    private String dataPreparing(Sheet operationLogSheet, Sheet meterSheet, boolean isDcWorks) {
+        int orderColumnNumber = findColumnIndex(meterSheet, "Отчет бригады о выполнении ОТО");
+        int deviceNumberColumnIndex = findColumnIndex(meterSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
+        int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
+        int addedRows = 0;
+        boolean isLogFilled = false;
+        boolean isMounting = conversationStateService.isOtoLogContainsMountWork();
+        String taskOrder = "";
+
+        List<Row> meterRows = new ArrayList<>();
+        for (Row row : meterSheet) {
+            meterRows.add(row);
+        }
+
+        for (Row otoRow : meterRows) {
+            String deviceNumber = getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
+            String logData = conversationStateService.getOtoLog().getOrDefault(deviceNumber, "");
+            boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
+            boolean dataContainsNotNot5 = logData.contains("НОТ") || logData.contains("НОТ5");
+
+            if (!logData.isEmpty()) {
+                if (!isLogFilled) {
+                    Row newLogSheetRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
+                    if (isDcWorks) {
+                        clearCellData(getIndexesOfCleaningCells(DC_COLUMNS_TO_CLEAR, meterSheet), newLogSheetRow); //удаление данных из ненужных ячеек
+                    }
+                    if (isMounting) {
+                        int meterSheetLastRowNumber = meterSheet.getLastRowNum();
+                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
+                        copyRow(otoRow, newOtoRow, orderColumnNumber);
+                        clearCellData(getIndexesOfCleaningCells(METER_MOUNT_COLUMNS_TO_CLEAR, meterSheet), newOtoRow);
+                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
+                    } else {
+                        copyRow(otoRow, newLogSheetRow, orderColumnNumber);
+                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
+                    }
+                    if (addedRows == conversationStateService.getOtoLog().size()) isLogFilled = true;
+                }
+                if (dataContainsNot123) {
+                    clearCellData(getIndexesOfCleaningCells(NOT_123_COLUMNS_TO_CLEAR, meterSheet), otoRow);
+                    String notType = taskOrder.substring(taskOrder.indexOf("(") + 1, taskOrder.indexOf("(") + 1 + 4);
+                    otoRow.getCell(findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
+                }
+                if (dataContainsNotNot5) {
+                    String notType = taskOrder.substring(taskOrder.indexOf("НОТ"), taskOrder.indexOf("НОТ") + 3);
+                    otoRow.getCell(findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
+                }
+            }
+        }
+//        addedRows = 0;
+        return taskOrder;
+    }
+
+    private String addOtoData(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123, int orderColumnNumber) {
+        String workType = logData.substring(0, logData.indexOf("_"));
+        String[] dataParts = logData.split("_");
+        List<String> otoWorksStrings = STRINGS_BY_ACTION_TYPE.get(workType);
+
+        String taskOrder = STRAIGHT_FORMATTED_CURRENT_DATE + " - " + otoWorksStrings.get(2) + switch (workType) {
+
+            case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
+                if (dataParts.length > 1) {
+                    if (!dataContainsNot123) yield " " + dataParts[1];
+                    else {
+                        int firstSpace = dataParts[1].indexOf(" ");
+                        int secondSpace = dataParts[1].indexOf(" ", firstSpace + 1);
+                        yield dataParts[1].substring(0, secondSpace) + " № " + deviceNumber + dataParts[1].substring(secondSpace);
+                    }
+                } else yield "";
+            }
+
+            case "meterChange" -> {
+                changeMeter(deviceNumber, otoRow, deviceNumberColumnIndex, dataParts);
+
+                yield deviceNumber + " (" + dataParts[1]
+                        + " кВт) на " + dataParts[2] + " (" + dataParts[3] + " кВт). Причина замены: " + dataParts[4] + ".";
+            }
+            case "ttChange" ->
+                    String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
+                            dataParts[1], dataParts[2], dataParts[3], dataParts[4],
+                            dataParts[5], dataParts[6], dataParts[7], dataParts[8]);
+            case "dcChange" -> {
+                otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
+                yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
+            }
+            case "iikMount" -> {
+                createMeteringPoint(otoRow, deviceNumberColumnIndex, dataParts);
+                yield "";
+            }
+            default -> null;
+        };
+        copyAndFillLogRow(otoRow, newLogRow, orderColumnNumber, taskOrder, otoWorksStrings);
+
+        return taskOrder;
+    }
+    private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet sheet) {
+        return Arrays.stream(columnNames)
+                .mapToInt(name -> findColumnIndex(sheet, name))
+                .filter(index -> index >= 0)
+                .toArray();
+    }
+
+    public String getStringMapKey(Row row) {
+        return new StringBuilder()
+                .append(getCellStringValue(row.getCell(2)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(3)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(4)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(5)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(6)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(7)))
+                .toString();
     }
 }

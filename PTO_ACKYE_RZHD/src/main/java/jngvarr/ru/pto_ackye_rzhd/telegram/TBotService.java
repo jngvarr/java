@@ -3,7 +3,9 @@ package jngvarr.ru.pto_ackye_rzhd.telegram;
 import jngvarr.ru.pto_ackye_rzhd.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
 import jngvarr.ru.pto_ackye_rzhd.services.*;
-import jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
+import jngvarr.ru.pto_ackye_rzhd.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -18,11 +20,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.*;
-import java.util.stream.Stream;
-
-import static jngvarr.ru.pto_ackye_rzhd.telegram.services.FileManagement.straightFormattedCurrentDate;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.not123ColumnsToClear;
 
 @Slf4j
 @Component
@@ -232,7 +229,7 @@ public class TBotService {
         String meterPlacement = dataParts[7];
         String mountOrg = dataParts[9];
         String date = dataParts[10];
-        LocalDate meteringPointMountDate = LocalDate.parse(date, FileManagement.DD_MM_YYYY);
+        LocalDate meteringPointMountDate = LocalDate.parse(date, DateUtils.DD_MM_YYYY);
         Substation s = substationService.findByName(substationName, stationName).orElse(null);
         if (s == null) {
             s = createSubstationIfNotExists(otoRow);
@@ -372,188 +369,6 @@ public class TBotService {
                     return substationService.create(s);
                 });
     }
-    private String dataPreparing(Sheet operationLogSheet, Sheet meterSheet, boolean isDcWorks) {
-        int orderColumnNumber = excelFileService.findColumnIndex(meterSheet, "Отчет бригады о выполнении ОТО");
-        int deviceNumberColumnIndex = excelFileService.findColumnIndex(meterSheet, isDcWorks ? "Номер УСПД" : "Номер счетчика");
-        int operationLogLastRowNumber = operationLogSheet.getLastRowNum();
-        int addedRows = 0;
-        boolean isLogFilled = false;
-        boolean isMounting = containsMountWork();
-        String taskOrder = "";
-
-        List<Row> meterRows = new ArrayList<>();
-        for (Row row : meterSheet) {
-            meterRows.add(row);
-        }
-
-        for (Row otoRow : meterRows) {
-//            log.info(String.valueOf(otoRow.getRowNum()));
-            String deviceNumber = excelFileService.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
-            String logData = otoLog.getOrDefault(deviceNumber, "");
-            boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
-            boolean dataContainsNotNot5 = logData.contains("НОТ") || logData.contains("НОТ5");
-
-            if (!logData.isEmpty()) {
-                if (!isLogFilled) {
-                    Row newLogSheetRow = operationLogSheet.createRow(operationLogLastRowNumber + ++addedRows);
-                    if (isDcWorks) {
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(dcColumnsToClear, meterSheet), newLogSheetRow); //удаление данных из ненужных ячеек
-                    }
-                    if (isMounting) {
-                        int meterSheetLastRowNumber = meterSheet.getLastRowNum();
-                        Row newOtoRow = meterSheet.createRow(meterSheetLastRowNumber + 1);
-                        excelFileService.copyRow(otoRow, newOtoRow, orderColumnNumber);
-                        excelFileService.clearCellData(getIndexesOfCleaningCells(meterMountColumnsToClear, meterSheet), newOtoRow);
-                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, newOtoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
-                    } else {
-                        excelFileService.copyRow(otoRow, newLogSheetRow, orderColumnNumber);
-                        taskOrder = addOtoData(deviceNumber, logData, newLogSheetRow, otoRow, deviceNumberColumnIndex, dataContainsNot123, orderColumnNumber);
-                    }
-                    if (addedRows == otoLog.size()) isLogFilled = true;
-                }
-                if (dataContainsNot123) {
-                    excelFileService.clearCellData(getIndexesOfCleaningCells(not123ColumnsToClear, meterSheet), otoRow);
-                    String notType = taskOrder.substring(taskOrder.indexOf("(") + 1, taskOrder.indexOf("(") + 1 + 4);
-                    otoRow.getCell(excelFileService.findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
-                }
-                if (dataContainsNotNot5) {
-                    String notType = taskOrder.substring(taskOrder.indexOf("НОТ"), taskOrder.indexOf("НОТ") + 3);
-                    otoRow.getCell(excelFileService.findColumnIndex(meterSheet, "Текущее состояние")).setCellValue(notType);
-                }
-            }
-        }
-        addedRows = 0;
-        return taskOrder;
-    }
-
-
-    private boolean containsDcWorks() {
-        return Stream.concat(otoLog.keySet().stream(), otoLog.values().stream())
-                .anyMatch(val -> val.contains("LW") || val.contains("LJ"));
-    }
-
-    private boolean containsDcChange() {
-        return otoLog.values().stream().anyMatch(val -> val.contains("dcChange"));
-    }
-
-    private boolean containsMountWork() {
-        return otoLog.values().stream().anyMatch(v -> v.contains("Mount"));
-    }
-
-
-    private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet sheet) {
-        return Arrays.stream(columnNames)
-                .mapToInt(name -> excelFileService.findColumnIndex(sheet, name))
-                .filter(index -> index >= 0)
-                .toArray();
-    }
-
-
-
-    void formingOtoLog(String deviceInfo, Object typeIndicator) {
-        String deviceNumber = deviceInfo.substring(0, deviceInfo.indexOf("_"));
-        String workType = setWorkType(typeIndicator, deviceNumber);
-        otoLog.put(deviceNumber, workType + deviceInfo.substring(deviceInfo.indexOf("_")));
-        processInfo = "";
-        sequenceNumber = 0;
-    }
-
-    private String setWorkType(Object typeIndicator, String deviceNumber) {
-        if (typeIndicator instanceof OtoType otoType) {
-            return switch (otoType) {
-                case METER_CHANGE -> "meterChange";
-                case TT_CHANGE -> "ttChange";
-                case DC_CHANGE -> "dcChange";
-                case SET_NOT -> "NOT";
-                case SUPPLY_RESTORING ->
-                        deviceNumber.contains("LW") || deviceNumber.contains("LJ") ? "dcSupply" : "meterSupply";
-                default -> "unknown";
-            };
-        } else if (typeIndicator instanceof TBot.ProcessState processState) {
-            return switch (processState) {
-                case IIK_MOUNT -> "iikMount";
-                case DC_MOUNT -> "dcMount";
-                default -> "unknown";
-            };
-        }
-        return "unknown";
-    }
-    private String addOtoData(String deviceNumber, String logData, Row newLogRow, Row otoRow, int deviceNumberColumnIndex, boolean dataContainsNot123, int orderColumnNumber) {
-        String workType = logData.substring(0, logData.indexOf("_"));
-        String[] dataParts = logData.split("_");
-        List<String> columns = stringsByActionType.get(workType);
-
-        String taskOrder = straightFormattedCurrentDate + " - " + columns.get(2) + switch (workType) {
-
-            case "WK", "NOT", "meterSupply", "dcSupply", "dcRestart" -> {
-                if (dataParts.length > 1) {
-                    if (!dataContainsNot123) yield " " + dataParts[1];
-                    else {
-                        int firstSpace = dataParts[1].indexOf(" ");
-                        int secondSpace = dataParts[1].indexOf(" ", firstSpace + 1);
-                        yield dataParts[1].substring(0, secondSpace) + " № " + deviceNumber + dataParts[1].substring(secondSpace);
-                    }
-                } else yield "";
-            }
-
-            case "meterChange" -> {
-                changeMeter(deviceNumber, otoRow, deviceNumberColumnIndex, dataParts);
-
-                yield deviceNumber + " (" + dataParts[1]
-                        + " кВт) на " + dataParts[2] + " (" + dataParts[3] + " кВт). Причина замены: " + dataParts[4] + ".";
-            }
-            case "ttChange" ->
-                    String.format("%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина замены: %s.",
-                            dataParts[1], dataParts[2], dataParts[3], dataParts[4],
-                            dataParts[5], dataParts[6], dataParts[7], dataParts[8]);
-            case "dcChange" -> {
-                otoRow.getCell(deviceNumberColumnIndex).setCellValue(dataParts[1]);
-                yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
-            }
-            case "iikMount" -> {
-                createMeteringPoint(otoRow, deviceNumberColumnIndex, dataParts);
-                yield "";
-            }
-            default -> null;
-        };
-        excelFileService.copyAndFillLogRow(otoRow, newLogRow, orderColumnNumber, taskOrder, columns);
-
-        return taskOrder;
-    }
-
-    String actionConfirmation(Long userId) {
-        StringBuilder resultStr = new StringBuilder("Выполнены следующие действия:\n");
-        int lineCounter = 0;
-
-        for (Map.Entry<String, String> entry : otoLog.entrySet()) {
-            String key = entry.getKey();
-            String[] str = entry.getValue().split("_");
-            str[4] = str[4].toUpperCase();
-            String actionType = str[0];
-            List<String> strings = stringsByActionType.get(actionType);
-
-            resultStr.append(++lineCounter).append(". ").append(strings.get(2));
-            switch (actionType) {
-                case "meterChange" -> resultStr.append(String.format(
-                        "%s с показаниями: %s\n на прибор учета № %s с показаниями: %s. Причина: %s.", key, str[1], str[2], str[3], str[4]));
-                case "ttChange" -> resultStr.append(String.format(
-                        "%s, номиналом %s, с классом точности %s, %sг.в. №АВС = %s, %s, %s. Причина: %s.",
-                        str[1], str[2], str[3], str[4], str[5], str[6], str[7], str[8]));
-                case "dcChange" -> resultStr.append(String.format(
-                        "%s на концентратор №%s. Причина: %s.", key, str[1], str[2]));
-                case "iikMount" -> resultStr.append(String.format(
-                        "\nНаименование ТУ: %s, \nПрибор учёта: %s №: %s. \nСтанция: %s, \nТП/КТП: %s, \nАдрес: %s, \nДата монтажа: %s.",
-                        str[5], str[4], str[3], str[1], str[2], str[6], str[10]));
-                default -> {
-                    String device = TBot.ProcessState.IIK_WORKS.equals(processStates.get(userId)) ? " ПУ" : " Концентратор";
-                    resultStr.append(String.format(device + " № %s - ", key));
-                    if (str.length > 1) resultStr.append(" ").append(str[str.length - 1]).append(".");
-                }
-            }
-            resultStr.append("\n");
-        }
-        return resultStr.toString();
-    }
 
     protected void fillDbWithIikData(Sheet sheet) {
         Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
@@ -650,7 +465,7 @@ public class TBotService {
     }
 
     private MeteringPoint createIIk(Row row) {
-        String mapKey = getStringMapKey(row);
+        String mapKey = excelFileService.getStringMapKey(row);
 
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
 
@@ -674,22 +489,6 @@ public class TBotService {
             newMeteringPoint.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
         }
         return newMeteringPoint;
-    }
-
-    private String getStringMapKey(Row row) {
-        return new StringBuilder()
-                .append(getCellStringValue(row.getCell(2)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(3)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(4)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(5)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(6)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(7)))
-                .toString();
     }
 
     private static String getCellStringValue(Cell cell) {
