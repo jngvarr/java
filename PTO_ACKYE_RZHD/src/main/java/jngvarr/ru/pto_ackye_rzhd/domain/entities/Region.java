@@ -1,0 +1,15 @@
+package jngvarr.ru.pto_ackye_rzhd.domain.entities;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name = "regions")
+public class Region {
+    @Id
+    @GeneratedValue(strategy = GenerationType.TABLE)
+    private Long id;
+    @Column(nullable = false, unique = true)
+    private String name;
+}

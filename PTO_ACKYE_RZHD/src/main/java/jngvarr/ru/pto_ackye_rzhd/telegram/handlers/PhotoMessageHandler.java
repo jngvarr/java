@@ -1,13 +1,13 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
 import jngvarr.ru.pto_ackye_rzhd.telegram.*;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PendingPhoto;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PhotoState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.services.PreparingPhotoService;
-import jngvarr.ru.pto_ackye_rzhd.telegram.services.TBotConversationStateService;
-import jngvarr.ru.pto_ackye_rzhd.util.StringUtils;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
+import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
+import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

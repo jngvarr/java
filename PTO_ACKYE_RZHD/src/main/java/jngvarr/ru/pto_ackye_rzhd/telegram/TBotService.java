@@ -1,11 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
-import jngvarr.ru.pto_ackye_rzhd.entities.*;
-import jngvarr.ru.pto_ackye_rzhd.repositories.others.*;
-import jngvarr.ru.pto_ackye_rzhd.services.*;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.util.DateUtils;
+import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.*;
+import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.*;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.*;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
+import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -17,9 +17,9 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.util.*;
+
+import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTER_DDMMYYYY;
 
 @Slf4j
 @Component
@@ -36,16 +36,8 @@ public class TBotService {
     private final PowerSupplyDistrictRepository powerSupplyDistrictRepository;
     private final StationRepository stationRepository;
     private final SubstationService substationService;
-    public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    public static final DateTimeFormatter STRICT_FORMATTER =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                    .withResolverStyle(ResolverStyle.STRICT);
 
-    public static final DateTimeFormatter FLEXIBLE_FORMATTER =
-            DateTimeFormatter.ofPattern("d.M.yyyy")
-                    .withResolverStyle(ResolverStyle.SMART);
     private final long startTime = System.currentTimeMillis();
-    public Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
     private static final int CELL_NUMBER_REGION_NAME = 2;
     private static final int CELL_NUMBER_STATION_NAME = 6;
     private static final int CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME = 4;
@@ -94,31 +86,12 @@ public class TBotService {
     }
 
 
-    public enum EntityType {
-        SUBSTATION, STATION, POWER_SUPPLY_DISTRICT, POWER_SUPPLY_ENTERPRISE, STRUCTURAL_SUBDIVISION, REGION, METERING_POINT, METER, DC
-    }
 
     public List<String> MeterType = Arrays.asList(
             "EM-1021", "EM-1023", "EM-2023", "KNUM-1021", "KNUM-1023", "KNUM-2023");
 
 
-    public void addDataFromExcelFile(String dataFilePath) {
-        try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
-        ) {
-            for (EntityType type : EntityType.values()) {
-                entityCache.put(type, new HashMap<>());
-            }
-            fillDbWithData(planOTOWorkbook.getSheet("ИВКЭ"), planOTOWorkbook.getSheet("ИИК"));
 
-            log.info("Data filled successfully!");
-
-        } catch (IOException ex) {
-            log.error("Error processing workbook", ex);
-        }
-
-        long duration = System.currentTimeMillis() - startTime;
-        log.info("Execution time: " + duration / 1000 + " seconds");
-    }
 
     protected void fillDbWithData(Sheet ivkeSheet, Sheet iikSheet) {
         fillDbWithIvkeData(ivkeSheet);
@@ -135,20 +108,7 @@ public class TBotService {
     }
 
 
-    protected void fillDbWithIvkeData(Sheet sheet) {
-        getAllDcMap(dcService.getAllDc());
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0) {
-                // Пропускаем первую строку, это заголовок
-                continue;
-            }
-            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
-            if (!entityCache.get(EntityType.DC).containsKey(dcNumber)) {
-                Substation substation = createSubstationIfNotExists(row);
-                createDc(substation, dcNumber, row);
-            }
-        }
-    }
+
 
     void changeMeter(String deviceNumber, Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
         meterChangeInExcelFile(otoRow, deviceNumberColumnIndex, dataParts[2]);
@@ -229,7 +189,7 @@ public class TBotService {
         String meterPlacement = dataParts[7];
         String mountOrg = dataParts[9];
         String date = dataParts[10];
-        LocalDate meteringPointMountDate = LocalDate.parse(date, DateUtils.DD_MM_YYYY);
+        LocalDate meteringPointMountDate = LocalDate.parse(date, DateUtils.DATE_FORMATTER_DDMMYYYY);
         Substation s = substationService.findByName(substationName, stationName).orElse(null);
         if (s == null) {
             s = createSubstationIfNotExists(otoRow);
@@ -253,59 +213,6 @@ public class TBotService {
         meteringPointService.create(nmp);
     }
 
-    private boolean isMeterInstalled(String meterNum) {
-        return entityCache
-                .get(EntityType.METERING_POINT)
-                .values()
-                .stream()
-                .map(o -> (MeteringPoint) o)
-                .map(MeteringPoint::getMeter)
-                .filter(Objects::nonNull)
-                .anyMatch(m -> meterNum.equals(m.getMeterNumber()));
-    }
-
-    private void createDc(Substation substation, String dcNumber, Row row) {
-        Dc newDc = new Dc();
-        newDc.setSubstation(substation);
-        log.info("{}", row.getRowNum());
-        String sectionNumber = getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
-        if (!sectionNumber.isBlank()) {
-            newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
-        } else newDc.setBusSection(1);
-
-        String installationDateStr = getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE));
-        if (installationDateStr != null && !installationDateStr.isBlank()) {
-            newDc.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
-        }
-        newDc.setDcModel(DC_MODEL);
-        newDc.setMeters(new ArrayList<>());
-        newDc.setDcNumber(dcNumber);
-        dcService.createDc(newDc);
-        entityCache.get(EntityType.DC).putIfAbsent(dcNumber, newDc);
-    }
-
-    private Dc createVirtualDc(Substation substation, String dcNumber) {
-        Dc newDc = new Dc();
-        newDc.setSubstation(substation);
-        newDc.setDcModel("Virtual");
-        newDc.setMeters(new ArrayList<>());
-        newDc.setDcNumber(dcNumber);
-        dcService.createDc(newDc);
-        entityCache.get(EntityType.DC).putIfAbsent(dcNumber, newDc);
-        return newDc;
-    }
-
-    public void changeMeterOnDc(Meter oldMeter, Meter newMeter) {
-        Dc dc = dcService.getDcByNumber(oldMeter.getDc().getDcNumber());
-        List<Meter> meters = dc.getMeters();
-        meters.removeIf(m -> m.getMeterNumber().equals(oldMeter.getMeterNumber()));
-        meters.add(newMeter);
-        newMeter.setDc(dc);
-        dc.setMeters(meters);
-        dcService.updateDc(dc, dc.getId());
-        oldMeter.setDc(dcService.getDcByNumber("LJ03514666"));
-        meterService.updateMeter(oldMeter, oldMeter.getId());
-    }
 
     public Substation createSubstationIfNotExists(Row row) {
 

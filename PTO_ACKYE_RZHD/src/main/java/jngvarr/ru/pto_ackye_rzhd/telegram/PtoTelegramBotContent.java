@@ -1,8 +1,8 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.OtoType;
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.ProcessState;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 
 import java.util.List;
 import java.util.Map;
@@ -71,7 +71,7 @@ public class PtoTelegramBotContent {
                     1, "Опишите причину замены: ")
     );
 
-    static final Map<ProcessState, Map<Integer, String>> mountedEquipmentDatum = Map.of(
+    public static final Map<ProcessState, Map<Integer, String>> MOUNTED_EQUIPMENT_DATUM = Map.of(
             ProcessState.IIK_MOUNT, Map.of(
                     0, "Введите наименование станции: ",
                     1, "Введите наименование подстанции: ",

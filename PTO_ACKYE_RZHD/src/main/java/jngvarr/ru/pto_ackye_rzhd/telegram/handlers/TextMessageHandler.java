@@ -1,9 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
-import jngvarr.ru.pto_ackye_rzhd.telegram.domain.PendingPhoto;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
+import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
-import jngvarr.ru.pto_ackye_rzhd.telegram.services.TBotConversationStateService;
-import jngvarr.ru.pto_ackye_rzhd.util.TBotConversationUtils;
+import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.application.util.TBotConversationUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +33,8 @@ public class TextMessageHandler {
         long userId = update.getMessage().getFrom().getId();
         long chatId = update.getMessage().getChatId();
 
-        TBot.ProcessState processState = processStates.get(userId);
-        OtoType otoType = otoTypes.get(userId);
+        ProcessState processState = conversationStateService.getProcessState(userId);
+        OtoType otoType = conversationStateService.getOtoType(userId);
 
 
         switch (msgText) {
@@ -92,13 +94,13 @@ public class TextMessageHandler {
 
     }
 
-    private void handleEquipmentMount(long userId, long chatId, String msgText, TBot.ProcessState state) {
-        Map<Integer, String> mountedEquipmentData = mountedEquipmentDatum.get(state);
+    private void handleEquipmentMount(long userId, long chatId, String msgText, ProcessState state) {
+        Map<Integer, String> mountedEquipmentData = MOUNTED_EQUIPMENT_DATUM.get(state);
         boolean hasWrongInput = false;
         if (msgText != null && !msgText.trim().isEmpty()) {
 
             // Проверка типа прибора учета
-            if (TBot.ProcessState.IIK_MOUNT.equals(processStates.get(userId))
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
                     && sequenceNumber == 4
                     && !tBotService.MeterType.contains(msgText.toUpperCase())) {
 
@@ -108,14 +110,14 @@ public class TextMessageHandler {
             }
 
             // Для всех остальных шагов (кроме даты на шаге 9) добавляем текст как есть
-            if (TBot.ProcessState.IIK_MOUNT.equals(processStates.get(userId))
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
                     && sequenceNumber != 10
                     && !hasWrongInput) {
                 processInfo += msgText + "_";
             }
 
             // Обработка по шагам
-            if (TBot.ProcessState.IIK_MOUNT.equals(processStates.get(userId))) {
+            if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))) {
                 switch (sequenceNumber) {
                     case 0 -> {
                         String path = stringUtils.getSavingPaths().get(msgText);

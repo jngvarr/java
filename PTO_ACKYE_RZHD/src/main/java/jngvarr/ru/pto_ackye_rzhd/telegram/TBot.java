@@ -1,11 +1,11 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
-import jngvarr.ru.pto_ackye_rzhd.config.BotConfig;
-import jngvarr.ru.pto_ackye_rzhd.entities.User;
+import jngvarr.ru.pto_ackye_rzhd.telegram.config.BotConfig;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.CallbackQueryHandler;
 import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.PhotoMessageHandler;
 import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.TextMessageHandler;
-import jngvarr.ru.pto_ackye_rzhd.services.*;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;

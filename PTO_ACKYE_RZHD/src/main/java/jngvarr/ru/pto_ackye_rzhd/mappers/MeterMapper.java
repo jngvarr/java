@@ -3,10 +3,10 @@ package jngvarr.ru.pto_ackye_rzhd.mappers;
 import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
 import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
-import jngvarr.ru.pto_ackye_rzhd.entities.Dc;
-import jngvarr.ru.pto_ackye_rzhd.entities.Meter;
-import jngvarr.ru.pto_ackye_rzhd.entities.MeteringPoint;
-import jngvarr.ru.pto_ackye_rzhd.entities.Substation;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 
 public class MeterMapper {
 
