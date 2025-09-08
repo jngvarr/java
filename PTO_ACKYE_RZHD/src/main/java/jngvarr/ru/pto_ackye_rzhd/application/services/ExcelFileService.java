@@ -1,11 +1,23 @@
 package jngvarr.ru.pto_ackye_rzhd.application.services;
 
 import jngvarr.ru.pto_ackye_rzhd.application.management.DcManagementService;
+import jngvarr.ru.pto_ackye_rzhd.application.management.MeterManagementService;
+import jngvarr.ru.pto_ackye_rzhd.application.management.MeteringPointManagementService;
+import jngvarr.ru.pto_ackye_rzhd.application.management.SubstationManagementService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.DcService;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.MeterService;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.MeteringPointService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
+import jngvarr.ru.pto_ackye_rzhd.dto.SubstationDTO;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -19,20 +31,26 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
+import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.STRAIGHT_FORMATTED_CURRENT_DATE;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 @Data
 @Slf4j
 @Component
+@RequiredArgsConstructor
 //@RequiredArgsConstructor
 public class ExcelFileService {
-    public static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
-    public static final String OPERATION_LOG_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
-    private final TBotConversationStateService conversationStateService;
+
     private final DcService dcService;
-    private final DcManagementService dcManagementService;
+    private final MeterService meterService;
     private final EntityCache entityCache;
+    private final DcManagementService dcManagementService;
+    private final TBotConversationStateService conversationStateService;
+    private final SubstationManagementService substationManagementService;
+    private final MeterManagementService meterManagementService;
+    private final MeteringPointManagementService meteringPointManagementService;
+    private final MeteringPointService meteringPointService;
 
     public void copyRow(Row sourceRow, Row targetRow, int columnCount) {
         for (int i = 0; i <= columnCount; i++) {
@@ -73,6 +91,7 @@ public class ExcelFileService {
             }
         }
     }
+
     CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
         CellStyle dateCellStyle = resultWorkbook.createCellStyle();
         DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
@@ -125,6 +144,7 @@ public class ExcelFileService {
             row.createCell(anInt).setCellValue("");
         }
     }
+
     public String getCellStringValue(Cell cell) {
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -160,8 +180,6 @@ public class ExcelFileService {
     }
 
     public Map<String, String> getPhotoSavingPathFromExcel() {
-
-        ExcelFileService excelFileService = new ExcelFileService();
 
         Map<String, String> paths = null;
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_OTO_PATH))) {
@@ -314,7 +332,15 @@ public class ExcelFileService {
         return taskOrder;
     }
 
+    public void fillDbWithData(Sheet ivkeSheet, Sheet iikSheet) {
+        fillDbWithIvkeData(ivkeSheet);
+        dcManagementService.saveDcFromMap();
+        fillDbWithIikData(iikSheet);
+        dcManagementService.saveDcFromMap(); //TODO переделать
+    }
+
     public void addDataFromExcelFile(String dataFilePath) {
+        long startTime = System.currentTimeMillis();
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
         ) {
             fillDbWithData(planOTOWorkbook.getSheet("ИВКЭ"), planOTOWorkbook.getSheet("ИИК"));
@@ -330,7 +356,7 @@ public class ExcelFileService {
     }
 
     public void fillDbWithIvkeData(Sheet sheet) {
-        getAllDcMap(dcService.getAllDc());
+        dcManagementService.getAllDcMap(dcService.getAllDc());
         for (Row row : sheet) {
             if (row.getRowNum() == 0) {
                 // Пропускаем первую строку, это заголовок
@@ -341,6 +367,53 @@ public class ExcelFileService {
                 Substation substation = createSubstationIfNotExists(row);
                 dcManagementService.createDc(substation, dcNumber, row);
             }
+        }
+    }
+
+    public void fillDbWithIikData(Sheet sheet) {
+        Map<Long, MeteringPoint> meteringPoints = new HashMap<>();
+        for (MeteringPoint mp : meteringPointService.getAllIik()) {
+            meteringPoints.put(mp.getId(), mp);
+        }
+
+        Map<String, Meter> meters = new HashMap<>();
+        for (Meter m : meterService.getAllMeters()) {
+            meters.put(m.getMeterNumber(), m);
+        }
+
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+            Meter newMeter = meterManagementService.constructMeter(row);
+            MeteringPoint newIik = meteringPointManagementService.createIIk(row);
+
+            if (!meteringPoints.containsKey(newIik.getId())) {
+                String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
+                if (dcNumber == null) {
+                    if (newIik.getMeteringPointAddress() == null) newIik.setMeteringPointAddress("");
+                } else {
+                    Dc dcByNumber = dcService.getDcByNumber(dcNumber);
+                    if (dcByNumber == null && !dcNumber.isBlank()) {
+                        dcByNumber = dcManagementService.createVirtualDc(newIik.getSubstation(), dcNumber);
+                    }
+
+                    if (dcByNumber != null) {
+                        newMeter.setDc(dcByNumber);
+                        if (!meters.containsKey(newMeter.getMeterNumber())) {
+                            newMeter = meterService.create(newMeter);
+                        }
+//                    newMeter = meterService.getMeterByNumber(newMeter.getMeterNumber());
+                        dcByNumber.getMeters().add(newMeter);
+                        entityCache.get(EntityType.DC).put(dcByNumber.getDcNumber(), dcByNumber);
+                    }
+                }
+                newIik.setMeter(newMeter);
+                meteringPoints.put(newIik.getId(), newIik);
+            }
+        }
+        for (MeteringPoint point : meteringPoints.values()) {
+            meteringPointService.create(point);
         }
     }
 
@@ -363,7 +436,7 @@ public class ExcelFileService {
             }
 
             case "meterChange" -> {
-                changeMeter(deviceNumber, otoRow, deviceNumberColumnIndex, dataParts);
+                meterManagementService.changeMeter(deviceNumber, otoRow, deviceNumberColumnIndex, dataParts);
 
                 yield deviceNumber + " (" + dataParts[1]
                         + " кВт) на " + dataParts[2] + " (" + dataParts[3] + " кВт). Причина замены: " + dataParts[4] + ".";
@@ -377,7 +450,7 @@ public class ExcelFileService {
                 yield String.format("%s на концентратор № %s. Причина замены: %s.", deviceNumber, dataParts[1], dataParts[2]);
             }
             case "iikMount" -> {
-                createMeteringPoint(otoRow, deviceNumberColumnIndex, dataParts);
+                meteringPointManagementService.createMeteringPoint(otoRow, deviceNumberColumnIndex, dataParts);
                 yield "";
             }
             default -> null;
@@ -386,6 +459,7 @@ public class ExcelFileService {
 
         return taskOrder;
     }
+
     private int[] getIndexesOfCleaningCells(String[] columnNames, Sheet sheet) {
         return Arrays.stream(columnNames)
                 .mapToInt(name -> findColumnIndex(sheet, name))
@@ -393,19 +467,82 @@ public class ExcelFileService {
                 .toArray();
     }
 
-    public String getStringMapKey(Row row) {
-        return new StringBuilder()
-                .append(getCellStringValue(row.getCell(2)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(3)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(4)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(5)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(6)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(7)))
-                .toString();
+    public void createNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
+        String deviceNumber = dataParts[0];
+        String mountingMeterNumber = dataParts[3];
+        String meterType = dataParts[4].toUpperCase();
+        String meteringPointName = dataParts[5];
+        String meteringPointAddress = dataParts[6];
+        String meterPlacement = dataParts[7];
+        String mountOrg = dataParts[9];
+        String date = dataParts[10];
+        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber); //Номер счетчика
+        if (mountingDeviceNumber instanceof Long) {
+            otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
+        } else {
+            otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
+        }
+        otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
+        otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
+        otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
+        otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
+//        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
+//        if (mountDeviceNumber instanceof Long) {
+//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
+//        } else {
+//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
+//        }
+
+        otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
+        Cell mountDateCell = otoRow.getCell(15);
+        mountDateCell.setCellValue(date); // Дата монтажа ТУ
+        setDateCellStyle(mountDateCell);
+        otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
+    }
+
+    public void meterChangeInExcelFile(Row otoRow, int deviceNumberColumnIndex, String mountingMeterNumber) {
+        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
+        // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
+        if (mountingDeviceNumber instanceof Long) {
+            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
+        } else {
+            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
+        }
+    }
+
+    public Optional<String[]> getMeterData(String mountingMeterNumber) {
+
+        try (Workbook meterDataWorkbook = new XSSFWorkbook(new FileInputStream(METER_DATA_FILE_PATH))) {
+            Sheet dataSheet = meterDataWorkbook.getSheet("Свод");
+
+            for (Row row : dataSheet) {
+                String cellValue = getCellStringValue(row.getCell(1));
+                if (mountingMeterNumber.equals(cellValue)) {
+                    String[] result = {
+                            getCellStringValue(row.getCell(1)),
+                            getCellStringValue(row.getCell(2)),
+                            getCellStringValue(row.getCell(3))
+                    };
+                    return Optional.of(result);
+                }
+            }
+
+            log.warn("Meter number {} not found in file {}", mountingMeterNumber, METER_DATA_FILE_PATH);
+
+        } catch (IOException ex) {
+            log.error("Error processing workbook {}", METER_DATA_FILE_PATH, ex);
+        }
+        return Optional.empty();
+    }
+
+    public Substation createSubstationIfNotExists(Row row) {
+        SubstationDTO newSubstation = new SubstationDTO();
+        newSubstation.setRegionName(getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
+        newSubstation.setSubdivisionName(getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
+        newSubstation.setPowerSupplyEnterpriseName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME)));
+        newSubstation.setDistrictName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME)));
+        newSubstation.setStationName(getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME)));
+        newSubstation.setSubstationName(getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
+        return substationManagementService.createSubstationIfNotExists(newSubstation);
     }
 }

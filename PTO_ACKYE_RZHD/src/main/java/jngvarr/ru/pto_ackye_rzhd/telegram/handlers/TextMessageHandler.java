@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
+import jngvarr.ru.pto_ackye_rzhd.application.management.MeterManagementService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
@@ -102,7 +103,7 @@ public class TextMessageHandler {
             // Проверка типа прибора учета
             if (ProcessState.IIK_MOUNT.equals(processStates.get(userId))
                     && sequenceNumber == 4
-                    && !tBotService.MeterType.contains(msgText.toUpperCase())) {
+                    && MeterManagementService.getMeterTypes().contains(msgText.toUpperCase())) {
 
                 tBot.sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
                 sequenceNumber--;
@@ -155,9 +156,9 @@ public class TextMessageHandler {
 
     private void handleManualInsert(long userId, long chatId, String deviceNumber) {
         String manualInput = deviceNumber.trim();
-        PendingPhoto pending = pendingPhotos.get(userId);
+        PendingPhoto pending = conversationStateService.getPendingPhoto(userId);
         if (pending != null) {
-            if (processStates.get(userId).equals(TBot.ProcessState.MANUAL_INSERT_METER_INDICATION)) {
+            if (conversationStateService.getProcessState(userId).equals(ProcessState.MANUAL_INSERT_METER_INDICATION)) {
                 pending.setAdditionalInfo(manualInput);
             } else {
                 pending.setDeviceNumber(manualInput);
@@ -167,10 +168,10 @@ public class TextMessageHandler {
                 photoMessageHandler.savePhoto(userId, chatId, pending);
             } else if (pending.getDeviceNumber() == null) {
                 tBot.sendMessage(chatId, userId, "Заводской номер не найден. Введите номер вручную:");
-                conversationStateService.setProcessStates(userId, TBot.ProcessState.MANUAL_INSERT_METER_NUMBER);
+                conversationStateService.setProcessState(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
             } else {
                 tBot.sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
-                conversationStateService.setProcessStates(userId, TBot.ProcessState.MANUAL_INSERT_METER_INDICATION);
+                conversationStateService.setProcessState(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
             }
         } else {
             tBot.sendMessage(chatId, userId, "Ошибка: нет ожидающих фото для привязки показаний.");
@@ -183,13 +184,13 @@ public class TextMessageHandler {
 
         switch (currentOtoType) {
             case WK_DROP -> {
-                otoLog.put(messageText, "WK_");
+                conversationStateService.getOtoLog().put(messageText, "WK_");
                 tBot.editTextAndButtons("Введите номер следующего прибора учета или закончите ввод.", COMPLETE_BUTTON, chatId, userId, 1);
             }
             case SET_NOT -> {
                 processInfo += msgText + "_";
                 if (sequenceNumber == 0) {
-                    if (TBot.ProcessState.DC_WORKS.equals(processStates.get(userId))) {
+                    if (ProcessState.DC_WORKS.equals(processStates.get(userId))) {
                         tBot.sendMessage(chatId, userId, "Введите причину отключения: ");
                     } else {
                         chooseNotType(chatId, userId);
@@ -211,7 +212,7 @@ public class TextMessageHandler {
                         tBot.sendTextMessage(tBotService.actionConfirmation(userId), CONFIRM_MENU, chatId, userId, 2);
                     }
                 } else {
-                    otoLog.put(messageText, "dcRestart_");
+                    conversationStateService.getOtoLog().put(messageText, "dcRestart_");
                     tBot.sendTextMessage(tBotService.actionConfirmation(userId), CONFIRM_MENU, chatId, userId, 2);
                 }
             }

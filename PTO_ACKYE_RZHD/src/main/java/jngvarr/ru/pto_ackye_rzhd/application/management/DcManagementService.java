@@ -16,12 +16,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTER_DDMMYYYY;
-
-
-
-
-
 @Component
 @Slf4j
 @Data
@@ -61,15 +57,25 @@ public class DcManagementService {
         return newDc;
     }
 
-    public void changeMeterOnDc(Meter oldMeter, Meter newMeter) {
-        Dc dc = dcService.getDcByNumber(oldMeter.getDc().getDcNumber());
-        List<Meter> meters = dc.getMeters();
-        meters.removeIf(m -> m.getMeterNumber().equals(oldMeter.getMeterNumber()));
-        meters.add(newMeter);
-        newMeter.setDc(dc);
-        dc.setMeters(meters);
-        dcService.updateDc(dc, dc.getId());
-        oldMeter.setDc(dcService.getDcByNumber("LJ03514666"));
-        meterService.updateMeter(oldMeter, oldMeter.getId());
+    public Dc addMeterToDc(Meter meter, String dcNum) {
+        if (entityCache.get(EntityType.DC).containsKey(dcNum)) {
+            Dc dc = dcService.getDcByNumber(dcNum);
+            dc.getMeters().add(meter);
+            return dc;
+        }
+        return null;
+    }
+
+    public void getAllDcMap(List<Dc> dcs) {
+        for (Dc dc : dcs) {
+            entityCache.put(EntityType.DC, dc.getDcNumber(), dc);
+        }
+    }
+
+    public void saveDcFromMap() {
+        for (
+                Object dc : entityCache.get(EntityType.DC, Substation.class).values()) {
+            dcService.createDc((Dc) dc);
+        }
     }
 }

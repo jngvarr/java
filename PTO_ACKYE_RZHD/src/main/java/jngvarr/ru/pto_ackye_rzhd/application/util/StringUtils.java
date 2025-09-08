@@ -1,15 +1,22 @@
 package jngvarr.ru.pto_ackye_rzhd.application.util;
 
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import lombok.Data;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
@@ -22,12 +29,11 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
 @Component
 public class StringUtils {
     private final ExcelFileService excelFileService;
-    private final TBotConversationStateService conversationStateService;
     private static final String WORKING_FOLDER = "\\" + TODAY.getYear() + "\\" + TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     public static final String PHOTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;
     private Map<String, String> savingPaths = excelFileService.getPhotoSavingPathFromExcel();//TODO подумать
 
-    public String createSavingPath(PendingPhoto pending, long userId) {
+    public String createSavingPath(PendingPhoto pending, long userId, TBotConversationStateService conversationStateService) {
         String tempPath = "";
         OtoType operationType = conversationStateService.getOtoType(userId);
         String baseDir = PHOTO_PATH + File.separator;
@@ -45,7 +51,7 @@ public class StringUtils {
         return baseDir + path;
     }
 
-    public String createNewFileName(PendingPhoto pending, Long userId) {
+    public String createNewFileName(PendingPhoto pending, Long userId, TBotConversationStateService conversationStateService) {
         OtoType operationType = conversationStateService.getOtoType(userId);
         String photoSuffix = "";
         String additionalInfo = pending.getAdditionalInfo() != null ? "_" + pending.getAdditionalInfo() : "";
@@ -78,4 +84,54 @@ public class StringUtils {
         } else return "";
     }
 
+    public String getCellStringValue(Cell cell) {
+        if (cell != null) {
+            switch (cell.getCellType()) {
+                case STRING:
+                    return cell.getStringCellValue();
+                case NUMERIC:
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
+                    } else {
+                        return new DecimalFormat("0").format(cell.getNumericCellValue());
+                    }
+                case FORMULA:
+                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+                    return evaluator.evaluate(cell).getStringValue();
+                default:
+                    return null;
+            }
+        }
+        return null;
+    }
+    public String buildSubstationMapKey(Substation substation) {
+        return new StringBuilder().
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion().getName()).
+                append("_").
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getName()).
+                append("_").
+                append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getName()).
+                append("_").
+                append(substation.getStation().getPowerSupplyDistrict().getName()).
+                append("_").
+                append(substation.getStation().getName()).
+                append("_").
+                append(substation.getName()).toString();
+
+    }
+    public String getStringMapKey(Row row) {
+        return new StringBuilder()
+                .append(getCellStringValue(row.getCell(2)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(3)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(4)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(5)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(6)))
+                .append("_")
+                .append(getCellStringValue(row.getCell(7)))
+                .toString();
+    }
 }

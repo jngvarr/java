@@ -42,18 +42,11 @@ public class TBot extends TelegramLongPollingBot {
     private final PhotoMessageHandler photoMessageHandler;
     private Map<Long, Integer> sentMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
-
     private static final long ADMIN_CHAT_ID = 199867696L;
-
-
-
-
-
     private boolean isPTO;
     private int sequenceNumber = 0;
     private String processInfo = "";
     private boolean isDcLocation;
-
 
     public TBot(BotConfig config, UserServiceImpl userService, CallbackQueryHandler callbackQueryHandler,
                 TextMessageHandler textMessageHandler, PhotoMessageHandler photoMessageHandler) throws TelegramApiException {
@@ -132,7 +125,6 @@ public class TBot extends TelegramLongPollingBot {
             log.error("Не удалось переслать сообщение админу: " + e.getMessage());
         }
     }
-
 
     public void sendMessage(long chatId, long userId, String textToSend) {
         SendMessage message = new SendMessage();

@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.application.util;
 
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Component;
@@ -10,7 +11,7 @@ import java.util.Map;
 
 @Component
 public class EntityCache {
-    private final Map<EntityType, Map<String, ?>> entityCache = new EnumMap<>(EntityType.class);
+    private final Map<EntityType, Map<String, Object>> entityCache = new EnumMap<>(EntityType.class);
 
     public EntityCache() {
         for (
@@ -18,12 +19,12 @@ public class EntityCache {
             entityCache.put(type, new HashMap<>());
         }
     }
-    @SuppressWarnings("unchecked") // глушит предупреждение компилятора о небезопасном приведении типов
-    public Map<String, T> get(EntityType type) {
-        return (Map<String, T>) entityCache.get(type);
+//    @SuppressWarnings("unchecked") // глушит предупреждение компилятора о небезопасном приведении типов
+    public Map<String, Object> get(EntityType type) {
+        return entityCache.get(type);
     }
 
-    public void put(EntityType type, String key, T value) {
+    public void put(EntityType type, String key, Object value) {
         get(type).put(key, value);
     }
 }

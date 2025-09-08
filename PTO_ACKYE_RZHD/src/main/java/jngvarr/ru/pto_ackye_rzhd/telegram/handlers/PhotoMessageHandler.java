@@ -241,11 +241,11 @@ public class PhotoMessageHandler {
     public void doSave(long userId, long chatId, PendingPhoto pending) {
 //        OtoType operationType = otoTypes.get(userId);
         try {
-            Path userDir = Paths.get(stringUtils.createSavingPath(pending, userId));
+            Path userDir = Paths.get(stringUtils.createSavingPath(pending, userId, conversationStateService));
 
             Files.createDirectories(userDir);
 
-            String newFileName = stringUtils.createNewFileName(pending, userId);
+            String newFileName = stringUtils.createNewFileName(pending, userId, conversationStateService);
             Path destination = userDir.resolve(newFileName);
 
             // Сохранение
