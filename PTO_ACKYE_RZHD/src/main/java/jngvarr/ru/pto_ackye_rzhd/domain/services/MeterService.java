@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.domain.services;
 
-import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeterDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.mappers.MeterMapper;

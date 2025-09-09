@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.domain.services;
 
-import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;

@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.api.controllers;
 
-import jngvarr.ru.pto_ackye_rzhd.dto.MeterDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeterDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.MeterService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

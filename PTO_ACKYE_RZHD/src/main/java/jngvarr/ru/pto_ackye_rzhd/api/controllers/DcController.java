@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.api.controllers;
 
-import jngvarr.ru.pto_ackye_rzhd.dto.DcDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.DcService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

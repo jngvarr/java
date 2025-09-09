@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.application.util;
 
+import jakarta.annotation.PostConstruct;
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
@@ -8,6 +9,7 @@ import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -27,11 +30,18 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
 
 @Data
 @Component
+@RequiredArgsConstructor
 public class StringUtils {
     private final ExcelFileService excelFileService;
     private static final String WORKING_FOLDER = "\\" + TODAY.getYear() + "\\" + TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     public static final String PHOTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;
-    private Map<String, String> savingPaths = excelFileService.getPhotoSavingPathFromExcel();//TODO подумать
+    private final Map<String, String> savingPaths = new HashMap<>();
+
+
+    @PostConstruct
+    private void init() {
+        savingPaths.putAll(excelFileService.getPhotoSavingPathFromExcel());
+    }
 
     public String createSavingPath(PendingPhoto pending, long userId, TBotConversationStateService conversationStateService) {
         String tempPath = "";

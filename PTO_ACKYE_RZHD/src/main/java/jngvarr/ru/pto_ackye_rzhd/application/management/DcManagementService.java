@@ -74,7 +74,7 @@ public class DcManagementService {
 
     public void saveDcFromMap() {
         for (
-                Object dc : entityCache.get(EntityType.DC, Substation.class).values()) {
+                Object dc : entityCache.get(EntityType.DC).values()) {
             dcService.createDc((Dc) dc);
         }
     }

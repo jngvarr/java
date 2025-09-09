@@ -1,6 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.domain.services;
 
-import jngvarr.ru.pto_ackye_rzhd.dto.MeteringPointDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughDataException;

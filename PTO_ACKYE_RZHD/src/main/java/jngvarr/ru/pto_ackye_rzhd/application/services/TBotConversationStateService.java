@@ -64,6 +64,13 @@ public class TBotConversationStateService {
         sequenceNumbers.put(userId, getSequenceNumber(userId) + 1);
     }
 
+    public void decrementSequenceNumber(Long userId) {
+        sequenceNumbers.put(userId, getSequenceNumber(userId) - 1);
+    }
+    public void increaseSequenceNumber(Long userId, int value) {
+        sequenceNumbers.put(userId, getSequenceNumber(userId) + value);
+    }
+
     public void resetSequence(Long userId) {
         sequenceNumbers.put(userId, 0);
     }

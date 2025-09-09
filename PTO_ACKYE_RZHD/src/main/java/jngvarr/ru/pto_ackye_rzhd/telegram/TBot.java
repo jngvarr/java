@@ -36,26 +36,26 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private UserServiceImpl userService;
-    private final CallbackQueryHandler callbackQueryHandler;
-    private final TextMessageHandler textMessageHandler;
+    private final TBotMessageService messageService;
     private final PhotoMessageHandler photoMessageHandler;
+    private final TextMessageHandler textMessageHandler;
+    private final CallbackQueryHandler callbackQueryHandler;
+    private UserServiceImpl userService;
     private Map<Long, Integer> sentMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
     private static final long ADMIN_CHAT_ID = 199867696L;
     private boolean isPTO;
     private int sequenceNumber = 0;
     private String processInfo = "";
-    private boolean isDcLocation;
 
-    public TBot(BotConfig config, UserServiceImpl userService, CallbackQueryHandler callbackQueryHandler,
-                TextMessageHandler textMessageHandler, PhotoMessageHandler photoMessageHandler) throws TelegramApiException {
+
+    public TBot(BotConfig config, TBotMessageService messageService, PhotoMessageHandler photoMessageHandler, TextMessageHandler textMessageHandler, CallbackQueryHandler callbackQueryHandler) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
-        this.userService = userService;
-        this.callbackQueryHandler = callbackQueryHandler;
-        this.textMessageHandler = textMessageHandler;
+        this.messageService = messageService;
         this.photoMessageHandler = photoMessageHandler;
+        this.textMessageHandler = textMessageHandler;
+        this.callbackQueryHandler = callbackQueryHandler;
 
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "Начать работу"));
@@ -113,7 +113,7 @@ public class TBot extends TelegramLongPollingBot {
         }
     }
 
-    private void forwardMessage(Message userMessage) {
+    void forwardMessage(Message userMessage) {
         ForwardMessage forward = new ForwardMessage();
         forward.setChatId(String.valueOf(ADMIN_CHAT_ID)); // куда
         forward.setFromChatId(String.valueOf(userMessage.getChatId())); // откуда
@@ -208,6 +208,7 @@ public class TBot extends TelegramLongPollingBot {
         message.setChatId(chatId);
         return message;
     }
+
 
     private void attachButtons(SendMessage message, Map<String, String> buttons, int columns) {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();

@@ -3,7 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.application.management;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.SubstationService;
-import jngvarr.ru.pto_ackye_rzhd.dto.SubstationDTO;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

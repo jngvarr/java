@@ -1,31 +1,31 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
-import jngvarr.ru.pto_ackye_rzhd.domain.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.*;
-import jngvarr.ru.pto_ackye_rzhd.domain.services.*;
-import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
-import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.DcService;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.MeterService;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.MeteringPointService;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.SubstationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTER_DDMMYYYY;
+import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.ERROR_TEXT;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 //@Transactional
-public class TBotService {
+public class TBotMessageService {
     private final MeterService meterService;
     private final DcService dcService;
     private final ExcelFileService excelFileService;
@@ -36,5 +36,7 @@ public class TBotService {
     private final PowerSupplyDistrictRepository powerSupplyDistrictRepository;
     private final StationRepository stationRepository;
     private final SubstationService substationService;
+
+
 
 }
