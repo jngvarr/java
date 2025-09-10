@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.mappers;
+package jngvarr.ru.pto_ackye_rzhd.application.mappers;
 
 import jngvarr.ru.pto_ackye_rzhd.domain.dto.DcDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeterDTO;

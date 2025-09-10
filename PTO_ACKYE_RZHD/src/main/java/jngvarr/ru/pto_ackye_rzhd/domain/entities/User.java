@@ -34,6 +34,9 @@ public class User {
     @Column(name = "accepted")
     private boolean accepted;
 
+    @Column(name = "oto_accepted")
+    private boolean otoAccepted;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

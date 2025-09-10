@@ -33,6 +33,7 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
 @RequiredArgsConstructor
 public class StringUtils {
     private final ExcelFileService excelFileService;
+    private final ExcelUtil excelUtil;
     private static final String WORKING_FOLDER = "\\" + TODAY.getYear() + "\\" + TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     public static final String PHOTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;
     private final Map<String, String> savingPaths = new HashMap<>();
@@ -94,26 +95,28 @@ public class StringUtils {
         } else return "";
     }
 
-    public String getCellStringValue(Cell cell) {
-        if (cell != null) {
-            switch (cell.getCellType()) {
-                case STRING:
-                    return cell.getStringCellValue();
-                case NUMERIC:
-                    if (DateUtil.isCellDateFormatted(cell)) {
-                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
-                    } else {
-                        return new DecimalFormat("0").format(cell.getNumericCellValue());
-                    }
-                case FORMULA:
-                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
-                    return evaluator.evaluate(cell).getStringValue();
-                default:
-                    return null;
-            }
-        }
-        return null;
-    }
+//    public String getCellStringValue(Cell cell) {
+//        if (cell != null) {
+//            switch (cell.getCellType()) {
+//                case STRING:
+//                    return cell.getStringCellValue();
+//                case NUMERIC:
+//                    if (DateUtil.isCellDateFormatted(cell)) {
+//                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
+//                    } else {
+//                        return new DecimalFormat("0").format(cell.getNumericCellValue());
+//                    }
+//                case FORMULA:
+//                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+//                    return evaluator.evaluate(cell).getStringValue();
+//                default:
+//                    return null;
+//            }
+//        }
+//        return null;
+//    }
+
+
     public String buildSubstationMapKey(Substation substation) {
         return new StringBuilder().
                 append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion().getName()).
@@ -131,17 +134,18 @@ public class StringUtils {
     }
     public String getStringMapKey(Row row) {
         return new StringBuilder()
-                .append(getCellStringValue(row.getCell(2)))
+                .append(excelUtil.getCellStringValue(row.getCell(2)))
                 .append("_")
-                .append(getCellStringValue(row.getCell(3)))
+                .append(excelUtil.getCellStringValue(row.getCell(3)))
                 .append("_")
-                .append(getCellStringValue(row.getCell(4)))
+                .append(excelUtil.getCellStringValue(row.getCell(4)))
                 .append("_")
-                .append(getCellStringValue(row.getCell(5)))
+                .append(excelUtil.getCellStringValue(row.getCell(5)))
                 .append("_")
-                .append(getCellStringValue(row.getCell(6)))
+                .append(excelUtil.getCellStringValue(row.getCell(6)))
                 .append("_")
-                .append(getCellStringValue(row.getCell(7)))
+                .append(excelUtil.getCellStringValue(row.getCell(7)))
                 .toString();
     }
+
 }

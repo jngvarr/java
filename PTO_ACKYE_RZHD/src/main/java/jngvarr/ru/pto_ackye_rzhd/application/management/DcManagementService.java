@@ -1,7 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.application.management;
 
-import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
+import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
@@ -24,18 +24,18 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTE
 public class DcManagementService {
     private final EntityCache entityCache;
     private final DcService dcService;
-    private final ExcelFileService excelFileService;
+    private final ExcelUtil excelUtil;
 
     public void createDc(Substation substation, String dcNumber, Row row) {
         Dc newDc = new Dc();
         newDc.setSubstation(substation);
         log.info("{}", row.getRowNum());
-        String sectionNumber = excelFileService.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
+        String sectionNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
         if (!sectionNumber.isBlank()) {
             newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
         } else newDc.setBusSection(1);
 
-        String installationDateStr = excelFileService.getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE));
+        String installationDateStr = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE));
         if (installationDateStr != null && !installationDateStr.isBlank()) {
             newDc.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
         }

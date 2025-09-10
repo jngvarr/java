@@ -5,6 +5,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.management.MeterManagementService;
 import jngvarr.ru.pto_ackye_rzhd.application.management.MeteringPointManagementService;
 import jngvarr.ru.pto_ackye_rzhd.application.management.SubstationManagementService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
+import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
@@ -48,6 +49,7 @@ public class ExcelFileService {
     private final MeterManagementService meterManagementService;
     private final MeteringPointManagementService meteringPointManagementService;
     private final MeteringPointService meteringPointService;
+    private final ExcelUtil excelUtil;
 
     public void copyRow(Row sourceRow, Row targetRow, int columnCount) {
         for (int i = 0; i <= columnCount; i++) {
@@ -142,27 +144,6 @@ public class ExcelFileService {
         }
     }
 
-    public String getCellStringValue(Cell cell) {
-        if (cell != null) {
-            switch (cell.getCellType()) {
-                case STRING:
-                    return cell.getStringCellValue();
-                case NUMERIC:
-                    if (DateUtil.isCellDateFormatted(cell)) {
-                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
-                    } else {
-                        return new DecimalFormat("0").format(cell.getNumericCellValue());
-                    }
-                case FORMULA:
-                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
-                    return evaluator.evaluate(cell).getStringValue();
-                default:
-                    return null;
-            }
-        }
-        return null;
-    }
-
     public int findColumnIndex(Sheet sheet, String columnName) {
         Row headerRow = sheet.getRow(0); // Заголовок на первой строке
         if (headerRow == null) return -1;
@@ -189,8 +170,8 @@ public class ExcelFileService {
             int substationColumnIndex = findColumnIndex(iikSheet, "ТП/КТП");
             int meterPointIndex = findColumnIndex(iikSheet, "Точка учёта");
             for (Row row : iikSheet) {
-                String meterNum = getCellStringValue(row.getCell(meterNumberColumnIndex));
-                String dcNum = getCellStringValue(row.getCell(dcNumberColumnIndex));
+                String meterNum = excelUtil.getCellStringValue(row.getCell(meterNumberColumnIndex));
+                String dcNum = excelUtil.getCellStringValue(row.getCell(dcNumberColumnIndex));
                 if (meterNum != null) {
                     paths.put(meterNum,
                             EEL_TO_NTEL.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
@@ -225,7 +206,7 @@ public class ExcelFileService {
         int dcCurrentStateColIndex = findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
 
         for (Row row : dcWorkSheet) {
-            String deviceNumber = getCellStringValue(row.getCell(dcNumberColIndex));
+            String deviceNumber = excelUtil.getCellStringValue(row.getCell(dcNumberColIndex));
             String logData = conversationStateService.getOtoLog().getOrDefault(deviceNumber, "");
             if (!logData.isEmpty()) {
                 row.createCell(dcCurrentStateColIndex).setCellValue(taskOrder);
@@ -291,7 +272,7 @@ public class ExcelFileService {
         }
 
         for (Row otoRow : meterRows) {
-            String deviceNumber = getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
+            String deviceNumber = excelUtil.getCellStringValue(otoRow.getCell(deviceNumberColumnIndex));
             String logData = conversationStateService.getOtoLog().getOrDefault(deviceNumber, "");
             boolean dataContainsNot123 = logData.contains("НОТ1") || logData.contains("НОТ2") || logData.contains("НОТ3");
             boolean dataContainsNotNot5 = logData.contains("НОТ") || logData.contains("НОТ5");
@@ -359,7 +340,7 @@ public class ExcelFileService {
                 // Пропускаем первую строку, это заголовок
                 continue;
             }
-            String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
+            String dcNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             if (!entityCache.get(EntityType.DC).containsKey(dcNumber)) {
                 Substation substation = createSubstationIfNotExists(row);
                 dcManagementService.createDc(substation, dcNumber, row);
@@ -386,7 +367,7 @@ public class ExcelFileService {
             MeteringPoint newIik = meteringPointManagementService.createIIk(row);
 
             if (!meteringPoints.containsKey(newIik.getId())) {
-                String dcNumber = getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
+                String dcNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
                 if (dcNumber == null) {
                     if (newIik.getMeteringPointAddress() == null) newIik.setMeteringPointAddress("");
                 } else {
@@ -513,12 +494,12 @@ public class ExcelFileService {
             Sheet dataSheet = meterDataWorkbook.getSheet("Свод");
 
             for (Row row : dataSheet) {
-                String cellValue = getCellStringValue(row.getCell(1));
+                String cellValue = excelUtil.getCellStringValue(row.getCell(1));
                 if (mountingMeterNumber.equals(cellValue)) {
                     String[] result = {
-                            getCellStringValue(row.getCell(1)),
-                            getCellStringValue(row.getCell(2)),
-                            getCellStringValue(row.getCell(3))
+                            excelUtil.getCellStringValue(row.getCell(1)),
+                            excelUtil.getCellStringValue(row.getCell(2)),
+                            excelUtil.getCellStringValue(row.getCell(3))
                     };
                     return Optional.of(result);
                 }
@@ -533,12 +514,12 @@ public class ExcelFileService {
 
     public Substation createSubstationIfNotExists(Row row) {
         SubstationDTO newSubstation = new SubstationDTO();
-        newSubstation.setRegionName(getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
-        newSubstation.setSubdivisionName(getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
-        newSubstation.setPowerSupplyEnterpriseName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME)));
-        newSubstation.setDistrictName(getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME)));
-        newSubstation.setStationName(getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME)));
-        newSubstation.setSubstationName(getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
+        newSubstation.setRegionName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
+        newSubstation.setSubdivisionName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
+        newSubstation.setPowerSupplyEnterpriseName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME)));
+        newSubstation.setDistrictName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME)));
+        newSubstation.setStationName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME)));
+        newSubstation.setSubstationName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
         return substationManagementService.createSubstationIfNotExists(newSubstation);
     }
 }

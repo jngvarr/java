@@ -51,10 +51,6 @@ public class UserServiceImpl implements UserService {
     public void registerUser(Update update) {
         User newUser = createUser(update);
         registerUser(newUser);
-//        if (sequenceNumber < registrationMenu.size()) {
-//            sendMessage(chatId, registrationMenu.get(sequenceNumber));
-//            sequenceNumber++;
-//        }
     }
     public List<User> getUsers() {
         return repository.findAll();

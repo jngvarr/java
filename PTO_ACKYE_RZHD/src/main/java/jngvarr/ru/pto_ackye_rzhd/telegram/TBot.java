@@ -36,7 +36,6 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class TBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private final TBotMessageService messageService;
     private final PhotoMessageHandler photoMessageHandler;
     private final TextMessageHandler textMessageHandler;
     private final CallbackQueryHandler callbackQueryHandler;
@@ -44,15 +43,11 @@ public class TBot extends TelegramLongPollingBot {
     private Map<Long, Integer> sentMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
     private static final long ADMIN_CHAT_ID = 199867696L;
-    private boolean isPTO;
-    private int sequenceNumber = 0;
-    private String processInfo = "";
 
 
-    public TBot(BotConfig config, TBotMessageService messageService, PhotoMessageHandler photoMessageHandler, TextMessageHandler textMessageHandler, CallbackQueryHandler callbackQueryHandler) throws TelegramApiException {
+    public TBot(BotConfig config, PhotoMessageHandler photoMessageHandler, TextMessageHandler textMessageHandler, CallbackQueryHandler callbackQueryHandler) throws TelegramApiException {
         super(config.getBotToken());
         this.config = config;
-        this.messageService = messageService;
         this.photoMessageHandler = photoMessageHandler;
         this.textMessageHandler = textMessageHandler;
         this.callbackQueryHandler = callbackQueryHandler;
@@ -109,7 +104,7 @@ public class TBot extends TelegramLongPollingBot {
                 photoMessageHandler.handlePhotoMessage(update);
             }
         } else if (update.hasCallbackQuery()) {
-            callbackQueryHandler.handleCallbackQuery(update);
+            callbackQueryHandler.handleCallbackQuery(update, user);
         }
     }
 
@@ -234,11 +229,6 @@ public class TBot extends TelegramLongPollingBot {
         markup.setKeyboard(keyboard);
         message.setReplyMarkup(markup);
     }
-
-//    private void prepareMountedDeviceRow(Row newOtoRow, String logData) {
-//        String[] dataParts = logData.split("_");
-//
-//    }
 
     @Override
     public void onUpdatesReceived(List<Update> updates) {

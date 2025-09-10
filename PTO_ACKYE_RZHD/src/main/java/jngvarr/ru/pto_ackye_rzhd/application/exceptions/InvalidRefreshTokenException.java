@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.exceptions;
+package jngvarr.ru.pto_ackye_rzhd.application.exceptions;
 
 
 import java.nio.file.AccessDeniedException;

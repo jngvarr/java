@@ -1,8 +1,8 @@
 //package jngvarr.ru.pto_ackye_rzhd.sevices;
 //
 //import jngvarr.ru.pto_ackye_rzhd.domain.entities.IikStatusData;
-//import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
-//import jngvarr.ru.pto_ackye_rzhd.exceptions.NotEnoughData;
+//import jngvarr.ru.pto_ackye_rzhd.application.exceptions.NeededObjectNotFound;
+//import jngvarr.ru.pto_ackye_rzhd.application.exceptions.NotEnoughData;
 //import jngvarr.ru.pto_ackye_rzhd.domain.repositories.IikStatusDataRepository;
 //import lombok.Data;
 //import lombok.RequiredArgsConstructor;

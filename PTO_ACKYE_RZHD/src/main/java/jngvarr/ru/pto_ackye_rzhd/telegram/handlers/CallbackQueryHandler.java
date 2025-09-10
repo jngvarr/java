@@ -1,6 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
@@ -28,7 +29,7 @@ public class CallbackQueryHandler {
     private final ExcelFileService excelFileService;
     private final TBotConversationUtils conversationUtils;
 
-    public void handleCallbackQuery(Update update) {
+    public void handleCallbackQuery(Update update, User user) {
         String callbackData = update.getCallbackQuery().getData();
         long userId = update.getCallbackQuery().getFrom().getId();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -45,7 +46,12 @@ public class CallbackQueryHandler {
             }
             case "oto" -> {
 //                sendTextMessage(OTO, modes.get(callbackData), chatId, 2);
-                tBot.editTextAndButtons(OTO, MODES.get(callbackData), chatId, userId, 2);
+                if (!user.isOtoAccepted()) {
+                    tBot.editMessage(chatId, userId, "Не достаточно прав, обратитесь к администратору!");
+                    return;
+                } else {
+                    tBot.editTextAndButtons(OTO, MODES.get(callbackData), chatId, userId, 2);
+                }
             }
 
             // Обработка выбора для ПТО счетчика и концентратора

@@ -2,6 +2,7 @@ package jngvarr.ru.pto_ackye_rzhd.application.management;
 
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
+import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
@@ -30,7 +31,7 @@ public class MeterManagementService {
     private final DcService dcService;
     private final MeterService meterService;
     private final MeteringPointService meteringPointService;
-    private final StringUtils utils;
+    private final ExcelUtil utils;
 
     @Getter
     private static List<String> meterTypes = Arrays.asList(

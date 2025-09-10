@@ -1,7 +1,7 @@
 package jngvarr.ru.pto_ackye_rzhd.domain.services;
 
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
-import jngvarr.ru.pto_ackye_rzhd.exceptions.NeededObjectNotFound;
+import jngvarr.ru.pto_ackye_rzhd.application.exceptions.NeededObjectNotFound;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.SubstationRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

@@ -3,6 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.application.management;
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
+import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
@@ -27,6 +28,7 @@ public class MeteringPointManagementService {
     private final ExcelFileService excelFileService;
     private final MeterManagementService meterManagementService;
     private final EntityCache entityCache;
+    private final ExcelUtil excelUtil;
     private final StringUtils stringUtils;
     private final MeteringPointService meteringPointService;
     private final SubstationService substationService;
@@ -45,13 +47,13 @@ public class MeteringPointManagementService {
         MeteringPoint newMeteringPoint = new MeteringPoint();
 
         newMeteringPoint.setSubstation(finalSubstation);
-        newMeteringPoint.setId(Long.parseLong(stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
-        newMeteringPoint.setConnection(stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
-        newMeteringPoint.setName(stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
-        newMeteringPoint.setMeterPlacement(stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
-        newMeteringPoint.setMeteringPointAddress(stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
+        newMeteringPoint.setId(Long.parseLong(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ID))));
+        newMeteringPoint.setConnection(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_CONNECTION)));
+        newMeteringPoint.setName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_NAME)));
+        newMeteringPoint.setMeterPlacement(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_PLACEMENT)));
+        newMeteringPoint.setMeteringPointAddress(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_ADDRESS)));
 
-        String installationDateStr = stringUtils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE));
+        String installationDateStr = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_INSTALLATION_DATE));
         if (installationDateStr != null && !installationDateStr.isBlank()) {
             newMeteringPoint.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
         }
