@@ -1,8 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.application.util;
 
-import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;

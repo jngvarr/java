@@ -3,7 +3,6 @@ package jngvarr.ru.pto_ackye_rzhd.application.management;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.SubstationService;
-import jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,10 +16,9 @@ public class SubstationManagementService {
     private final PowerSupplyEnterpriseRepository powerSupplyEnterpriseRepository;
     private final PowerSupplyDistrictRepository powerSupplyDistrictRepository;
     private final StationRepository stationRepository;
-    private final SubstationRepository substationRepository;
     private final SubstationService substationService;
 
-    public Substation createSubstationIfNotExists(SubstationDTO dto) {
+    public Substation createSubstationIfNotExists(jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO dto) {
         String regionName = dto.getRegionName();
         String subdivisionName = dto.getSubdivisionName();
         String powerSupplyEnterpriseName = dto.getPowerSupplyEnterpriseName();

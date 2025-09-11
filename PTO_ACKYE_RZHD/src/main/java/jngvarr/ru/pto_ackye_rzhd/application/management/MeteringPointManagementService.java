@@ -5,6 +5,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
 import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
@@ -25,13 +26,13 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTE
 @Slf4j
 @Component
 public class MeteringPointManagementService {
-    private final ExcelFileService excelFileService;
     private final MeterManagementService meterManagementService;
     private final EntityCache entityCache;
     private final ExcelUtil excelUtil;
     private final StringUtils stringUtils;
     private final MeteringPointService meteringPointService;
     private final SubstationService substationService;
+    private final SubstationManagementService substationManagementService;
 
     public MeteringPoint createIIk(Row row) {
         String mapKey = stringUtils.getStringMapKey(row);
@@ -39,7 +40,7 @@ public class MeteringPointManagementService {
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
 
         if (substation == null) {
-            substation = excelFileService.createSubstationIfNotExists(row);
+            substation = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDtoIfNotExists(row));
             entityCache.get(EntityType.SUBSTATION).put(mapKey, substation);
         }
 
@@ -62,41 +63,32 @@ public class MeteringPointManagementService {
 
     public void createMeteringPoint(Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
         createNewMeteringPointInDb(dataParts, otoRow);
-        excelFileService.createNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
+        excelUtil.createNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
+
     }
 
     private void createNewMeteringPointInDb(String[] dataParts, Row otoRow) {
         MeteringPoint nmp = new MeteringPoint();
-        String stationName = dataParts[1];
-        String substationName = dataParts[2];
-        String mountingMeterNumber = dataParts[3];
-        String meterType = dataParts[4].toUpperCase();
-        String meteringPointName = dataParts[5];
-        String meteringPointAddress = dataParts[6];
-        String meterPlacement = dataParts[7];
-        String mountOrg = dataParts[9];
-        String date = dataParts[10];
-        LocalDate meteringPointMountDate = LocalDate.parse(date, DateUtils.DATE_FORMATTER_DDMMYYYY);
-        Substation s = substationService.findByName(substationName, stationName).orElse(null);
+        LocalDate meteringPointMountDate = LocalDate.parse(dataParts[10], DateUtils.DATE_FORMATTER_DDMMYYYY);
+        Substation s = substationService.findByName(dataParts[2], dataParts[1]).orElse(null);
         if (s == null) {
-            s = excelFileService.createSubstationIfNotExists(otoRow);
+            s = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDtoIfNotExists(otoRow));
         }
 
         nmp.setId(meteringPointService.getNextId());
         nmp.setInstallationDate(meteringPointMountDate);
         nmp.setSubstation(s);
-        nmp.setName(meteringPointName);
-        nmp.setMeteringPointAddress(meteringPointAddress);
-        nmp.setMeterPlacement(meterPlacement);
-        nmp.setMountOrganization(mountOrg);
-        Meter newMeteringPointMeter = meterManagementService.getOrCreateMeter(mountingMeterNumber, meterType, dataParts[0]);
+        nmp.setName(dataParts[5]);
+        nmp.setMeteringPointAddress(dataParts[6]);
+        nmp.setMeterPlacement(dataParts[7]);
+        nmp.setMountOrganization(dataParts[9]);
+        Meter newMeteringPointMeter = meterManagementService.getOrCreateMeter(dataParts[3], dataParts[4].toUpperCase(), dataParts[0]);
 
-        if (!meterManagementService.isMeterInstalled(mountingMeterNumber)) {
+        if (!meterManagementService.isMeterInstalled(dataParts[1])) {
             nmp.setMeter(newMeteringPointMeter);
         } else {
             log.warn("Данный прибор учета уже установлен на другой точке учёта");
         }
-
         meteringPointService.create(nmp);
     }
 }

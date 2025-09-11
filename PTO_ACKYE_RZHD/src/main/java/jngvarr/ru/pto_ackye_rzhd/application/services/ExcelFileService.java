@@ -14,7 +14,6 @@ import jngvarr.ru.pto_ackye_rzhd.domain.services.DcService;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.MeterService;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.MeteringPointService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
-import jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -342,7 +340,7 @@ public class ExcelFileService {
             }
             String dcNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             if (!entityCache.get(EntityType.DC).containsKey(dcNumber)) {
-                Substation substation = createSubstationIfNotExists(row);
+                Substation substation = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDtoIfNotExists(row));
                 dcManagementService.createDc(substation, dcNumber, row);
             }
         }
@@ -486,40 +484,5 @@ public class ExcelFileService {
         } else {
             otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
         }
-    }
-
-    public Optional<String[]> getMeterData(String mountingMeterNumber) {
-
-        try (Workbook meterDataWorkbook = new XSSFWorkbook(new FileInputStream(METER_DATA_FILE_PATH))) {
-            Sheet dataSheet = meterDataWorkbook.getSheet("Свод");
-
-            for (Row row : dataSheet) {
-                String cellValue = excelUtil.getCellStringValue(row.getCell(1));
-                if (mountingMeterNumber.equals(cellValue)) {
-                    String[] result = {
-                            excelUtil.getCellStringValue(row.getCell(1)),
-                            excelUtil.getCellStringValue(row.getCell(2)),
-                            excelUtil.getCellStringValue(row.getCell(3))
-                    };
-                    return Optional.of(result);
-                }
-            }
-            log.warn("Meter number {} not found in file {}", mountingMeterNumber, METER_DATA_FILE_PATH);
-
-        } catch (IOException ex) {
-            log.error("Error processing workbook {}", METER_DATA_FILE_PATH, ex);
-        }
-        return Optional.empty();
-    }
-
-    public Substation createSubstationIfNotExists(Row row) {
-        SubstationDTO newSubstation = new SubstationDTO();
-        newSubstation.setRegionName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
-        newSubstation.setSubdivisionName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
-        newSubstation.setPowerSupplyEnterpriseName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_ENTERPRISE_NAME)));
-        newSubstation.setDistrictName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_POWER_SUPPLY_DISTRICT_NAME)));
-        newSubstation.setStationName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_STATION_NAME)));
-        newSubstation.setSubstationName(excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_SUBSTATION_NAME)));
-        return substationManagementService.createSubstationIfNotExists(newSubstation);
     }
 }

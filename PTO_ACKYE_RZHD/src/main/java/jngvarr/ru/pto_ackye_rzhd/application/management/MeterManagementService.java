@@ -99,7 +99,7 @@ public class MeterManagementService {
         Meter m = meterService.getMeterByNumber(deviceNumber);
         Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
         if (nm == null) {
-            String[] nmData = excelFileService.getMeterData(mountingMeterNumber).orElseThrow(() ->
+            String[] nmData = utils.getMeterData(mountingMeterNumber).orElseThrow(() ->
                     new IllegalArgumentException("Не найдены данные по " + mountingMeterNumber));
             nm = constructMeter(nmData[0], nmData[2], m.getDc().getDcNumber());
             meterService.create(nm);
