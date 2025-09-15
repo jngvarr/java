@@ -1,11 +1,9 @@
 package jngvarr.ru.pto_ackye_rzhd.application.management;
 
-import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
 import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
-import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeteringPointDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
@@ -34,7 +32,7 @@ public class MeteringPointManagementService {
     private final SubstationService substationService;
     private final SubstationManagementService substationManagementService;
 
-    public MeteringPoint createIIk(Row row) {
+    public MeteringPoint constructIIk(Row row) {
         String mapKey = stringUtils.getStringMapKey(row);
 
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
@@ -63,7 +61,7 @@ public class MeteringPointManagementService {
 
     public void createMeteringPoint(Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
         createNewMeteringPointInDb(dataParts, otoRow);
-        excelUtil.createNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
+        excelUtil.addNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
 
     }
 

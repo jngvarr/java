@@ -55,8 +55,8 @@ public class ExcelFileService {
             Cell targetCell = targetRow.createCell(i);
             Workbook operationLog = targetRow.getSheet().getWorkbook();
 
-            CellStyle defaultCellStyle = createCommonCellStyle(operationLog);
-            CellStyle dateCellStyle = createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
+            CellStyle defaultCellStyle = excelUtil.createCommonCellStyle(operationLog);
+            CellStyle dateCellStyle = excelUtil.createDateCellStyle(operationLog, "dd.MM.YYYY", "Calibri");
 
             if (sourceCell != null) {
                 switch (sourceCell.getCellType()) {
@@ -89,52 +89,6 @@ public class ExcelFileService {
         }
     }
 
-    CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
-        CellStyle dateCellStyle = resultWorkbook.createCellStyle();
-        DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
-        dateCellStyle.setDataFormat(dateFormat.getFormat(format));
-        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
-        dateCellStyle.setBorderBottom(BorderStyle.THIN);
-        dateCellStyle.setFont(createCellFontStyle(resultWorkbook, font, (short) 10, false));
-        return dateCellStyle;
-    }
-
-
-    CellStyle createCommonCellStyle(Workbook resultWorkbook) {
-        CellStyle simpleCellStyle = resultWorkbook.createCellStyle();
-        Font font = createCellFontStyle(resultWorkbook, "Arial", (short) 10, false);
-
-        simpleCellStyle.setBorderBottom(BorderStyle.THIN);
-        simpleCellStyle.setBorderLeft(BorderStyle.THIN);
-        simpleCellStyle.setBorderRight(BorderStyle.THIN);
-        simpleCellStyle.setBorderTop(BorderStyle.THIN);
-        simpleCellStyle.setFont(font);
-        return simpleCellStyle;
-    }
-
-    private Font createCellFontStyle(Workbook workbook, String fontName, short fontSize, boolean isBold) {
-        Font font = workbook.createFont();
-        font.setFontName(fontName);
-        font.setFontHeightInPoints(fontSize);
-        font.setBold(isBold);
-        return font;
-    }
-
-    /**
-     * Метод преобразования значения ячейки в дату, так чтоб Excel понимал его именно как дату.
-     *
-     * @param date Cell, ячейка содержащая значеие даты.
-     */
-    public void setDateCellStyle(Cell date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
-        CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
-        try {
-            date.setCellValue(sdf.parse(STRAIGHT_FORMATTED_CURRENT_DATE));
-        } catch (ParseException e) {
-            date.setCellStyle(dateStyle);
-        }
-        date.setCellStyle(dateStyle);
-    }
 
     public void clearCellData(int[] ints, Row row) {
         for (int anInt : ints) {
@@ -190,15 +144,6 @@ public class ExcelFileService {
         return paths;
     }
 
-    // Метод для проверки и преобразования номера счетчика
-    public Object parseMeterNumber(String meterNumberStr) {
-        try {
-            return Long.parseLong(meterNumberStr);
-        } catch (NumberFormatException e) {
-            return meterNumberStr;
-        }
-    }
-
     private void fillDcSection(Sheet dcWorkSheet, String taskOrder, boolean isDcChange) { // заполнение данных на вкладке "ИВКЭ"
         int dcNumberColIndex = findColumnIndex(dcWorkSheet, "Серийный номер концентратора");
         int dcCurrentStateColIndex = findColumnIndex(dcWorkSheet, "Состояние ИВКЭ");
@@ -244,7 +189,7 @@ public class ExcelFileService {
     public void copyAndFillLogRow(Row otoRow, Row newLogRow, int orderColumnNumber, String taskOrder, List<String> columns) {
         copyRow(otoRow, newLogRow, orderColumnNumber);
         Cell date = newLogRow.getCell(16);
-        setDateCellStyle(date);
+        excelUtil.setDateCellStyle(date);
         newLogRow.getCell(17).setCellValue(columns.get(0));
         newLogRow.getCell(18).setCellValue(columns.get(1));
         newLogRow.createCell(19);
@@ -362,7 +307,7 @@ public class ExcelFileService {
                 continue;
             }
             Meter newMeter = meterManagementService.constructMeter(row);
-            MeteringPoint newIik = meteringPointManagementService.createIIk(row);
+            MeteringPoint newIik = meteringPointManagementService.constructIIk(row);
 
             if (!meteringPoints.containsKey(newIik.getId())) {
                 String dcNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
@@ -443,46 +388,4 @@ public class ExcelFileService {
                 .toArray();
     }
 
-    public void createNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
-        String deviceNumber = dataParts[0];
-        String mountingMeterNumber = dataParts[3];
-        String meterType = dataParts[4].toUpperCase();
-        String meteringPointName = dataParts[5];
-        String meteringPointAddress = dataParts[6];
-        String meterPlacement = dataParts[7];
-        String mountOrg = dataParts[9];
-        String date = dataParts[10];
-        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber); //Номер счетчика
-        if (mountingDeviceNumber instanceof Long) {
-            otoRow.getCell(13).setCellValue((Long) mountingDeviceNumber);
-        } else {
-            otoRow.getCell(13).setCellValue((String) mountingDeviceNumber);
-        }
-        otoRow.getCell(9).setCellValue(meteringPointName); //Наименование точки учёта
-        otoRow.getCell(10).setCellValue(meterPlacement); // Место установки счетчика (Размещение счетчика)
-        otoRow.getCell(11).setCellValue(meteringPointAddress); // Адрес установки
-        otoRow.getCell(12).setCellValue(meterType); // Марка счётчика
-//        Object mountDeviceNumber = parseMeterNumber(mountingMeterNumber);
-//        if (mountDeviceNumber instanceof Long) {
-//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountDeviceNumber);
-//        } else {
-//            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountDeviceNumber);
-//        }
-
-        otoRow.getCell(14).setCellValue(deviceNumber); // Номер УСПД
-        Cell mountDateCell = otoRow.getCell(15);
-        mountDateCell.setCellValue(date); // Дата монтажа ТУ
-        setDateCellStyle(mountDateCell);
-        otoRow.getCell(16).setCellValue("НОТ"); // Текущее состояние
-    }
-
-    public void meterChangeInExcelFile(Row otoRow, int deviceNumberColumnIndex, String mountingMeterNumber) {
-        Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
-        // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
-        if (mountingDeviceNumber instanceof Long) {
-            otoRow.getCell(deviceNumberColumnIndex).setCellValue((Long) mountingDeviceNumber);
-        } else {
-            otoRow.getCell(deviceNumberColumnIndex).setCellValue((String) mountingDeviceNumber);
-        }
-    }
 }

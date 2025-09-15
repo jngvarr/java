@@ -26,7 +26,6 @@ import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 @Data
 @Component
 public class MeterManagementService {
-    private final ExcelFileService excelFileService;
     private final EntityCache entityCache;
     private final DcService dcService;
     private final MeterService meterService;
@@ -48,7 +47,7 @@ public class MeterManagementService {
     }
 
     public void changeMeter(String deviceNumber, Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
-        excelFileService.meterChangeInExcelFile(otoRow, deviceNumberColumnIndex, dataParts[2]);
+        utils.meterChangeInExcelFile(otoRow, deviceNumberColumnIndex, dataParts[2]);
         meterChangeInDb(deviceNumber, dataParts[2]);
     }
 
@@ -56,12 +55,15 @@ public class MeterManagementService {
         String meterNumber = utils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
         String meterModel = utils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
         String dcNum = utils.getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
+        return constructMeter(meterNumber, meterModel, dcNum);
+    }
 
+    public Meter constructMeter(String meterNum, String meterModel, String dcNum) {
         // Dc ищем либо в карте, либо в сервисе
         Dc foundDc = Optional.ofNullable((Dc) entityCache.get(EntityType.DC).get(dcNum))
                 .orElseGet(() -> dcService.getDcByNumber(dcNum));
 
-        return Optional.ofNullable(meterNumber)
+        return Optional.ofNullable(meterNum)
                 .filter(num -> !num.isBlank())                // проверка, что номер не пустой
                 .filter(num -> meterModel != null && !meterModel.isBlank()) // проверка модели
                 .map(num -> {
@@ -72,16 +74,6 @@ public class MeterManagementService {
                     return meter;
                 })
                 .orElse(null); // если номер или модель не прошли проверки — null
-    }
-
-    public Meter constructMeter(String meterNum, String meterModel, String dcNum) {
-        Dc foundDc = dcService.getDcByNumber(dcNum);
-        Meter meter = new Meter();
-        meter.setMeterNumber(meterNum);
-        meter.setMeterModel(meterModel);
-        foundDc.getMeters().add(meter);
-        meter.setDc(foundDc);
-        return meter;
     }
 
     public Meter getOrCreateMeter(String mountingMeterNumber, String meterType, String dcNum) {

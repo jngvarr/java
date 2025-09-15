@@ -90,28 +90,6 @@ public class StringUtils {
         } else return "";
     }
 
-//    public String getCellStringValue(Cell cell) {
-//        if (cell != null) {
-//            switch (cell.getCellType()) {
-//                case STRING:
-//                    return cell.getStringCellValue();
-//                case NUMERIC:
-//                    if (DateUtil.isCellDateFormatted(cell)) {
-//                        return new SimpleDateFormat("dd.MM.yyyy").format(cell.getDateCellValue());
-//                    } else {
-//                        return new DecimalFormat("0").format(cell.getNumericCellValue());
-//                    }
-//                case FORMULA:
-//                    FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
-//                    return evaluator.evaluate(cell).getStringValue();
-//                default:
-//                    return null;
-//            }
-//        }
-//        return null;
-//    }
-
-
     public String buildSubstationMapKey(Substation substation) {
         return new StringBuilder().
                 append(substation.getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion().getName()).
