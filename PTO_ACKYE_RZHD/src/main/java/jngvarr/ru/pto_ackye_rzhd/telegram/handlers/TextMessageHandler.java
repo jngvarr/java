@@ -6,7 +6,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.services.dialog.ManualInsertService
 import jngvarr.ru.pto_ackye_rzhd.application.services.dialog.OtherOtoWorksService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
+import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,7 +19,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @Component
 public class TextMessageHandler {
 
-    private final TBot tBot;
+    private final TBotMessageService tBotMessageService;
     private final PhotoMessageHandler photoMessageHandler;
     private final TBotConversationStateService conversationStateService;
     private final EquipmentManipulationsService equipmentManipulationsService;
@@ -37,12 +37,12 @@ public class TextMessageHandler {
 
         switch (msgText) {
             case "/start" -> {
-                tBot.sendTextMessage(MAIN_MENU, START_MENU_BUTTONS, chatId, userId, 1);
+                tBotMessageService.sendTextMessage(MAIN_MENU, START_MENU_BUTTONS, chatId, userId, 1);
                 conversationStateService.clearUserData(userId);
                 return;
             }
             case "/help" -> {
-                tBot.sendMessage(chatId, userId, HELP);
+                tBotMessageService.sendMessage(chatId, userId, HELP);
                 return;
             }
 //            case "/register" -> {
@@ -52,7 +52,7 @@ public class TextMessageHandler {
 //                return;
 //            }
             case "/stop" -> {
-                tBot.sendMessage(chatId, userId, "Работа прервана, для продолжения нажмите /start");
+                tBotMessageService.sendMessage(chatId, userId, "Работа прервана, для продолжения нажмите /start");
                 conversationStateService.clearUserData(userId);
                 return;
             }
@@ -88,6 +88,6 @@ public class TextMessageHandler {
                 }
             }
         }
-        tBot.sendMessage(chatId, userId, "Команда не распознана. Попробуйте еще раз.");
+        tBotMessageService.sendMessage(chatId, userId, "Команда не распознана. Попробуйте еще раз.");
     }
 }

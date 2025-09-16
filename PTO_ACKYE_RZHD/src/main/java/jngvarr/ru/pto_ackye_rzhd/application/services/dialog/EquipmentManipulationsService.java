@@ -1,13 +1,13 @@
 package jngvarr.ru.pto_ackye_rzhd.application.services.dialog;
 
 import jngvarr.ru.pto_ackye_rzhd.application.management.MeterManagementService;
+import jngvarr.ru.pto_ackye_rzhd.application.services.PhotoPathService;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
-import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.TBotConversationUtils;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
+import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +19,9 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @Data
 @Component
 public class EquipmentManipulationsService {
-    private final TBot tBot;
+    private final TBotMessageService tBotMessageService;
     private final TBotConversationStateService conversationStateService;
-    private final StringUtils stringUtils;
+    private final PhotoPathService photoPathService;
     private final DateUtils dateUtils;
     private final TBotConversationUtils conversationUtils;
 //    private boolean isDcLocation;
@@ -34,9 +34,9 @@ public class EquipmentManipulationsService {
         }
         if (sequenceNumber < replacedEquipmentData.size()) {
             if (processState.equals(ProcessState.WAITING_FOR_TT_PHOTO) && sequenceNumber == 4) {
-                tBot.sendMessage(chatId, userId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
+                tBotMessageService.sendMessage(chatId, userId, "📸 Прикрепите фото **ТТ фазы A** и введите его номер:");
             } else {
-                tBot.sendMessage(chatId, userId, replacedEquipmentData.get(sequenceNumber));
+                tBotMessageService.sendMessage(chatId, userId, replacedEquipmentData.get(sequenceNumber));
             }
             conversationStateService.incrementSequenceNumber(userId);
         } else concludeEquipmentOperation(userId, chatId, processState);
@@ -53,7 +53,7 @@ public class EquipmentManipulationsService {
                     && sequenceNumber == 4
                     && MeterManagementService.getMeterTypes().contains(msgText.toUpperCase())) {
 
-                tBot.sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
+                tBotMessageService.sendMessage(chatId, userId, "Тип прибора учета указан неверно!!!");
                 sequenceNumber--;
                 hasWrongInput = true;
             }
@@ -69,7 +69,7 @@ public class EquipmentManipulationsService {
             if (ProcessState.IIK_MOUNT.equals(processState)) {
                 switch (sequenceNumber) {
                     case 0 -> {
-                        String path = stringUtils.getSavingPaths().get(msgText);
+                        String path = photoPathService.getSavingPaths().get(msgText);
                         if (path != null) {
                             conversationStateService.increaseSequenceNumber(chatId, 2);
                             String[] pathParts = path.split("\\\\");
@@ -80,7 +80,7 @@ public class EquipmentManipulationsService {
                         // Нормализация и проверка даты
                         String normalizedDate = dateUtils.normalizeDate(msgText);
                         if (normalizedDate == null) {
-                            tBot.sendMessage(chatId, userId, "Формат даты указан неверно!!!");
+                            tBotMessageService.sendMessage(chatId, userId, "Формат даты указан неверно!!!");
                             conversationStateService.decrementSequenceNumber(userId);
                         } else {
                             conversationStateService.appendProcessInfo(userId, normalizedDate + "_"); // сохраняем уже нормализованную дату
@@ -93,7 +93,7 @@ public class EquipmentManipulationsService {
         // Следующий шаг или завершение процесса
         if (sequenceNumber < mountedEquipmentData.size()) {
             sequenceNumber++;
-            tBot.sendMessage(chatId, userId, mountedEquipmentData.get(sequenceNumber));
+            tBotMessageService.sendMessage(chatId, userId, mountedEquipmentData.get(sequenceNumber));
         } else {
             concludeEquipmentOperation(userId, chatId, processState);
         }
@@ -103,6 +103,6 @@ public class EquipmentManipulationsService {
         OtoType otoType = conversationStateService.getOtoType(userId);
         Object typeIndicator = otoType != null ? otoType : processState;
         conversationUtils.formingOtoLog(conversationStateService.getProcessInfo(userId), typeIndicator, userId);
-        tBot.editTextAndButtons(conversationUtils.actionConfirmation(null), CONFIRM_MENU, chatId, userId, 2);
+        tBotMessageService.editTextAndButtons(conversationUtils.actionConfirmation(null), CONFIRM_MENU, chatId, userId, 2);
     }
 }

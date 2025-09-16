@@ -27,13 +27,12 @@ public class MeteringPointManagementService {
     private final MeterManagementService meterManagementService;
     private final EntityCache entityCache;
     private final ExcelUtil excelUtil;
-    private final StringUtils stringUtils;
     private final MeteringPointService meteringPointService;
     private final SubstationService substationService;
     private final SubstationManagementService substationManagementService;
 
     public MeteringPoint constructIIk(Row row) {
-        String mapKey = stringUtils.getStringMapKey(row);
+        String mapKey = StringUtils.getStringMapKey(row, excelUtil);
 
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
 

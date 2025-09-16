@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
+import jngvarr.ru.pto_ackye_rzhd.application.services.PhotoPathService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
@@ -7,7 +8,6 @@ import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
-import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +33,12 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @RequiredArgsConstructor
 public class PhotoMessageHandler {
 
+    private final TBotMessageService tBotMessageService;
     private final TBot tBot;
     // Карта для хранения информации о фото, ожидающих подтверждения
     private final PreparingPhotoService preparingPhotoService;
     private final TBotConversationStateService conversationStateService;
-    private final StringUtils stringUtils;
+    private final PhotoPathService photoPathService;
 
     public void handlePhotoMessage(Update update) {
         long userId = update.getMessage().getFrom().getId();
@@ -49,10 +50,10 @@ public class PhotoMessageHandler {
 
         // Если фото не запрашивалось
         if (!conversationStateService.getProcessStates().containsKey(userId)) {
-            tBot.sendMessage(chatId, userId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
+            tBotMessageService.sendMessage(chatId, userId, "Фото не запрашивалось. Если хотите начать, нажмите /start");
             return;
         }
-        tBot.sendMessage(chatId, userId, "Подождите, идёт обработка фото....");
+        tBotMessageService.sendMessage(chatId, userId, "Подождите, идёт обработка фото....");
         ProcessState currentState = conversationStateService.getProcessState(userId);
         // Получаем самое большое фото
         var photos = update.getMessage().getPhoto();
@@ -82,7 +83,7 @@ public class PhotoMessageHandler {
             // 3. Читаем изображение
             BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
             if (bufferedImage == null) {
-                tBot.sendMessage(chatId, userId, "Не удалось обработать изображение.");
+                tBotMessageService.sendMessage(chatId, userId, "Не удалось обработать изображение.");
                 return;
             }
 
@@ -121,12 +122,12 @@ public class PhotoMessageHandler {
                     return;
                 }
                 if (barcodeText == null) {
-                    tBot.sendMessage(chatId, userId, "Штрихкод не найден. Введите номер ПУ вручную:");
+                    tBotMessageService.sendMessage(chatId, userId, "Штрихкод не найден. Введите номер ПУ вручную:");
                     conversationStateService.setProcessState(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
                     return;
                 }
                 if (manualInput == null) {
-                    tBot.sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
+                    tBotMessageService.sendMessage(chatId, userId, "Показания счетчика не введены. Введите показания счётчика:");
                     conversationStateService.setProcessState(userId, ProcessState.MANUAL_INSERT_METER_INDICATION);
                 }
 
@@ -137,7 +138,7 @@ public class PhotoMessageHandler {
                 } else {
                     PhotoState photoState = conversationStateService.getPhotoState(userId);
                     OtoType otoType = conversationStateService.getOtoType(userId);
-                    tBot.sendMessage(chatId, userId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
+                    tBotMessageService.sendMessage(chatId, userId, "❌ Не указан номер трансформатора тока!! Повторите предыдущее действие!");
                     sendNextPhotoInstruction(userId, chatId, photoState.getNextPhotoType(otoType));
                 }
             } else {
@@ -148,14 +149,14 @@ public class PhotoMessageHandler {
                     pendingPhoto.setAdditionalInfo("Данные не требуются.");
 //                    PhotoState photoState = conversationStateService.getPhotoStates().get(userId);
 //                    OtoType otoType = conversationStateService.getOtoType(userId);
-                    tBot.sendMessage(chatId, userId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
+                    tBotMessageService.sendMessage(chatId, userId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
                     conversationStateService.setProcessState(userId, ProcessState.MANUAL_INSERT_METER_NUMBER);
 //                    sendNextPhotoInstruction(userId, photoState.getNextPhotoType(otoType));
                 }
             }
         } catch (Exception e) {
             log.error("Ошибка обработки фото: " + e.getMessage());
-            tBot.sendMessage(chatId, userId, "Произошла ошибка при обработке фото.");
+            tBotMessageService.sendMessage(chatId, userId, "Произошла ошибка при обработке фото.");
         }
     }
 
@@ -173,7 +174,7 @@ public class PhotoMessageHandler {
         };
 
         if (message != null) {
-            tBot.sendMessage(chatId, userId, message);
+            tBotMessageService.sendMessage(chatId, userId, message);
         }
     }
 
@@ -183,7 +184,7 @@ public class PhotoMessageHandler {
     private void handleUncontrolledPhoto(long userId, long chatId, PendingPhoto pending) {
         doSave(userId, chatId, pending);
         conversationStateService.clearPendingPhoto(userId);
-        tBot.editTextAndButtons("📸 Загрузите следующее фото или завершите загрузку.", COMPLETE_BUTTON, chatId, userId, 1);
+        tBotMessageService.editTextAndButtons("📸 Загрузите следующее фото или завершите загрузку.", COMPLETE_BUTTON, chatId, userId, 1);
     }
 
     /**
@@ -193,7 +194,7 @@ public class PhotoMessageHandler {
         // Определяем, необходимость загрузки нового фото
         String photoPhase = photoState.getNextPhotoType(operationType);
         if (photoPhase == null) {
-            tBot.editMessage(chatId, userId, "⚠ Ошибка: уже загружены все необходимые фото.");
+            tBotMessageService.editMessage(chatId, userId, "⚠ Ошибка: уже загружены все необходимые фото.");
             return;
         }
         // Сохранение фото
@@ -205,7 +206,7 @@ public class PhotoMessageHandler {
 
         // Проверка необходимости продолжения загрузки фото
         if (photoState.isComplete(operationType)) {
-            tBot.sendMessage(chatId, userId, "✅ Все фото загружены!");
+            tBotMessageService.sendMessage(chatId, userId, "✅ Все фото загружены!");
             changeReasonInput(chatId, userId, operationType);
             conversationStateService.clearPendingPhoto(userId);
         } else {
@@ -224,7 +225,7 @@ public class PhotoMessageHandler {
     }
 
     public void changeReasonInput(long chatId, long userId, OtoType operationType) {
-        tBot.editMessage(chatId, userId, "Введите причину замены: ");
+        tBotMessageService.editMessage(chatId, userId, "Введите причину замены: ");
         conversationStateService.setSequenceNumber(userId, REPLACED_EQUIPMENT_DATUM.get(operationType).size());
         conversationStateService.clearProcessState(userId);
 
@@ -241,19 +242,19 @@ public class PhotoMessageHandler {
     public void doSave(long userId, long chatId, PendingPhoto pending) {
 //        OtoType operationType = otoTypes.get(userId);
         try {
-            Path userDir = Paths.get(stringUtils.createSavingPath(pending, userId, conversationStateService));
+            Path userDir = Paths.get(photoPathService.createSavingPath(pending, userId, conversationStateService));
 
             Files.createDirectories(userDir);
 
-            String newFileName = stringUtils.createNewFileName(pending, userId, conversationStateService);
+            String newFileName = photoPathService.createNewFileName(pending, userId, conversationStateService);
             Path destination = userDir.resolve(newFileName);
 
             // Сохранение
             Files.move(pending.getTempFilePath(), destination, StandardCopyOption.REPLACE_EXISTING);
-            tBot.editMessage(chatId, userId, "Фото сохранено!\nФайл: " + newFileName);
+            tBotMessageService.editMessage(chatId, userId, "Фото сохранено!\nФайл: " + newFileName);
         } catch (IOException e) {
             log.error("❌ Ошибка сохранения фото для userId {}: {}", userId, e.getMessage(), e);
-            tBot.sendMessage(chatId, userId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
+            tBotMessageService.sendMessage(chatId, userId, "⚠ Ошибка при сохранении фото. Попробуйте снова.");
         }
     }
 
