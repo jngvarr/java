@@ -17,16 +17,16 @@ import java.nio.file.StandardCopyOption;
 @RequiredArgsConstructor
 public class TelegramFileServiceImpl implements TelegramFileService {
 
-    private final BotExecutor tBot;
+    private final BotExecutor botExecutor;
 
     @Override
     public File downloadFile(String fileId) throws TelegramApiException, IOException {
         GetFile getFileMethod = new GetFile();
         getFileMethod.setFileId(fileId);
-        org.telegram.telegrambots.meta.api.objects.File telegramFile = tBot.execute(getFileMethod);
+        org.telegram.telegrambots.meta.api.objects.File telegramFile = botExecutor.execute(getFileMethod);
 
         String filePath = telegramFile.getFilePath();
-        String fileUrl = "https://api.telegram.org/file/bot" + tBot.getConfig().getBotToken() + "/" + filePath;
+        String fileUrl = "https://api.telegram.org/file/bot" + botExecutor.getBotToken() + "/" + filePath;
 
         Path tempFile = Files.createTempFile("photo_", ".jpg");
         try (InputStream in = new URL(fileUrl).openStream()) {

@@ -7,6 +7,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.services.dialog.OtherOtoWorksServic
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.UpdateHandler;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @Data
 @Slf4j
 @Component
-public class TextMessageHandler {
+public class TextMessageHandler implements UpdateHandler {
 
     private final TBotMessageService tBotMessageService;
     private final PhotoMessageHandler photoMessageHandler;
@@ -89,5 +90,15 @@ public class TextMessageHandler {
             }
         }
         tBotMessageService.sendMessage(chatId, userId, "Команда не распознана. Попробуйте еще раз.");
+    }
+
+    @Override
+    public boolean canHandle(Update update) {
+        return false;
+    }
+
+    @Override
+    public void handle(Update update) {
+
     }
 }

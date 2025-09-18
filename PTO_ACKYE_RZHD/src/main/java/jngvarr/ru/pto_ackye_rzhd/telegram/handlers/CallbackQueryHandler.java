@@ -7,6 +7,7 @@ import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.TBotConversationUtils;
 import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.UpdateHandler;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.COMPLETE_
 @Component
 @Data
 @RequiredArgsConstructor
-public class CallbackQueryHandler {
+public class CallbackQueryHandler implements UpdateHandler {
 
     private final TBotMessageService tBotMessageService;
     private final TBotConversationStateService conversationStateService;
@@ -189,5 +190,15 @@ public class CallbackQueryHandler {
             }
             default -> tBotMessageService.sendMessage(chatId, userId, "Неизвестное действие. Попробуйте еще раз.");
         }
+    }
+
+    @Override
+    public boolean canHandle(Update update) {
+        return false;
+    }
+
+    @Override
+    public void handle(Update update) {
+
     }
 }

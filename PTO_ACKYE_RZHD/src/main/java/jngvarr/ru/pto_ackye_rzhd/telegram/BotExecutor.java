@@ -8,10 +8,13 @@ import org.telegram.telegrambots.meta.generics.TelegramBot;
 
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
+
 @Component
 public interface BotExecutor {
     <T extends Serializable, M extends BotApiMethod<T>> CompletableFuture<T> executeAsync(M method);
+
     <T extends Serializable, M extends BotApiMethod<T>> T execute(M method) throws TelegramApiException;
 
-    TelegramBot getConfig();
+    //    TelegramBot getConfig();
+    String getBotToken();
 }

@@ -32,7 +32,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PhotoMessageHandler {
+public class PhotoMessageHandler implements UpdateHandler{
 
     private final TBotMessageService tBotMessageService;
     private final TelegramFileService telegramFileService;
@@ -254,5 +254,15 @@ public class PhotoMessageHandler {
             return;
         }
         handleChangingEquipmentPhoto(userId, chatId, pending, operationType, photoState);
+    }
+
+    @Override
+    public boolean canHandle(Update update) {
+        return false;
+    }
+
+    @Override
+    public void handle(Update update) {
+
     }
 }
