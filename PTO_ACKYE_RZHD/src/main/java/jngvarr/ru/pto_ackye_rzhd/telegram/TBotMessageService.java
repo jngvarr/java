@@ -1,6 +1,8 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
@@ -20,11 +22,13 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.ERROR_TEX
 @Data
 @Slf4j
 @Component
+@RequiredArgsConstructor
+
 public class TBotMessageService {
     private static final long ADMIN_CHAT_ID = 199867696L;
     private Map<Long, Integer> sentMessagesIds = new HashMap<>();
     private List<Message> sentMessages = new ArrayList<>();
-    private final TBot tBot;
+    private final BotExecutor botExecutor;
 
     public void sendMessage(long chatId, long userId, String textToSend) {
         SendMessage message = new SendMessage();
@@ -40,32 +44,28 @@ public class TBotMessageService {
         editMessage.setText(newTextToReplace);
 
         try {
-           tBot.execute(editMessage);
+            botExecutor.execute(editMessage);
         } catch (TelegramApiException e) {
             log.error(ERROR_TEXT + e.getMessage());
         }
     }
 
-    void forwardMessage(Message userMessage) {
+    public void forwardMessage(Message userMessage) {
         ForwardMessage forward = new ForwardMessage();
         forward.setChatId(String.valueOf(ADMIN_CHAT_ID)); // куда
         forward.setFromChatId(String.valueOf(userMessage.getChatId())); // откуда
         forward.setMessageId(userMessage.getMessageId()); // какое сообщение
 
         try {
-            tBot.execute(forward);
+            botExecutor.execute(forward);
         } catch (TelegramApiException e) {
             log.error("Не удалось переслать сообщение админу: " + e.getMessage());
         }
     }
 
-
-
-
-
     void executeMessage(SendMessage message, long userId) {
         try {
-            Message sentMessage = tBot.execute(message); // Отправляем сообщение в Telegram
+            Message sentMessage = botExecutor.execute(message); // Отправляем сообщение в Telegram
             sentMessagesIds.put(userId, sentMessage.getMessageId());
         } catch (TelegramApiException e) {
             log.error(ERROR_TEXT + e.getMessage());
@@ -75,7 +75,7 @@ public class TBotMessageService {
     public void sendTextMessage(String text, Map<String, String> buttons, Long chatId, long userId, int columns) {
         try {
             SendMessage message = createMessage(text, buttons, chatId, columns);
-            CompletableFuture<Message> future = tBot.executeAsync(message);
+            CompletableFuture<Message> future = botExecutor.executeAsync(message);
             Message sentMessage = future.get(); // если всё же нужен результат
             this.sentMessages.add(sentMessage);
             sentMessagesIds.put(userId, sentMessage.getMessageId());
@@ -98,14 +98,17 @@ public class TBotMessageService {
         editMessage.setParseMode("markdown");
 
         // Создаём временный объект для формирования разметки
-        SendMessage temp = new SendMessage();
-        attachButtons(temp, buttons, columns);
-        editMessage.setReplyMarkup((InlineKeyboardMarkup) temp.getReplyMarkup());
+        if (buttons != null && !buttons.isEmpty()) {
+            SendMessage temp = new SendMessage();
+            attachButtons(temp, buttons, columns);
+            editMessage.setReplyMarkup((InlineKeyboardMarkup) temp.getReplyMarkup());
+        }
 
         try {
-            tBot.execute(editMessage);
+            botExecutor.execute(editMessage);
         } catch (TelegramApiException e) {
             log.error(ERROR_TEXT + e.getMessage());
+//            log.error("Ошибка редактирования сообщения для userId {}: {}", userId, e.getMessage());
         }
     }
 

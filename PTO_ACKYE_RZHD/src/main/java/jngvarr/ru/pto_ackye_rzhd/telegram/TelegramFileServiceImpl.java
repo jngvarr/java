@@ -17,7 +17,7 @@ import java.nio.file.StandardCopyOption;
 @RequiredArgsConstructor
 public class TelegramFileServiceImpl implements TelegramFileService {
 
-    private final TBot tBot;
+    private final BotExecutor tBot;
 
     @Override
     public File downloadFile(String fileId) throws TelegramApiException, IOException {

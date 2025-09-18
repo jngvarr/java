@@ -6,9 +6,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public interface UserService {
 
 //    @Transactional
-    void registerUser(User user);
+    User registerUser(User user);
 
     User createUser(Update update);
+
+    User checkUser(Update update);
 }
 
 

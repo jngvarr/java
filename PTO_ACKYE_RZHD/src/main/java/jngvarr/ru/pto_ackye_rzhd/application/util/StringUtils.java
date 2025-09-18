@@ -1,28 +1,10 @@
 package jngvarr.ru.pto_ackye_rzhd.application.util;
 
-import jakarta.annotation.PostConstruct;
-import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
-import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
-import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
-import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
-import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
-import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 import java.util.StringJoiner;
-
-import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.PHOTO_SUBDIRS_NAME;
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.FORMATTED_CURRENT_DATE;
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
 
 @Data
 public final class StringUtils {

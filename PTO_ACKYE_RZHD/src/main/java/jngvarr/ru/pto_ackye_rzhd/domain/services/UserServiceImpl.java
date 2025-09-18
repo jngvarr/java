@@ -3,6 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.domain.services;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.UserRepository;
+import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -18,13 +19,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
+    private final TBotMessageService messageService;
 
     @Override
 //    @Transactional
-    public void registerUser(User user) {
+    public User registerUser(User user) {
         if (!repository.existsById(user.getUserId())) {
-            repository.save(user);
+           return repository.save(user);
         }
+        return user;
     }
 
 
@@ -48,10 +51,40 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    public void registerUser(Update update) {
-        User newUser = createUser(update);
-        registerUser(newUser);
+    @Override
+    public User checkUser(Update update) {
+        long userId = 0;
+        long chatId = 0;
+        if (update.hasMessage()) {
+            messageService.forwardMessage(update.getMessage());
+            userId = update.getMessage().getFrom().getId();
+            chatId = update.getMessage().getChatId();
+        } else if (update.hasCallbackQuery()) {
+            chatId = update.getCallbackQuery().getMessage().getChatId();
+            userId = update.getCallbackQuery().getFrom().getId();
+        }
+
+        User user = getUserById(userId);
+        String incomingText = update.hasMessage() && update.getMessage().hasText()
+                ? update.getMessage().getText()
+                : "";
+
+        if (user == null && "/register".equals(incomingText)) {
+            user = registerUser(update);
+            messageService.sendMessage(chatId, userId, "Пользователь успешно зарегистрирован.");
+        } else if ("/register".equals(incomingText)) {
+            messageService.sendMessage(chatId, userId, "Вы уже зарегистрированы!!!");
+        } else if (user == null || !user.isAccepted()) {
+            messageService.sendMessage(chatId, userId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратора.");
+        }
+        return user;
     }
+
+    public User registerUser(Update update) {
+        User newUser = createUser(update);
+       return registerUser(newUser);
+    }
+
     public List<User> getUsers() {
         return repository.findAll();
     }

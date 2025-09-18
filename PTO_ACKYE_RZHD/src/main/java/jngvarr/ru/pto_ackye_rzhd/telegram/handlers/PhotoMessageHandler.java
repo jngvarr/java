@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -34,7 +35,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 public class PhotoMessageHandler {
 
     private final TBotMessageService tBotMessageService;
-    private final TBot tBot;
+    private final TelegramFileService telegramFileService;
     // Карта для хранения информации о фото, ожидающих подтверждения
     private final PreparingPhotoService preparingPhotoService;
     private final TBotConversationStateService conversationStateService;
@@ -62,26 +63,10 @@ public class PhotoMessageHandler {
 
         try {
             // Скачивание файла с сервера Telegram
-            GetFile getFileMethod = new GetFile();
-            getFileMethod.setFileId(fileId);
-            org.telegram.telegrambots.meta.api.objects.File telegramFile = tBot.execute(getFileMethod);
-            String filePath = telegramFile.getFilePath();
-            String fileUrl = "https://api.telegram.org/file/bot" + tBot.getConfig().getBotToken() + "/" + filePath;
-
-            // 2. Сохраняем фото в папку пользователя
-            Path userDir = Paths.get("photos", String.valueOf(userId));
-            if (!Files.exists(userDir)) {
-                Files.createDirectories(userDir);
-
-                // Сохраняем файл во временное хранилище
-            }
-            Path tempFilePath = Files.createTempFile(userDir, "photo_", ".jpg");
-            try (InputStream in = new URL(fileUrl).openStream()) {
-                Files.copy(in, tempFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
+            File downloadedFile = telegramFileService.downloadFile(fileId);
 
             // 3. Читаем изображение
-            BufferedImage bufferedImage = ImageIO.read(tempFilePath.toFile());
+            BufferedImage bufferedImage = ImageIO.read(downloadedFile);
             if (bufferedImage == null) {
                 tBotMessageService.sendMessage(chatId, userId, "Не удалось обработать изображение.");
                 return;
@@ -111,7 +96,7 @@ public class PhotoMessageHandler {
             };
 
             // 6. Создаём объект для хранения фото
-            PendingPhoto pendingPhoto = new PendingPhoto(type, tempFilePath, barcodeText);
+            PendingPhoto pendingPhoto = new PendingPhoto(type, downloadedFile.toPath(), barcodeText);
             conversationStateService.setPendingPhoto(userId, pendingPhoto);
             if (type.equals("counter")) {
                 if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
@@ -218,7 +203,7 @@ public class PhotoMessageHandler {
 
     private void addChangingInfo(PendingPhoto pending, long userId) {
         if (pending.getType().equals("counter")) {
-            conversationStateService.appendProcessInfo(userId,pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_");
+            conversationStateService.appendProcessInfo(userId, pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_");
         } else
             conversationStateService.appendProcessInfo(userId, pending.getType().equals("concentrator") ? pending.getDeviceNumber() + "_" : pending.getAdditionalInfo() + "_");
 
@@ -239,6 +224,7 @@ public class PhotoMessageHandler {
             }
         }
     }
+
     public void doSave(long userId, long chatId, PendingPhoto pending) {
 //        OtoType operationType = otoTypes.get(userId);
         try {

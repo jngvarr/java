@@ -24,7 +24,6 @@ public class EquipmentManipulationsService {
     private final PhotoPathService photoPathService;
     private final DateUtils dateUtils;
     private final TBotConversationUtils conversationUtils;
-//    private boolean isDcLocation;
 
     public void handleEquipmentChange(long userId, long chatId, String msgText, OtoType otoType, ProcessState processState) {
         Map<Integer, String> replacedEquipmentData = REPLACED_EQUIPMENT_DATUM.get(otoType);
