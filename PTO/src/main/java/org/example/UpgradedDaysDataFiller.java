@@ -10,11 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import org.slf4j.Logger;
@@ -30,11 +26,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMM = DateTimeFormatter.ofPattern("dd MMMM", new Locale("ru"));
     private static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
-    //    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
     private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY);
     private static final LocalDate TODAY = LocalDate.now();
     private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
-    //    private static final String RESERVE_FILE_DATE = TODAY.getMonth().getDisplayName(TextStyle.FULL, new Locale("ru")).toUpperCase() + " " + TODAY.getYear();
     private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ РРЭ\\Архив заданий на ОТО\\";
     private static final int COUNTER_NUMBER_CELL_NUMBER = 13;
     private static final int IIK_STATUS_CELL_NUMBER = 19;
@@ -45,6 +39,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private enum DataType {
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
     }
+
+    private static boolean needSynchronize = false;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
@@ -133,6 +129,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
     private static Map<String, String> fillingMapWithData(int meterColumn, int neededDataColumn, File file) {
         Map<String, String> workMap = new HashMap<>();
+        Map<String, String> synchroMap = new HashMap<>();
         try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
             Sheet sheet = workbook.getSheetAt(0);
             boolean isStatusPUFile = file.getName().contains("Статусы ПУ");
@@ -143,6 +140,11 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     Cell statusDateCell = row.getCell(neededDataColumn + 1);
                     value += "_" + (statusDateCell != null ? getCellStringValue(statusDateCell) : "");
                 }
+                if (file.getName().contains("Состав ИИК") && needSynchronize) {
+                    synchroMap.putIfAbsent(
+                            getCellStringValue(row.getCell(
+                                    findColumnIndex(sheet, "Идентификатор ТУ", null))), getSyncData(row));
+                }
                 if (key != null && value != null) {
                     workMap.put(key.trim(), value);
                 }
@@ -150,7 +152,28 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         } catch (IOException ex) {
             logger.error("Error reading file: " + file.getName(), ex);
         }
+        synchronizeData(synchroMap);
         return workMap;
+    }
+
+    private static String getSyncData(Row row) {
+        Sheet workSheet = row.getSheet();
+        return new StringJoiner("_").
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Регион", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЭЛ",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧ",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧС",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЖД станция",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧЭ/ТП/КТП",1 )))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Название ТУ", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Присоединение", 2)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Размещение ПУ",2)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Адрес ТУ",2)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Модель ПУ",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. номер ПУ",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Дата монт.",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. ном. УСПД",1)))).
+                toString();
     }
 
     private static void fillIIKData(Sheet worksheet, Map<DataType, Map<String, String>> dataMaps) {
@@ -270,12 +293,12 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         dateCellStyle.setDataFormat(poiDataFormat.getFormat("dd.MM.yyyy"));
 
         for (Row row : ivkeSheet) {
-            Cell ivkeCell = row.getCell(findColumnIndex(ivkeSheet, "Серийный номер концентратора"));
+            Cell ivkeCell = row.getCell(findColumnIndex(ivkeSheet, "Серийный номер концентратора", null));
             String ivkeNumber = getCellStringValue(ivkeCell);
             if (ivkeNumber != null) {
                 String key = ivkeNumber.trim();
                 if (dataMaps.get(DataType.CONNECTION_DIAG).containsKey(key)) {
-                    Cell connectionDiagCol = row.createCell(findColumnIndex(ivkeSheet, "Дата последней связи с УСПД"));
+                    Cell connectionDiagCol = row.createCell(findColumnIndex(ivkeSheet, "Дата последней связи с УСПД", null));
                     String dateString = dataMaps.get(DataType.CONNECTION_DIAG).get(key);
 
                     // Попытка преобразовать строку в дату

@@ -31,7 +31,8 @@ public class DcManagementService {
         newDc.setSubstation(substation);
         log.info("{}", row.getRowNum());
         String sectionNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
-        if (!sectionNumber.isBlank()) {
+        if (!sectionNumber.isBlank()
+        ) {
             newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
         } else newDc.setBusSection(1);
 

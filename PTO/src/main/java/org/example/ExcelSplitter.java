@@ -153,8 +153,8 @@ public class ExcelSplitter { //разбиение сводных файлов н
     }
 
 
-    static int findColumnIndex(Sheet sheet, String columnName) {
-        Row headerRow = sheet.getRow(0); // Заголовок на первой строке
+    static int findColumnIndex(Sheet sheet, String columnName, Integer headerRowIndex) {
+        Row headerRow = headerRowIndex == null? sheet.getRow(0) :sheet.getRow( headerRowIndex); // Заголовок на первой строке
         if (headerRow == null) return -1;
 
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {

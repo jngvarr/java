@@ -15,7 +15,7 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        boolean needInitialize = false;
+        boolean needInitialize = true;
         if (needInitialize) { // TODO реализовать необходимость обновление данных из файла
             log.info("Приложение запущено. Инициализирую данные...");
 
