@@ -34,8 +34,8 @@ public class User {
     @Column(name = "accepted")
     private boolean accepted;
 
-    @Column(name = "oto_accepted")
-    private boolean otoAccepted;
+    @Column(name = "oto_mount_accepted")
+    private boolean otoMountAccepted;
 
     @Override
     public boolean equals(Object o) {

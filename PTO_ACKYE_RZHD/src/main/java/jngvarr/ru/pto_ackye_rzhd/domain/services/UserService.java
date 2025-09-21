@@ -11,6 +11,8 @@ public interface UserService {
     User createUser(Update update);
 
     User checkUser(Update update);
+
+     User getUserById(Long id);
 }
 
 

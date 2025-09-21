@@ -2,11 +2,12 @@ package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
 import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.User;
+import jngvarr.ru.pto_ackye_rzhd.domain.services.UserServiceImpl;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.TBotConversationUtils;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.UpdateHandler;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -29,29 +30,32 @@ public class CallbackQueryHandler implements UpdateHandler {
     private final TBotConversationStateService conversationStateService;
     private final ExcelFileService excelFileService;
     private final TBotConversationUtils conversationUtils;
+    private final UserServiceImpl userService;
 
-    public void handleCallbackQuery(Update update, User user) {
+    @Override
+    public void handle(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         long userId = update.getCallbackQuery().getFrom().getId();
         long chatId = update.getCallbackQuery().getMessage().getChatId();
+        User user = userService.getUserById(userId);
 
         switch (callbackData) {
-            case "mount" -> {
-                tBotMessageService.editTextAndButtons(NEW_TU, MODES.get(callbackData), chatId, userId, 1);
-//                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
-            }
             case "pto" -> {
                 conversationStateService.setPtoFlags(userId, true);
                 tBotMessageService.editTextAndButtons(PTO, MODES.get(callbackData), chatId, userId, 2);
 //                sendTextMessage(PTO, modes.get(callbackData), chatId, 2);
             }
-            case "oto" -> {
-//                sendTextMessage(OTO, modes.get(callbackData), chatId, 2);
-                if (!user.isOtoAccepted()) {
+            case "mount", "oto" -> {
+                if (!user.isOtoMountAccepted()) {
                     tBotMessageService.editMessage(chatId, userId, "Не достаточно прав, обратитесь к администратору!");
                     return;
                 } else {
-                    tBotMessageService.editTextAndButtons(OTO, MODES.get(callbackData), chatId, userId, 2);
+                    if ("oto".equals(callbackData)) {
+                        tBotMessageService.editTextAndButtons(OTO, MODES.get(callbackData), chatId, userId, 2);
+                    } else
+                        tBotMessageService.editTextAndButtons(NEW_TU, MODES.get(callbackData), chatId, userId, 1);
+//                sendTextMessage(OTO, modes.get(callbackData), chatId, 2);
+//                sendTextMessage(NEW_TU, modes.get(callbackData), chatId, 1);
                 }
             }
 
@@ -194,11 +198,8 @@ public class CallbackQueryHandler implements UpdateHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return false;
+        return update.hasCallbackQuery();
     }
 
-    @Override
-    public void handle(Update update) {
 
-    }
 }

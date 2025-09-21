@@ -1,4 +1,4 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.telegram.service;
 
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 

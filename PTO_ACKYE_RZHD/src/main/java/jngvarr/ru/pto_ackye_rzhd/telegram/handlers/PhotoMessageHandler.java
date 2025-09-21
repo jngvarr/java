@@ -8,19 +8,18 @@ import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
 import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TelegramFileService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,7 +31,7 @@ import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PhotoMessageHandler implements UpdateHandler{
+public class PhotoMessageHandler implements UpdateHandler {
 
     private final TBotMessageService tBotMessageService;
     private final TelegramFileService telegramFileService;
@@ -41,7 +40,8 @@ public class PhotoMessageHandler implements UpdateHandler{
     private final TBotConversationStateService conversationStateService;
     private final PhotoPathService photoPathService;
 
-    public void handlePhotoMessage(Update update) {
+    @Override
+    public void handle(Update update) {
         long userId = update.getMessage().getFrom().getId();
         long chatId = update.getMessage().getChatId();
         String processInfo = conversationStateService.getProcessInfo(userId);
@@ -258,11 +258,6 @@ public class PhotoMessageHandler implements UpdateHandler{
 
     @Override
     public boolean canHandle(Update update) {
-        return false;
-    }
-
-    @Override
-    public void handle(Update update) {
-
+        return update.getMessage().hasPhoto();
     }
 }

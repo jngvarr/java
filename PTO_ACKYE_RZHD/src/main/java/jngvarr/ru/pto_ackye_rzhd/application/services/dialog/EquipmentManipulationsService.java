@@ -7,7 +7,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.TBotConversationUtils;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 

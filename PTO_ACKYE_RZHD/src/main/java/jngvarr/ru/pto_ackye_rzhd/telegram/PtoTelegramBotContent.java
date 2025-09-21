@@ -8,10 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 public class PtoTelegramBotContent {
-    static final String ERROR_TEXT = "Error occurred: ";
+    public static final String ERROR_TEXT = "Error occurred: ";
 
     public static final String MAIN_MENU = """
-                Выбери вид работ:
+            *Beta версия телеграм бота призванного помочь облегчить участь персонала ООО "УК СТС"*
+                                                                
+            Бот умеет делать следующие вещи:                                                     \s
+                1. Обрабатывать / сортировать фотоматериалы ПТО
+                2. Обрабатывать / сортировать фотоматериалы ОТО
+                3. Обрабатывать / сортировать фотоматериалы при монтаже нового оборудования (ИИК/ИВКЭ)
+                4.Подготавливать информацию для внесения в ПО Горизонт
+                5. Что-то еще, пока не придумал
+
+            Выбери вид работ:
             """;
 
     public static final String INTRO = """
@@ -23,8 +32,8 @@ public class PtoTelegramBotContent {
                 3. Подготавливать информацию для внесения в ПО Горизонт
                 4. Что-то еще, пока не придумал
                
-            Для начала работы нажмите /start
             """;
+//            Для начала работы нажмите /start
 
     public static final String PTO = """
             *ВЫБРАН РЕЖИМ "ПТО"*

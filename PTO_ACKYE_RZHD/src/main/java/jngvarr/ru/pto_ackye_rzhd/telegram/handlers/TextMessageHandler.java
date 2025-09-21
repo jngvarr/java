@@ -6,7 +6,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.services.dialog.ManualInsertService
 import jngvarr.ru.pto_ackye_rzhd.application.services.dialog.OtherOtoWorksService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.UpdateHandler;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,8 @@ public class TextMessageHandler implements UpdateHandler {
     private final ManualInsertService manualInsertService;
     private final OtherOtoWorksService otherOtoWorksService;
 
-    public void handleTextMessage(Update update) {
+    @Override
+    public void handle(Update update) {
         String msgText = update.getMessage().getText();
         long userId = update.getMessage().getFrom().getId();
         long chatId = update.getMessage().getChatId();
@@ -38,6 +39,7 @@ public class TextMessageHandler implements UpdateHandler {
 
         switch (msgText) {
             case "/start" -> {
+//                tBotMessageService.sendMessage(chatId, userId, INTRO);
                 tBotMessageService.sendTextMessage(MAIN_MENU, START_MENU_BUTTONS, chatId, userId, 1);
                 conversationStateService.clearUserData(userId);
                 return;
@@ -46,12 +48,15 @@ public class TextMessageHandler implements UpdateHandler {
                 tBotMessageService.sendMessage(chatId, userId, HELP);
                 return;
             }
-//            case "/register" -> {
+            case "/register" -> {
+                tBotMessageService.sendMessage(chatId, userId,
+                        "Вы уже зарегистрированы!!!\n" +
+                                "Чтобы продолжить работу нажмите /start ");
 //                conversationStateService.setProcessStates(userId, ProcessState.REGISTRATION);
 //                registerUser(update);
 //                clearData();
-//                return;
-//            }
+                return;
+            }
             case "/stop" -> {
                 tBotMessageService.sendMessage(chatId, userId, "Работа прервана, для продолжения нажмите /start");
                 conversationStateService.clearUserData(userId);
@@ -94,11 +99,6 @@ public class TextMessageHandler implements UpdateHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return false;
-    }
-
-    @Override
-    public void handle(Update update) {
-
+        return update.getMessage().hasText();
     }
 }

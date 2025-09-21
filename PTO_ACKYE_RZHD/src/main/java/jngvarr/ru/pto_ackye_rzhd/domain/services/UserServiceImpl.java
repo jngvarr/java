@@ -3,7 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.domain.services;
 import jakarta.transaction.Transactional;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.User;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.UserRepository;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(from.getLastName() != null ? from.getLastName() : "");
         user.setUsername(from.getUserName());
         user.setRegisteredAt(LocalDateTime.now());
-        user.setAccepted(false);
+//        user.setAccepted(false);
         return user;
     }
 
@@ -64,18 +64,17 @@ public class UserServiceImpl implements UserService {
             userId = update.getCallbackQuery().getFrom().getId();
         }
 
-        User user = getUserById(userId);
         String incomingText = update.hasMessage() && update.getMessage().hasText()
                 ? update.getMessage().getText()
                 : "";
-
+        User user = getUserById(userId);
         if (user == null && "/register".equals(incomingText)) {
             user = registerUser(update);
             messageService.sendMessage(chatId, userId, "Пользователь успешно зарегистрирован.");
-        } else if ("/register".equals(incomingText)) {
-            messageService.sendMessage(chatId, userId, "Вы уже зарегистрированы!!!");
+//        } else if ("/register".equals(incomingText)) {
+//            messageService.sendMessage(chatId, userId, "Вы уже зарегистрированы!!!");
         } else if (user == null || !user.isAccepted()) {
-            messageService.sendMessage(chatId, userId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратора.");
+            messageService.sendMessage(chatId, userId, "Пожалуйста, пройдите регистрацию и дождитесь валидации администратором.");
         }
         return user;
     }

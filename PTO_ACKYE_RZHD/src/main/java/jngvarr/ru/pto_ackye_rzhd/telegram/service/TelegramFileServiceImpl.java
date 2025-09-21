@@ -1,5 +1,6 @@
-package jngvarr.ru.pto_ackye_rzhd.telegram;
+package jngvarr.ru.pto_ackye_rzhd.telegram.service;
 
+import jngvarr.ru.pto_ackye_rzhd.telegram.TBot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -17,16 +18,16 @@ import java.nio.file.StandardCopyOption;
 @RequiredArgsConstructor
 public class TelegramFileServiceImpl implements TelegramFileService {
 
-    private final BotExecutor botExecutor;
+    private final TBot tBot;
 
     @Override
     public File downloadFile(String fileId) throws TelegramApiException, IOException {
         GetFile getFileMethod = new GetFile();
         getFileMethod.setFileId(fileId);
-        org.telegram.telegrambots.meta.api.objects.File telegramFile = botExecutor.execute(getFileMethod);
+        org.telegram.telegrambots.meta.api.objects.File telegramFile = tBot.execute(getFileMethod);
 
         String filePath = telegramFile.getFilePath();
-        String fileUrl = "https://api.telegram.org/file/bot" + botExecutor.getBotToken() + "/" + filePath;
+        String fileUrl = "https://api.telegram.org/file/bot" + tBot.getBotToken() + "/" + filePath;
 
         Path tempFile = Files.createTempFile("photo_", ".jpg");
         try (InputStream in = new URL(fileUrl).openStream()) {

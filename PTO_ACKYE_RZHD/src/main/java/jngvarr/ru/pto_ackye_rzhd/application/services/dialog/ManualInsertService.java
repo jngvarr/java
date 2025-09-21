@@ -3,7 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.application.services.dialog;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.telegram.TBotMessageService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.handlers.PhotoMessageHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
