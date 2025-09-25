@@ -16,7 +16,7 @@ public class Dc {
     @ManyToOne
     @JoinColumn(name = "substation_id")
     private Substation substation;
-    private int busSection;
+    private String busSection;
     @Column(nullable = false, unique = true)
     private String dcNumber;
     private String dcModel;

@@ -56,7 +56,7 @@ public class ExcelUtil {
         newSubstation.setRegionName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "Регион", 1))));
         newSubstation.setSubdivisionName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЭЛ",1))));
         newSubstation.setPowerSupplyEnterpriseName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧ",1))));
-        newSubstation.setDistrictName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧC",1))));
+        newSubstation.setDistrictName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧС",1))));
         newSubstation.setStationName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЖД станция",1))));
         newSubstation.setSubstationName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧЭ/ТП/КТП",1))));
         return newSubstation;
@@ -105,7 +105,7 @@ public class ExcelUtil {
         }
     }
 
-    public void addNewMeteringPointToExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
+    public static void addNewMeteringPointToExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
         String deviceNumber = dataParts[0];
         String mountingMeterNumber = dataParts[3];
         String meterType = dataParts[4].toUpperCase();

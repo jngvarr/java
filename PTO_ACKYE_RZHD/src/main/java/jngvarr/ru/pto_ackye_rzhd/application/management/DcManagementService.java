@@ -25,22 +25,20 @@ import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTE
 public class DcManagementService {
     private final EntityCache entityCache;
     private final DcService dcService;
-    private final ExcelUtil excelUtil;
 
-    public void createDc(Substation substation, String dcNumber, Row row) {
+    public void createDc(Substation substation, String dcNumber, String[] dcData) {
         Dc newDc = new Dc();
         newDc.setSubstation(substation);
-        log.info("обрабатывается строка {}, листа {}", row.getRowNum(), row.getSheet().getSheetName());
-        String sectionNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
+        String sectionNumber = dcData[0];
         if (sectionNumber != null && !sectionNumber.isBlank()
         ) {
-            newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
-        } else newDc.setBusSection(1);
+            newDc.setBusSection(sectionNumber);
+        } else newDc.setBusSection("#Н/Д");
 
-        String installationDateStr = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE));
+        String installationDateStr = dcData[1];
         if (installationDateStr != null && !installationDateStr.isBlank()) {
             newDc.setInstallationDate(LocalDate.parse(installationDateStr, DATE_FORMATTER_DDMMYYYY));
-        }
+        } else newDc.setInstallationDate(null);
         newDc.setDcModel(DC_MODEL);
         newDc.setMeters(new ArrayList<>());
         newDc.setDcNumber(dcNumber);

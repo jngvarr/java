@@ -6,12 +6,16 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.time.LocalDate;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements ApplicationListener<ApplicationReadyEvent> {
 
     private final ExcelFileService excelFileService;
+    private static final String FOLDER_PATH = "d:\\Downloads\\пто\\";
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -19,13 +23,25 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
         if (needInitialize) { // TODO реализовать необходимость обновление данных из файла
             log.info("Приложение запущено. Инициализирую данные...");
 
-            String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+            File[] files = new File(FOLDER_PATH).listFiles((dir, name) -> name.endsWith(".xlsx"));
+            if (files == null || files.length == 0) {
+                log.info("No files found in folder: " + FOLDER_PATH);
+                return;
+            }
 
-            try {
-                excelFileService.addDataFromExcelFile(filePath);
-                log.info("Загрузка данных из Excel завершена.");
-            } catch (Exception e) {
-                log.error("Ошибка при загрузке данных из Excel-файла", e);
+//            String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+
+            for (File file : files) {
+                if (file.getName().startsWith("Состав ИИК")) {
+                    try {
+//                excelFileService.addDataFromExcelFile(filePath);
+                        String path = file.getPath();
+                        excelFileService.addDataFromIikContent(path);
+                        log.info("Загрузка данных из Excel завершена.");
+                    } catch (Exception e) {
+                        log.error("Ошибка при загрузке данных из Excel-файла", e);
+                    }
+                }
             }
         }
     }

@@ -24,10 +24,11 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 
 import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.STRAIGHT_FORMATTED_CURRENT_DATE;
+import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 @Data
@@ -265,7 +266,7 @@ public class ExcelFileService {
         long startTime = System.currentTimeMillis();
         try (Workbook planOTOWorkbook = new XSSFWorkbook(new FileInputStream(dataFilePath))
         ) {
-            fillDbWithIikContent(planOTOWorkbook.getSheetAt(1));
+            fillDbWithIikContent(planOTOWorkbook.getSheetAt(0));
 
             log.info("Data filled successfully!");
 
@@ -289,10 +290,19 @@ public class ExcelFileService {
             String dcNumber = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
             if (!entityCache.get(EntityType.DC).containsKey(dcNumber) && dcNumber != null) {
                 Substation substation = substationManagementService.createSubstationIfNotExists(ExcelUtil.createSubstationDto(row));
-                dcManagementService.createDc(substation, dcNumber, row);
+                dcManagementService.createDc(substation, dcNumber, getDcDataFromRow(row, false));
                 log.info("Сохраняем DC {} из строки {} : ", dcNumber, row.getRowNum());
             }
         }
+    }
+
+    private String[] getDcDataFromRow(Row row, boolean dataFromContent) {
+        String[] data = new String[2];
+        if (!dataFromContent) {
+            data[0] = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
+            data[1] = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_DC_INSTALLATION_DATE));
+        }
+        return data;
     }
 
     public void fillDbWithIikContent(Sheet sheet) {
@@ -317,14 +327,14 @@ public class ExcelFileService {
 
             if (!entityCache.get(EntityType.DC).containsKey(dcNumber) && dcNumber != null) {
                 Substation substation = substationManagementService.createSubstationIfNotExists(ExcelUtil.createSubstationDtoFromContent(row));
-                dcManagementService.createDc(substation, dcNumber, row);
+                dcManagementService.createDc(substation, dcNumber, getDcDataFromRow(row, true));
             }
 
             if (!entityCache.get(EntityType.METERING_POINT).containsKey(newIikId)) {
                 int rowNum = row.getRowNum();
                 log.info("Создаем новый ИИК с id = {} из строки {}.", newIikId, rowNum);
                 Meter newMeter = meterManagementService.constructMeterFromIikContent(row);
-                MeteringPoint newIik = meteringPointManagementService.constructIIk(row);
+                MeteringPoint newIik = meteringPointManagementService.constructIIkFromIikContent(row);
                 if (dcNumber == null) {
                     if (newIik.getMeteringPointAddress() == null) newIik.setMeteringPointAddress("");
                 } else {
@@ -350,6 +360,71 @@ public class ExcelFileService {
         }
         for (MeteringPoint point : newMeteringPoints.values()) {
             meteringPointService.create(point);
+        }
+    }
+
+    public void ExportDb() {
+        String filePath = "БД.xlsx";
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("ИИК");
+
+
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("ID");
+            headerRow.createCell(1).setCellValue("Регион");
+            headerRow.createCell(2).setCellValue("ЭЭЛ");
+            headerRow.createCell(3).setCellValue("ЭЧ");
+            headerRow.createCell(4).setCellValue("ЭЧС/ЭЧК");
+            headerRow.createCell(5).setCellValue("Железнодорожная станция");
+            headerRow.createCell(6).setCellValue("ТП/КТП");
+            headerRow.createCell(7).setCellValue("Точка учёта");
+            headerRow.createCell(8).setCellValue("Адрес установки");
+            headerRow.createCell(9).setCellValue("Марка счётчика");
+            headerRow.createCell(10).setCellValue("Номер счетчика");
+            headerRow.createCell(11).setCellValue("Номер УСПД");
+            headerRow.createCell(12).setCellValue("Дата монтажа ТУ");
+            headerRow.createCell(13).setCellValue("Текущее состояние");
+            headerRow.createCell(14).setCellValue("Счетчик в Горизонте отмечен как НОТ?");
+            headerRow.createCell(15).setCellValue("ВСЕГО счетчиков на \nВСЕГО счетчиков на " + TODAY + "\n");
+            headerRow.createCell(16).setCellValue("Статус счетчика в Горизонте на\n" + TODAY + "\n");
+            headerRow.createCell(17).setCellValue("Задание на ОТО от диспетчера");
+            headerRow.createCell(18).setCellValue("Отчет бригады о выполнении ОТО");
+
+            int rowNum = 1;
+            for (Object mp : entityCache.get(EntityType.METERING_POINT).values()) {
+                MeteringPoint nmp = (MeteringPoint) mp;
+                Row row = sheet.createRow(rowNum++);
+
+
+                row.createCell(0).setCellValue(nmp.getId());
+                headerRow.createCell(1).setCellValue(nmp.getSubstation().getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getRegion().getName());
+                headerRow.createCell(2).setCellValue(nmp.getSubstation().getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getStructuralSubdivision().getName());
+                headerRow.createCell(3).setCellValue(nmp.getSubstation().getStation().getPowerSupplyDistrict().getPowerSupplyEnterprise().getName());
+                headerRow.createCell(4).setCellValue(nmp.getSubstation().getStation().getPowerSupplyDistrict().getName());
+                headerRow.createCell(5).setCellValue(nmp.getSubstation().getStation().getName());
+                headerRow.createCell(6).setCellValue(nmp.getSubstation().getName());
+                headerRow.createCell(7).setCellValue(nmp.getName());
+                headerRow.createCell(8).setCellValue(nmp.getMeteringPointAddress());
+                headerRow.createCell(9).setCellValue(nmp.getMeter().getMeterModel());
+                headerRow.createCell(10).setCellValue(nmp.getMeter().getMeterNumber());
+                headerRow.createCell(11).setCellValue(nmp.getMeter().getDc().getDcNumber());
+                headerRow.createCell(12).setCellValue(nmp.getInstallationDate());
+//                headerRow.createCell(13).setCellValue("Текущее состояние");
+//                headerRow.createCell(14).setCellValue("Счетчик в Горизонте отмечен как НОТ?");
+//                headerRow.createCell(15).setCellValue("ВСЕГО счетчиков на \nВСЕГО счетчиков на " + TODAY + "\n");
+//                headerRow.createCell(16).setCellValue("Статус счетчика в Горизонте на\n" + TODAY + "\n");
+//                headerRow.createCell(17).setCellValue("Задание на ОТО от диспетчера");
+//                headerRow.createCell(18).setCellValue("Отчет бригады о выполнении ОТО");
+
+            }
+            try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+                workbook.write(fileOut);
+            }
+
+            System.out.println("Файл Excel успешно сохранён: " + filePath);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при экспорте в Excel", e);
         }
     }
 

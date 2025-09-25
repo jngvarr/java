@@ -10,7 +10,7 @@ public class DcDTO {
     private String dcNumber;
     private String dcModel;
     private Long substationId;
-    private int busSection;
+    private String busSection;
     private LocalDate manufactureDate;
     private LocalDate installationDate;
 }

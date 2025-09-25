@@ -92,7 +92,7 @@ public class DcService {
         Optional<Dc> oldDc = dcRepository.findById(ivkeId);
         if (oldDc.isPresent()) {
             Dc newDc = oldDc.get();
-            if (newData.getBusSection() != 0) newDc.setBusSection(newData.getBusSection());
+            if (newData.getBusSection() != null) newDc.setBusSection(newData.getBusSection());
             if (newData.getDcNumber() != null) newDc.setDcNumber(newData.getDcNumber());
             if (newData.getDcModel() != null) newDc.setDcModel(newData.getDcModel());
             if (newData.getInstallationDate() != null) newDc.setInstallationDate(newData.getInstallationDate());
@@ -108,7 +108,7 @@ public class DcService {
         Optional<Dc> oldDc = dcRepository.findById(ivkeId);
         if (oldDc.isPresent()) {
             Dc newDc = oldDc.get();
-            if (newData.getBusSection() != 0) newDc.setBusSection(newData.getBusSection());
+            if (newData.getBusSection() != null) newDc.setBusSection(newData.getBusSection());
             if (newData.getDcNumber() != null) newDc.setDcNumber(newData.getDcNumber());
             if (newData.getDcModel() != null) newDc.setDcModel(newData.getDcModel());
             if (newData.getInstallationDate() != null) newDc.setInstallationDate(newData.getInstallationDate());
