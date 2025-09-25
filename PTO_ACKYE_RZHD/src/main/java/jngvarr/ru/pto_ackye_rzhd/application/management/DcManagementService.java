@@ -18,6 +18,7 @@ import java.util.List;
 
 import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTER_DDMMYYYY;
+
 @Component
 @Slf4j
 @Data
@@ -29,9 +30,9 @@ public class DcManagementService {
     public void createDc(Substation substation, String dcNumber, Row row) {
         Dc newDc = new Dc();
         newDc.setSubstation(substation);
-        log.info("{}", row.getRowNum());
+        log.info("обрабатывается строка {}, листа {}", row.getRowNum(), row.getSheet().getSheetName());
         String sectionNumber = excelUtil.getCellStringValue(row.getCell(CELL_NUMBER_BUS_SECTION_NUM));
-        if (!sectionNumber.isBlank()
+        if (sectionNumber != null && !sectionNumber.isBlank()
         ) {
             newDc.setBusSection(Integer.parseInt(sectionNumber) == 2 ? 2 : 1);
         } else newDc.setBusSection(1);
@@ -67,7 +68,7 @@ public class DcManagementService {
         return null;
     }
 
-    public void getAllDcMap(List<Dc> dcs) {
+    public void putAllDcToCache(List<Dc> dcs) {
         for (Dc dc : dcs) {
             entityCache.put(EntityType.DC, dc.getDcNumber(), dc);
         }

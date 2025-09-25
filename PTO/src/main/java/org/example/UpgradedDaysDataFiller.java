@@ -152,7 +152,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         } catch (IOException ex) {
             logger.error("Error reading file: " + file.getName(), ex);
         }
-        synchronizeData(synchroMap);
+//        synchronizeData(synchroMap);
         return workMap;
     }
 

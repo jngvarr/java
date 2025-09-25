@@ -1,5 +1,6 @@
 package jngvarr.ru.pto_ackye_rzhd.application.management;
 
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.repositories.others.*;
 import jngvarr.ru.pto_ackye_rzhd.domain.services.SubstationService;
@@ -18,7 +19,7 @@ public class SubstationManagementService {
     private final StationRepository stationRepository;
     private final SubstationService substationService;
 
-    public Substation createSubstationIfNotExists(jngvarr.ru.pto_ackye_rzhd.domain.dto.SubstationDTO dto) {
+    public Substation createSubstationIfNotExists(SubstationDTO dto) {
         String regionName = dto.getRegionName();
         String subdivisionName = dto.getSubdivisionName();
         String powerSupplyEnterpriseName = dto.getPowerSupplyEnterpriseName();

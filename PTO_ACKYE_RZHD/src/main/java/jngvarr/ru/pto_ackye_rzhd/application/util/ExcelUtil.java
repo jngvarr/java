@@ -17,9 +17,8 @@ import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.STRAIGHT_FORMATTED_CURRENT_DATE;
 
 @Slf4j
-@Component
 public class ExcelUtil {
-    public String getCellStringValue(Cell cell) {
+    public static String getCellStringValue(Cell cell) {
         if (cell != null) {
             switch (cell.getCellType()) {
                 case STRING:
@@ -40,7 +39,7 @@ public class ExcelUtil {
         return null;
     }
 
-    public SubstationDTO createSubstationDtoIfNotExists(Row row) {
+    public static SubstationDTO createSubstationDto(Row row) {
         SubstationDTO newSubstation = new SubstationDTO();
         newSubstation.setRegionName(getCellStringValue(row.getCell(CELL_NUMBER_REGION_NAME)));
         newSubstation.setSubdivisionName(getCellStringValue(row.getCell(CELL_NUMBER_STRUCTURAL_SUBDIVISION_NAME)));
@@ -51,7 +50,19 @@ public class ExcelUtil {
         return newSubstation;
     }
 
-    public Optional<String[]> getMeterData(String mountingMeterNumber) {
+    public static SubstationDTO createSubstationDtoFromContent(Row row) {
+        Sheet sheet = row.getSheet();
+        SubstationDTO newSubstation = new SubstationDTO();
+        newSubstation.setRegionName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "Регион", 1))));
+        newSubstation.setSubdivisionName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЭЛ",1))));
+        newSubstation.setPowerSupplyEnterpriseName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧ",1))));
+        newSubstation.setDistrictName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧC",1))));
+        newSubstation.setStationName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЖД станция",1))));
+        newSubstation.setSubstationName(getCellStringValue(row.getCell(findColumnIndexAnotherRowHeader(sheet, "ЭЧЭ/ТП/КТП",1))));
+        return newSubstation;
+    }
+
+    public static Optional<String[]> getMeterData(String mountingMeterNumber) {
 
         try (Workbook meterDataWorkbook = new XSSFWorkbook(new FileInputStream(METER_DATA_FILE_PATH))) {
             Sheet dataSheet = meterDataWorkbook.getSheet("Свод");
@@ -75,7 +86,7 @@ public class ExcelUtil {
         return Optional.empty();
     }
 
-    public void meterChangeInExcelFile(Row otoRow, int deviceNumberColumnIndex, String mountingMeterNumber) {
+    public static void meterChangeInExcelFile(Row otoRow, int deviceNumberColumnIndex, String mountingMeterNumber) {
         Object mountingDeviceNumber = parseMeterNumber(mountingMeterNumber);
         // Внесение номера Устройства в журнал "Контроль ПУ РРЭ"
         if (mountingDeviceNumber instanceof Long) {
@@ -86,7 +97,7 @@ public class ExcelUtil {
     }
 
     // Метод для проверки и преобразования номера счетчика
-    public Object parseMeterNumber(String meterNumberStr) {
+    public static Object parseMeterNumber(String meterNumberStr) {
         try {
             return Long.parseLong(meterNumberStr);
         } catch (NumberFormatException e) {
@@ -94,7 +105,7 @@ public class ExcelUtil {
         }
     }
 
-    public void addNewMeteringPointInExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
+    public void addNewMeteringPointToExcelFile(String[] dataParts, Row otoRow, int deviceNumberColumnIndex) {
         String deviceNumber = dataParts[0];
         String mountingMeterNumber = dataParts[3];
         String meterType = dataParts[4].toUpperCase();
@@ -132,7 +143,7 @@ public class ExcelUtil {
      *
      * @param date Cell, ячейка содержащая значеие даты.
      */
-    public void setDateCellStyle(Cell date) {
+    public static void setDateCellStyle(Cell date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy");
         CellStyle dateStyle = createDateCellStyle(date.getRow().getSheet().getWorkbook(), "dd.MM.yy", "Arial");
         try {
@@ -143,7 +154,7 @@ public class ExcelUtil {
         date.setCellStyle(dateStyle);
     }
 
-    public CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
+    public static CellStyle createDateCellStyle(Workbook resultWorkbook, String format, String font) {
         CellStyle dateCellStyle = resultWorkbook.createCellStyle();
         DataFormat dateFormat = resultWorkbook.createDataFormat(); // Формат даты
         dateCellStyle.setDataFormat(dateFormat.getFormat(format));
@@ -153,14 +164,15 @@ public class ExcelUtil {
         return dateCellStyle;
     }
 
-    public Font createCellFontStyle(Workbook workbook, String fontName, short fontSize, boolean isBold) {
+    public static Font createCellFontStyle(Workbook workbook, String fontName, short fontSize, boolean isBold) {
         Font font = workbook.createFont();
         font.setFontName(fontName);
         font.setFontHeightInPoints(fontSize);
         font.setBold(isBold);
         return font;
     }
-    public CellStyle createCommonCellStyle(Workbook resultWorkbook) {
+
+    public static CellStyle createCommonCellStyle(Workbook resultWorkbook) {
         CellStyle simpleCellStyle = resultWorkbook.createCellStyle();
         Font font = createCellFontStyle(resultWorkbook, "Arial", (short) 10, false);
 
@@ -170,5 +182,30 @@ public class ExcelUtil {
         simpleCellStyle.setBorderTop(BorderStyle.THIN);
         simpleCellStyle.setFont(font);
         return simpleCellStyle;
+    }
+
+    public static int findColumnIndexFirstRowHeader(Sheet sheet, String columnName) {
+        Row headerRow = sheet.getRow(0); // Заголовок на первой строке
+        if (headerRow == null) return -1;
+
+        for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+            Cell cell = headerRow.getCell(i);
+            if (cell != null && cell.getStringCellValue().toLowerCase().startsWith(columnName.toLowerCase())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static int findColumnIndexAnotherRowHeader(Sheet sheet, String columnName, Integer headerRowIndex) {
+        Row headerRow = headerRowIndex == null? sheet.getRow(0) :sheet.getRow( headerRowIndex); // Заголовок на первой строке
+        if (headerRow == null) return -1;
+
+        for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+            Cell cell = headerRow.getCell(i);
+            if (cell != null && cell.getStringCellValue().startsWith(columnName)) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

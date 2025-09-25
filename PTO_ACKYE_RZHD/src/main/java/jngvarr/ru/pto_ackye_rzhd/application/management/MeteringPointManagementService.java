@@ -4,6 +4,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
 import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
+import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Substation;
@@ -16,6 +17,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static jngvarr.ru.pto_ackye_rzhd.application.constant.ExcelConstants.*;
 import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.DATE_FORMATTER_DDMMYYYY;
@@ -37,7 +39,7 @@ public class MeteringPointManagementService {
         Substation substation = (Substation) entityCache.get(EntityType.SUBSTATION).get(mapKey);
 
         if (substation == null) {
-            substation = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDtoIfNotExists(row));
+            substation = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDto(row));
             entityCache.get(EntityType.SUBSTATION).put(mapKey, substation);
         }
 
@@ -60,8 +62,7 @@ public class MeteringPointManagementService {
 
     public void createMeteringPoint(Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
         createNewMeteringPointInDb(dataParts, otoRow);
-        excelUtil.addNewMeteringPointInExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
-
+        excelUtil.addNewMeteringPointToExcelFile(dataParts, otoRow, deviceNumberColumnIndex);
     }
 
     private void createNewMeteringPointInDb(String[] dataParts, Row otoRow) {
@@ -69,7 +70,7 @@ public class MeteringPointManagementService {
         LocalDate meteringPointMountDate = LocalDate.parse(dataParts[10], DateUtils.DATE_FORMATTER_DDMMYYYY);
         Substation s = substationService.findByName(dataParts[2], dataParts[1]).orElse(null);
         if (s == null) {
-            s = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDtoIfNotExists(otoRow));
+            s = substationManagementService.createSubstationIfNotExists(excelUtil.createSubstationDto(otoRow));
         }
 
         nmp.setId(meteringPointService.getNextId());
@@ -87,5 +88,11 @@ public class MeteringPointManagementService {
             log.warn("Данный прибор учета уже установлен на другой точке учёта");
         }
         meteringPointService.create(nmp);
+    }
+
+    public void putAllMeteringPointToCache(List<MeteringPoint> dcs) {
+        for (MeteringPoint mp : dcs) {
+            entityCache.put(EntityType.METERING_POINT, String.valueOf(mp.getId()), mp);
+        }
     }
 }

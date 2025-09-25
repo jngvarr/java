@@ -4,6 +4,7 @@ import jngvarr.ru.pto_ackye_rzhd.application.services.ExcelFileService;
 import jngvarr.ru.pto_ackye_rzhd.application.util.EntityCache;
 import jngvarr.ru.pto_ackye_rzhd.application.util.ExcelUtil;
 import jngvarr.ru.pto_ackye_rzhd.application.util.StringUtils;
+import jngvarr.ru.pto_ackye_rzhd.domain.dto.MeterDTO;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Dc;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.Meter;
 import jngvarr.ru.pto_ackye_rzhd.domain.entities.MeteringPoint;
@@ -14,6 +15,7 @@ import jngvarr.ru.pto_ackye_rzhd.domain.value.EntityType;
 import lombok.Data;
 import lombok.Getter;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -30,7 +32,6 @@ public class MeterManagementService {
     private final DcService dcService;
     private final MeterService meterService;
     private final MeteringPointService meteringPointService;
-    private final ExcelUtil utils;
 
     @Getter
     private static List<String> meterTypes = Arrays.asList(
@@ -47,14 +48,22 @@ public class MeterManagementService {
     }
 
     public void changeMeter(String deviceNumber, Row otoRow, int deviceNumberColumnIndex, String[] dataParts) {
-        utils.meterChangeInExcelFile(otoRow, deviceNumberColumnIndex, dataParts[2]);
+        ExcelUtil.meterChangeInExcelFile(otoRow, deviceNumberColumnIndex, dataParts[2]);
         meterChangeInDb(deviceNumber, dataParts[2]);
     }
 
     public Meter constructMeter(Row row) {
-        String meterNumber = utils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
-        String meterModel = utils.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
-        String dcNum = utils.getCellStringValue(row.getCell(CELL_NUMBER_DC_NUMBER));
+        String meterNumber = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_NUMBER));
+        String meterModel = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_METER_MODEL));
+        String dcNum = ExcelUtil.getCellStringValue(row.getCell(CELL_NUMBER_METERING_POINT_DC_NUMBER));
+        return constructMeter(meterNumber, meterModel, dcNum);
+    }
+
+    public Meter constructMeterFromIikContent(Row row) {
+        Sheet sheet = row.getSheet();
+        String meterNumber = ExcelUtil.getCellStringValue(row.getCell(ExcelUtil.findColumnIndexAnotherRowHeader(sheet, "Сер. номер ПУ", 1)));
+        String meterModel = ExcelUtil.getCellStringValue(row.getCell(ExcelUtil.findColumnIndexAnotherRowHeader(sheet, "Модель ПУ", 1)));
+        String dcNum =  ExcelUtil.getCellStringValue(row.getCell(ExcelUtil.findColumnIndexAnotherRowHeader(sheet, "Сер. ном. УСПД", 1)));
         return constructMeter(meterNumber, meterModel, dcNum);
     }
 
@@ -91,7 +100,7 @@ public class MeterManagementService {
         Meter m = meterService.getMeterByNumber(deviceNumber);
         Meter nm = meterService.getMeterByNumber(mountingMeterNumber);
         if (nm == null) {
-            String[] nmData = utils.getMeterData(mountingMeterNumber).orElseThrow(() ->
+            String[] nmData = ExcelUtil.getMeterData(mountingMeterNumber).orElseThrow(() ->
                     new IllegalArgumentException("Не найдены данные по " + mountingMeterNumber));
             nm = constructMeter(nmData[0], nmData[2], m.getDc().getDcNumber());
             meterService.create(nm);
@@ -112,5 +121,11 @@ public class MeterManagementService {
         dcService.updateDc(dc, dc.getId());
         oldMeter.setDc(dcService.getDcByNumber("LJ03514666")); //TODO Конц из отстойника, потом переделать
         meterService.updateMeter(oldMeter, oldMeter.getId());
+    }
+
+    public void putAllMeterToCache(List<Meter> all) {
+        for (Meter m : all) {
+            entityCache.put(EntityType.METER, m.getMeterNumber(), m);
+        }
     }
 }

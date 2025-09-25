@@ -13,7 +13,6 @@ public class Dc {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-//    @ManyToOne(cascade = CascadeType.ALL)
     @ManyToOne
     @JoinColumn(name = "substation_id")
     private Substation substation;

@@ -76,41 +76,41 @@ public class ExcelSplitter { //разбиение сводных файлов н
             XSSFSheet sheet = workbook.getSheetAt(0);
             Map<String, List<Row>> groupedRows = new HashMap<>();
 
-            // Найти индекс столбца "ЭЭЛ"
-            int eelColumnIndex = findColumnIndex(sheet, "ЭЭЛ");
-            int regionColumnIndex = findColumnIndex(sheet, "Регион");
-            if (regionColumnIndex == -1) {
-                regionColumnIndex = findColumnIndex(sheet, "Субъект РФ");
-            }
+//            // Найти индекс столбца "ЭЭЛ"
+//            int eelColumnIndex = findColumnIndex(sheet, "ЭЭЛ");
+//            int regionColumnIndex = findColumnIndex(sheet, "Регион");
+//            if (regionColumnIndex == -1) {
+//                regionColumnIndex = findColumnIndex(sheet, "Субъект РФ");
+//            }
 
-            if (eelColumnIndex == -1) {
-                logger.error("Столбец 'ЭЭЛ' не найден в файле: {}", inputFilePath.getName());
-                return;
-            }
+//            if (eelColumnIndex == -1) {
+//                logger.error("Столбец 'ЭЭЛ' не найден в файле: {}", inputFilePath.getName());
+//                return;
+//            }
 
             // Группируем строки по значениям в столбце "НТЭЛ"
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Пропускаем заголовок
-                Row row = sheet.getRow(i);
-                if (row == null || isCellEmpty(row.getCell(0))) continue;
-
-                Cell cell = row.getCell(eelColumnIndex);
-                String eelValue = cell != null ? cell.toString() : "Без ЭЭЛ";
-
-                // Логика объединения и разделения
-//                if (eelValue.equals("ЭЭЛ-2") || eelValue.equals("ЭЭЛ-2.1")) {
-//                    // Объединяем строки с ЭЭЛ-2 и ЭЭЛ-2.1 в одну группу
-//                    groupedRows.computeIfAbsent("ЭЭЛ-2_ЭЭЛ-2.1", k -> new ArrayList<>()).add(row);
-//                } else
-                if (eelValue.equals("ЭЭЛ-3.1") && regionColumnIndex != -1) {
-                    // Разделяем строки с ЭЭЛ-3.1 по столбцу "Регион"
-                    Cell regionCell = row.getCell(regionColumnIndex);
-                    String region = regionCell.toString(); // Учитываем, что регион есть всегда
-                    groupedRows.computeIfAbsent("ЭЭЛ-3.1_" + region, k -> new ArrayList<>()).add(row);
-                } else {
-                    // Группируем остальные строки по значению ЭЭЛ
-                    groupedRows.computeIfAbsent(eelValue, k -> new ArrayList<>()).add(row);
-                }
-            }
+//            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Пропускаем заголовок
+//                Row row = sheet.getRow(i);
+//                if (row == null || isCellEmpty(row.getCell(0))) continue;
+//
+//                Cell cell = row.getCell(eelColumnIndex);
+//                String eelValue = cell != null ? cell.toString() : "Без ЭЭЛ";
+//
+//                // Логика объединения и разделения
+////                if (eelValue.equals("ЭЭЛ-2") || eelValue.equals("ЭЭЛ-2.1")) {
+////                    // Объединяем строки с ЭЭЛ-2 и ЭЭЛ-2.1 в одну группу
+////                    groupedRows.computeIfAbsent("ЭЭЛ-2_ЭЭЛ-2.1", k -> new ArrayList<>()).add(row);
+////                } else
+//                if (eelValue.equals("ЭЭЛ-3.1") && regionColumnIndex != -1) {
+//                    // Разделяем строки с ЭЭЛ-3.1 по столбцу "Регион"
+//                    Cell regionCell = row.getCell(regionColumnIndex);
+//                    String region = regionCell.toString(); // Учитываем, что регион есть всегда
+//                    groupedRows.computeIfAbsent("ЭЭЛ-3.1_" + region, k -> new ArrayList<>()).add(row);
+//                } else {
+//                    // Группируем остальные строки по значению ЭЭЛ
+//                    groupedRows.computeIfAbsent(eelValue, k -> new ArrayList<>()).add(row);
+//                }
+//            }
 
             // Создаем файлы для каждой группы
             for (Map.Entry<String, List<Row>> entry : groupedRows.entrySet()) {
