@@ -36,7 +36,10 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
                     try {
 //                excelFileService.addDataFromExcelFile(filePath);
                         String path = file.getPath();
+                        long startTime = System.currentTimeMillis();
                         excelFileService.addDataFromIikContent(path);
+                        long duration = System.currentTimeMillis() - startTime;
+                        log.info("Execution time: " + duration / 1000 + " seconds");
                         log.info("Загрузка данных из Excel завершена.");
                     } catch (Exception e) {
                         log.error("Ошибка при загрузке данных из Excel-файла", e);

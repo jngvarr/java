@@ -33,10 +33,10 @@ public class ExcelUtil {
                     FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
                     return evaluator.evaluate(cell).getStringValue();
                 default:
-                    return null;
+                    return "";
             }
         }
-        return null;
+        return "";
     }
 
     public static SubstationDTO createSubstationDto(Row row) {
