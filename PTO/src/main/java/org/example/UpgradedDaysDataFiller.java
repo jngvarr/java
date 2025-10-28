@@ -40,6 +40,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
     }
 
+    private static final Map<String, Integer> iikCount = new HashMap<>();
+
     private static boolean needSynchronize = false;
 
     public static void main(String[] args) {
@@ -76,7 +78,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             fillIIKData(planOTOWorkbook.getSheet("ИИК"), dataMaps);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"), dataMaps);
             planOTOWorkbook.write(fileOut);
-            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
             createReserveCopy(planOTOWorkbook);
 
 
@@ -115,7 +117,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             if (fileName.startsWith("Контроль поступления данных")) {
                 dataMaps.get(DataType.DATA_CONTROL).putAll(fillingMapWithData(1, 5, file));
             } else if (fileName.startsWith("Состав ИИК")) {
-                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(13, 8, file));
+                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(14, 9, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
                 dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
             } else if (fileName.startsWith("Диагностика связи")) {
@@ -140,10 +142,15 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     Cell statusDateCell = row.getCell(neededDataColumn + 1);
                     value += "_" + (statusDateCell != null ? getCellStringValue(statusDateCell) : "");
                 }
-                if (file.getName().contains("Состав ИИК") && needSynchronize) {
-                    synchroMap.putIfAbsent(
-                            getCellStringValue(row.getCell(
-                                    findColumnIndex(sheet, "Идентификатор ТУ", null))), getSyncData(row));
+                if (file.getName().contains("Состав ИИК")) {
+                    String dcNum = getCellStringValue(row.getCell(
+                            findColumnIndex(sheet, "Сер. ном. УСПД", 1)));
+                    iikCount.put(dcNum, iikCount.getOrDefault(dcNum, 0) + 1);
+                    if (needSynchronize) {// TODO что-то здесь надо доделать
+                        synchroMap.putIfAbsent(
+                                getCellStringValue(row.getCell(
+                                        findColumnIndex(sheet, "Идентификатор ТУ", 1))), getSyncData(row));
+                    }
                 }
                 if (key != null && value != null) {
                     workMap.put(key.trim(), value);
@@ -160,19 +167,19 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         Sheet workSheet = row.getSheet();
         return new StringJoiner("_").
                 add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Регион", 1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЭЛ",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧ",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧС",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЖД станция",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧЭ/ТП/КТП",1 )))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЭЛ", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧ", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧС", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЖД станция", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "ЭЧЭ/ТП/КТП", 1)))).
                 add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Название ТУ", 1)))).
                 add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Присоединение", 2)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Размещение ПУ",2)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Адрес ТУ",2)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Модель ПУ",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. номер ПУ",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Дата монт.",1)))).
-                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. ном. УСПД",1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Размещение ПУ", 2)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Адрес ТУ", 2)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Модель ПУ", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. номер ПУ", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Дата монт.", 1)))).
+                add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Сер. ном. УСПД", 1)))).
                 toString();
     }
 
@@ -182,11 +189,17 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         int enabledCount = 0;
         CellStyle commonCS = createCommonCellStyle(worksheet);
         CellStyle dateCS = createDateCellStyle(worksheet.getWorkbook());
-
+        int iikQuantityCellNumber = findColumnIndex(worksheet, "ВСЕГО счетчиков на концентраторе", null);
+        int dcCellNumber = findColumnIndex(worksheet, "Номер УСПД", null);
 
         for (Row row : worksheet) {
             String key = getCellStringValue(row.getCell(COUNTER_NUMBER_CELL_NUMBER));
             if (key == null) continue;
+            String dcNum = getCellStringValue(row.getCell(dcCellNumber));
+            if (iikCount.containsKey(dcNum)) {
+                row.getCell(iikQuantityCellNumber).setCellValue(iikCount.getOrDefault(dcNum, 0));
+            }
+
             key = key.trim();
 
             boolean isNormallyTurnedOff = false;
@@ -291,16 +304,19 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         DataFormat poiDataFormat = ivkeSheet.getWorkbook().createDataFormat();
         CellStyle dateCellStyle = ivkeSheet.getWorkbook().createCellStyle();
         dateCellStyle.setDataFormat(poiDataFormat.getFormat("dd.MM.yyyy"));
-
+        int dcCellNum = findColumnIndex(ivkeSheet, "Серийный номер концентратора", null);
+        int connectionDiagCellIndex = findColumnIndex(ivkeSheet, "Дата последней связи с УСПД", null);
+        int iikQuantityCellIndex = findColumnIndex(ivkeSheet, "ВСЕГО счетчиков на концентраторе", null);
         for (Row row : ivkeSheet) {
-            Cell ivkeCell = row.getCell(findColumnIndex(ivkeSheet, "Серийный номер концентратора", null));
+            Cell ivkeCell = row.getCell(dcCellNum);
             String ivkeNumber = getCellStringValue(ivkeCell);
             if (ivkeNumber != null) {
                 String key = ivkeNumber.trim();
                 if (dataMaps.get(DataType.CONNECTION_DIAG).containsKey(key)) {
-                    Cell connectionDiagCol = row.createCell(findColumnIndex(ivkeSheet, "Дата последней связи с УСПД", null));
+                    Cell connectionDiagCol = row.createCell(connectionDiagCellIndex);
+                    Cell iikQuantity = row.getCell(iikQuantityCellIndex);
+                    iikQuantity.setCellValue(iikCount.getOrDefault(key, 0));
                     String dateString = dataMaps.get(DataType.CONNECTION_DIAG).get(key);
-
                     // Попытка преобразовать строку в дату
                     try {
                         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
