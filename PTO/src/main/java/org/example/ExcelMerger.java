@@ -123,7 +123,7 @@ public class ExcelMerger { // Объединение нескольких ана
 
         // Завершаем работу ExecutorService
         executorService.shutdown();
-        logger.info("Все задачи завершены");
+        logger.info("Все задачи по объединению файлов завершены");
         fillSchedule(scheduleTemplatePath);
 //        printDCEntries();
     }
@@ -139,7 +139,6 @@ public class ExcelMerger { // Объединение нескольких ана
             int ordersFirstRowNum = 13;
             int firstCellOfRowNum = 0;
             String scheduleDate = "на Западно-Сибирской жд на " + orderMonth + " " + orderYear + "г.";
-            System.out.println(scheduleDate);
             scheduleSheet.getRow(4).getCell(firstCellOfRowNum).setCellValue(scheduleDate);
 
             for (Map.Entry<String, DCEntry> dc : DC.entrySet()) {

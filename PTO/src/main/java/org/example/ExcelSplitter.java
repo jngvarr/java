@@ -115,6 +115,7 @@ public class ExcelSplitter { //разбиение сводных файлов н
             // Создаем файлы для каждой группы
             for (Map.Entry<String, List<Row>> entry : groupedRows.entrySet()) {
                 String groupName = entry.getKey();
+                if (!groupName.contains("ЭЭЛ")) continue;
                 List<Row> rows = entry.getValue();
 
                 // Генерируем имя файла с использованием StringBuilder
@@ -153,13 +154,13 @@ public class ExcelSplitter { //разбиение сводных файлов н
     }
 
 
-    static int findColumnIndex(Sheet sheet, String columnName, Integer headerRowIndex) {
+    static int findColumnIndex(Sheet sheet, String columnNameStartWith, Integer headerRowIndex) {
         Row headerRow = headerRowIndex == null? sheet.getRow(0) :sheet.getRow( headerRowIndex); // Заголовок на первой строке
         if (headerRow == null) return -1;
 
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
             Cell cell = headerRow.getCell(i);
-            if (cell != null && cell.getStringCellValue().startsWith(columnName)) {
+            if (cell != null && cell.getStringCellValue().startsWith(columnNameStartWith)) {
                 return i;
             }
         }
