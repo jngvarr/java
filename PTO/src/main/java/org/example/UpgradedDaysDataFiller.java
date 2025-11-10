@@ -21,19 +21,19 @@ import static org.example.ExcelSplitter.findColumnIndex;
 public class UpgradedDaysDataFiller { //заполнение файла Контроль ПУ РРЭ (Задания на ОТО РРЭ)
 
     private static final Logger logger = LoggerFactory.getLogger(UpgradedDaysDataFiller.class);
-
-
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMM = DateTimeFormatter.ofPattern("dd MMMM", new Locale("ru"));
     private static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
     private static final LocalDate TODAY = LocalDate.now();
     private static final String PRESENT_MONTH_IN_RUSSIAN = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
-    private static final String PLAN_PTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ 2025_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
+    static final String PLAN_PTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
+    private static final String PLAN_PTO = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ 2025_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
     private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + TODAY.format(DATE_FORMATTER_DDMMYYYY);
     private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
     private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ РРЭ\\Архив заданий на ОТО\\";
     private static final String COUNTER_NUMBER_CELL = "Номер счетчика";
     private static final String ID_CELL = "ID";
+    private static final String EEL_CELL = "ЭЭЛ";
     private static final String IIK_STATUS_CELL = "Статус счетчика";
     private static final String NORMALLY_TURNED_OFF_CELL = "Счетчик в Горизонте отмечен как НОТ";
     private static final String TASK_CELL = "Задание на ОТО от диспетчера";
@@ -46,7 +46,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final Map<String, Integer> iikCount = new HashMap<>();
     static Map<String, String> synchroMap = new HashMap<>();
 
-    private static boolean needSynchronize = isSynchronizeNeeded();
+    private static final boolean needSynchronize = isSynchronizeNeeded();
 
     private static boolean isSynchronizeNeeded() {
         return true;
@@ -79,7 +79,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         } finally {
             executorService.shutdown();
             try {
-                executorService.awaitTermination(1, TimeUnit.MINUTES);
+                executorService.awaitTermination(2, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 logger.error("Data processing interrupted", e);
             }
@@ -91,34 +91,50 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             Sheet otoIikSheet = planOTOWorkbook.getSheet("ИИК");
 
             if (needSynchronize) synchronize(otoIikSheet);
-
             fillIIKData(otoIikSheet);
             fillIVKEData(planOTOWorkbook.getSheet("ИВКЭ"));
             planOTOWorkbook.write(fileOut);
+            logger.info("Data filled successfully!");
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Execution time: " + duration / 1000 + " seconds");
             createReserveCopy(planOTOWorkbook);
 
             if (needSynchronize) {
                 ExcelMerger.main(args);
-                Workbook planPTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_PTO_PATH));
+                Workbook planPTOWorkbook = new XSSFWorkbook(new FileInputStream(PLAN_PTO));
                 Sheet ptoIikSheet = planPTOWorkbook.getSheet("Свод");
-                FileOutputStream filePtoOut = new FileOutputStream(PLAN_PTO_PATH);
+                FileOutputStream filePtoOut = new FileOutputStream(PLAN_PTO);
                 synchronize(ptoIikSheet);
                 planPTOWorkbook.write(filePtoOut);
                 planPTOWorkbook.close();
                 ExcelSplitter.main(args);
                 deleteSummaryFiles();
             }
-            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
-            logger.info("Data filled successfully!");
 
         } catch (IOException ex) {
             logger.error("Error processing workbook", ex);
         }
-
-        long duration = System.currentTimeMillis() - startTime;
-        logger.info("Execution time: " + duration / 1000 + " seconds");
     }
+
+//    static void deleteSummaryFiles() {
+//        File folder = new File(PLAN_PTO_PATH);
+//        File[] files = folder.listFiles((dir, name) -> name.contains("СВОД"));
+//
+//        if (files == null || files.length == 0) {
+//            logger.info("Нет файлов для удаления в папке: " + folder);
+//            return; // <--- важно! иначе ниже будет NPE
+//        }
+//
+//        for (File file : files) {
+//            if (file.delete()) {
+//                logger.info("Удалён файл: " + file.getName());
+//            } else {
+//                logger.warn("Не удалось удалить файл: " + file.getName());
+//            }
+//        }
+//    }
 
     private static void deleteSummaryFiles() {
         File folder = new File(PLAN_PTO_PATH);
@@ -181,6 +197,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                             findColumnIndex(sheet, "Сер. ном. УСПД", 1)));
                     iikCount.put(dcNum, iikCount.getOrDefault(dcNum, 0) + 1);
                     if (needSynchronize) {// TODO что-то здесь надо доделать // синхронизируется весь файл
+                        if (!needToSyncRow(row)) continue;
                         synchroMapCreating(row, sheet);
                     }
                 }
@@ -204,7 +221,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             synchroMap.put(synchroMapKey, getSyncData(row));
         } catch (NumberFormatException ignored) {
         }
-//        if (row.getRowNum() > 3)
 //        if (!key.matches("\\d+")) return; //Проверка, что строка полностью состоит из цифр
 
     }
@@ -311,6 +327,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     }
 
     private static void synchronizeDb() {
+//        Set <String> iikIds =
+//         synchroMap
     }
 
 
@@ -321,7 +339,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             if (key == null) continue;
             key = key.trim();
             if (synchroMap.containsKey(key)) {
-
                 synchronizeRow(key, row);
             }
             if (key.matches("\\d+"))
@@ -335,6 +352,11 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 }
             }
         }
+    }
+
+    private static boolean needToSyncRow(Row row) {
+        String eel = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), EEL_CELL, 1)));
+        return eel.contains("ЭЭЛ-");
     }
 
     private static void synchronizeRow(String key, Row row) {
@@ -358,11 +380,11 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 //        logger.info("358 строка номер {}", row.getRowNum());
         int inx = findColumnIndex(row.getSheet(), "Марка счётчика", null);
         Cell cell = row.getCell(inx);
-        String meterType = (getCellStringValue(cell));
-
-        meterType = meterType.getBytes().length > 0 ? meterType.substring(5) : meterType;
         String meterNum = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(),
                 "Номер счетчика", null)));
+
+        String meterType = (getCellStringValue(cell));
+        meterType = meterType.getBytes().length > 0 ? meterType.replaceAll("\\D+", "") : meterType;
         String iikType =
                 switch (meterType) {
                     case "1021" -> "1ф";
@@ -373,13 +395,14 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
         iikTypeCell.setCellValue(iikType);
         String notStatus = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(meterNum);
+        notStatus = notStatus != null && notStatus.toLowerCase().trim().equals("да") ? "НОТ" : "В работе";
         notStatusCell.setCellValue(notStatus);
     }
 
 
     private static void setTopRowProperties(Row firstRow, int lastColumnNum, int enabledCount) {
         String formattedDate = LocalDate.now().format(DATE_FORMATTER_DDMMMM);
-        Cell meterStatus = firstRow.getCell(19);
+        Cell meterStatus = firstRow.getCell(findColumnIndex(firstRow.getSheet(), "Статус счетчика в Горизонте", null));
         meterStatus.setCellValue("Статус счетчика в Горизонте на " + LocalDate.now().format(DATE_FORMATTER_DDMMYYYY));
         formattedDate = formattedDate.substring(0, 3) + formattedDate.substring(3, 4).toUpperCase() + formattedDate.substring(4);
         int sourceColumnWidth = firstRow.getSheet().getColumnWidth(lastColumnNum - 1);
@@ -400,6 +423,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
     }
 
+
+    //подача на холостом ходу
     private static void setCellAlignment(int firstRowNum, int lastRowNum, int firstColNum, int lastColumnNum, Sheet worksheet) {
         Cell sourceC = worksheet.getRow(1).getCell(lastColumnNum - 1);
         CellStyle sc = (sourceC != null) ? sourceC.getCellStyle() : worksheet.getWorkbook().createCellStyle();

@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,8 +33,8 @@ public class ExcelSplitter { //разбиение сводных файлов н
             return;
         }
 
-        // Получаем только файлы, содержащие "ПТО" в названии, из папки "свод"
-        File[] fileNames = inputFolder.listFiles(file -> file.isFile() && file.getName().contains("ПТО"));
+        // Получаем только файлы, содержащие "СВОД" в названии, из рабочей папки
+        File[] fileNames = inputFolder.listFiles(file -> file.isFile() && file.getName().contains("СВОД"));
 
         if (fileNames == null || fileNames.length == 0) {
             System.err.println("Нет файлов для обработки в папке: " + inputFilePath);
@@ -60,8 +61,12 @@ public class ExcelSplitter { //разбиение сводных файлов н
                 }
             });
         }
-
         executorService.shutdown();
+        try {
+            executorService.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            logger.error("Data processing interrupted", e);
+        }
     }
 
 
@@ -91,10 +96,14 @@ public class ExcelSplitter { //разбиение сводных файлов н
 //             Группируем строки по значениям в столбце "НТЭЛ"
             for (int i = 1; i <= sheet.getLastRowNum(); i++) { // Пропускаем заголовок
                 Row row = sheet.getRow(i);
-                if (row == null || isCellEmpty(row.getCell(0))) continue;
+                if (row == null || isCellEmpty(row.getCell(1))) continue;
 
                 Cell cell = row.getCell(eelColumnIndex);
-                String eelValue = cell != null ? cell.toString() : "Без ЭЭЛ";
+                String eelValue = Optional.ofNullable(row.getCell(eelColumnIndex))
+                        .map(Cell::toString)
+                        .orElse(null);
+                if (eelValue == null || !eelValue.contains("ЭЭЛ-")) continue;
+
 
                 // Логика объединения и разделения
 //                if (eelValue.equals("ЭЭЛ-2") || eelValue.equals("ЭЭЛ-2.1")) {
@@ -107,6 +116,9 @@ public class ExcelSplitter { //разбиение сводных файлов н
                     String region = regionCell.toString(); // Учитываем, что регион есть всегда
                     groupedRows.computeIfAbsent("ЭЭЛ-3.1_" + region, k -> new ArrayList<>()).add(row);
                 } else {
+                    if (!eelValue.contains("ЭЭЛ-")) {
+                        continue;
+                    }
                     // Группируем остальные строки по значению ЭЭЛ
                     groupedRows.computeIfAbsent(eelValue, k -> new ArrayList<>()).add(row);
                 }
@@ -115,7 +127,7 @@ public class ExcelSplitter { //разбиение сводных файлов н
             // Создаем файлы для каждой группы
             for (Map.Entry<String, List<Row>> entry : groupedRows.entrySet()) {
                 String groupName = entry.getKey();
-                if (!groupName.contains("ЭЭЛ")) continue;
+//                if (!groupName.contains("ЭЭЛ-")) continue;
                 List<Row> rows = entry.getValue();
 
                 // Генерируем имя файла с использованием StringBuilder
@@ -125,10 +137,8 @@ public class ExcelSplitter { //разбиение сводных файлов н
                 createExcelFile(outputFilePath, sheet.getRow(0), rows);
                 logger.info("Создан файл для группы '{}': {}", groupName, outputFilePath);
             }
-
         }
     }
-
 
     private static String generateOutputFileName(File inputFile, String groupValue, String month, String year) {
         StringBuilder fileNameBuilder = new StringBuilder();
@@ -155,7 +165,7 @@ public class ExcelSplitter { //разбиение сводных файлов н
 
 
     static int findColumnIndex(Sheet sheet, String columnNameStartWith, Integer headerRowIndex) {
-        Row headerRow = headerRowIndex == null? sheet.getRow(0) :sheet.getRow( headerRowIndex); // Заголовок на первой строке
+        Row headerRow = headerRowIndex == null ? sheet.getRow(0) : sheet.getRow(headerRowIndex); // Заголовок на первой строке
         if (headerRow == null) return -1;
 
         for (int i = 0; i < headerRow.getLastCellNum(); i++) {
@@ -177,7 +187,7 @@ public class ExcelSplitter { //разбиение сводных файлов н
         return true;
     }
 
-    private static boolean isCellEmpty(Cell cell) {  //проверяем строку на пустоту по первой ячейке, которая всегда заполнена
+    private static boolean isCellEmpty(Cell cell) {  //проверяем строку на пустоту по второй ячейке, которая всегда заполнена
         return (cell == null || cell.getCellType() == CellType.BLANK || (cell.getCellType() == CellType.STRING
                 && cell.getStringCellValue().trim().isEmpty()));
     }
