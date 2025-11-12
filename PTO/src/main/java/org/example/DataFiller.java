@@ -86,8 +86,6 @@ public class DataFiller {
                     loadProfileData(profileFile, profileData, date, countersByDate); // Загружаем данные профиля
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

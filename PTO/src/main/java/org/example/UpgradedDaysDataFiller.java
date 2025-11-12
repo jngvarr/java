@@ -110,7 +110,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 ExcelSplitter.main(args);
                 deleteSummaryFiles();
             }
-//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
 
         } catch (IOException ex) {
@@ -198,7 +198,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     iikCount.put(dcNum, iikCount.getOrDefault(dcNum, 0) + 1);
                     if (needSynchronize) {// TODO что-то здесь надо доделать // синхронизируется весь файл
                         if (!needToSyncRow(row)) continue;
-                        synchroMapCreating(row, sheet);
+                        synchroMapCreating(row);
                     }
                 }
                 if (key != null && value != null) {
@@ -212,9 +212,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         return workMap;
     }
 
-    private static void synchroMapCreating(Row row, Sheet sheet) {
+    private static void synchroMapCreating(Row row) {
         String synchroMapKey = getCellStringValue(row.getCell(
-                findColumnIndex(sheet, "Идентификатор ТУ", 1)));
+                findColumnIndex(row.getSheet(), "Идентификатор ТУ", 1)));
 //        if (synchroMap.containsKey(synchroMapKey))
         try {
             Long.parseLong(synchroMapKey);
@@ -360,7 +360,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     }
 
     private static void synchronizeRow(String key, Row row) {
-        String[] values = synchroMap.get(key).split("_");
+        String[] values = synchroMap.get(key).split("_", -1);
         for (int i = 0; i < values.length; i++) {
             if (row.getSheet().getSheetName().contains("Свод")) {
                 addAdditionalCell(row);
@@ -369,7 +369,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 row.createCell(i).setCellValue(Long.parseLong(values[i]));
             } else {
                 row.createCell(i).setCellValue(values[i]);
-
             }
         }
     }
