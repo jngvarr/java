@@ -37,7 +37,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int COUNTER_TYPE_COL_NUMBER = 9;
     private static final int SUMM_ROW_NUMBER = 12;
     private static final int IVKE_CELL_NUMBER = 5;
-    private static final int METER1021_CELL_NUMBER = 7;  
+    private static final int METER1021_CELL_NUMBER = 7;
     private static final int METER1023_CELL_NUMBER = 8;
     private static final int METER2023_CELL_NUMBER = 9;
     private static int dcNumberColNumber;
@@ -96,7 +96,7 @@ public class ExcelMerger { // Объединение нескольких ана
 
         // Логирование групп
         fileGroups.forEach((group, files) -> logger.info("Группа '{}' содержит {} файлов", group, files.size()));
-        
+
         ExecutorService executorService = Executors.newFixedThreadPool(2); // Пул из 2 потоков
 
         // Отправляем задачи в пул потоков
@@ -192,8 +192,7 @@ public class ExcelMerger { // Объединение нескольких ана
             cell.setCellStyle(commonCellStyle);
 
             switch (i) {
-                case pointsCellNum ->
-                        cell.setCellValue(currentRowNum - ordersFirstRowNum);
+                case pointsCellNum -> cell.setCellValue(currentRowNum - ordersFirstRowNum);
 
                 case regionCellNum, eelCellNum, stationCellNum, substationCellNum, dcNumCellNum ->
                         cell.setCellValue(placement[i - 1]);
@@ -213,6 +212,7 @@ public class ExcelMerger { // Объединение нескольких ана
             }
         }
     }
+
     private static void setDateCell(Cell cell, String value, CellStyle style) {
         cell.setCellValue(value);
         cell.setCellStyle(style);
@@ -300,6 +300,8 @@ public class ExcelMerger { // Объединение нескольких ана
         for (File file : inputFiles) {
             try (FileInputStream fis = new FileInputStream(file);
                  XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+                logger.info("Отрываем файл: {}", file.getAbsolutePath());
+
                 XSSFSheet sheet = workbook.getSheetAt(0);
 
                 int columnCount = sheet.getRow(0).getLastCellNum();

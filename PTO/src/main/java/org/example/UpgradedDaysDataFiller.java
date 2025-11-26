@@ -215,7 +215,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static void synchroMapCreating(Row row) {
         String synchroMapKey = getCellStringValue(row.getCell(
                 findColumnIndex(row.getSheet(), "Идентификатор ТУ", 1)));
-//        if (synchroMap.containsKey(synchroMapKey))
         try {
             Long.parseLong(synchroMapKey);
             synchroMap.put(synchroMapKey, getSyncData(row));
@@ -333,7 +332,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
 
     private static void synchronizeExcel(Sheet worksheet) {
-        Set<String> ids = new HashSet<>();
+        Set<String> ids = new HashSet<>(synchroMap.keySet());
         for (Row row : worksheet) {
             String key = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), ID_CELL, null)));
             if (key == null) continue;
@@ -341,15 +340,14 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
             if (synchroMap.containsKey(key)) {
                 synchronizeRow(key, row);
             }
-            if (key.matches("\\d+"))
-                ids.add(key);
+//            if (key.matches("\\d+"))
+            ids.remove(key);
         }
-        if (!ids.containsAll(synchroMap.keySet())) {
-            for (String key : synchroMap.keySet()) {
-                if (!ids.contains(key)) {
-                    Row newRow = worksheet.createRow(worksheet.getLastRowNum() + 1);
-                    synchronizeRow(key, newRow);
-                }
+
+        if (!ids.isEmpty()) {
+            for (String id : ids) {
+                Row newRow = worksheet.createRow(worksheet.getLastRowNum() + 1);
+                synchronizeRow(id, newRow);
             }
         }
     }
@@ -424,7 +422,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
 
     //подача на холостом ходу
-    private static void setCellAlignment(int firstRowNum, int lastRowNum, int firstColNum, int lastColumnNum, Sheet worksheet) {
+    private static void setCellAlignment(int firstRowNum, int lastRowNum, int firstColNum,
+                                         int lastColumnNum, Sheet worksheet) {
         Cell sourceC = worksheet.getRow(1).getCell(lastColumnNum - 1);
         CellStyle sc = (sourceC != null) ? sourceC.getCellStyle() : worksheet.getWorkbook().createCellStyle();
         sc.setAlignment(HorizontalAlignment.LEFT);
