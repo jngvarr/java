@@ -52,8 +52,8 @@ public class ExcelMerger { // Объединение нескольких ана
     private static int dc = 0;
 
     public static class DCEntry {
-        private int[] counts = new int[3]; // Для типов 1021, 1023, 2023
-        private String source; // Источник элемента ("ИВКЭ" или "ИИК")
+        private final int[] counts = new int[3]; // Для типов 1021, 1023, 2023
+        private final String source; // Источник элемента ("ИВКЭ" или "ИИК")
 
         public DCEntry(String source) {
             this.source = source;
@@ -257,8 +257,8 @@ public class ExcelMerger { // Объединение нескольких ана
 
     private static void processGroup(List<File> files, String folderPath, String group) {
         try {
-            orderMonth = extractMonthFromFileName(files.get(0).getName());
-            orderYear = extractYearFromFileName(files.get(0).getName());
+            orderMonth = extractMonthFromFileName(files.getFirst().getName());
+            orderYear = extractYearFromFileName(files.getFirst().getName());
             String outputFileName = String.format("СВОД_%s ПТО РРЭ %s_%s.xlsx", group, orderYear, orderMonth.toUpperCase());
             mergeExcelFiles(files, folderPath + File.separator + File.separator + outputFileName);
         } catch (IOException e) {
@@ -322,7 +322,8 @@ public class ExcelMerger { // Объединение нескольких ана
 
 
                 // Копируем данные, пропуская пустые строки
-                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                int й = sheet.getLastRowNum();
+                for (int i = 1; i <=й ; i++) {
                     Row sourceRow = sheet.getRow(i);
 //                    if (sourceRow == null || isRowEmpty(sourceRow)) continue; // Пропуск пустых строк
                     if (sourceRow == null || isCellEmpty(sourceRow.getCell(1)))
@@ -439,18 +440,13 @@ public class ExcelMerger { // Объединение нескольких ана
     }
 
     private static String setKey(Row row, int monthColumnIndex) {
-        return new StringBuilder()
-                .append(row.getCell(REGION_COL_NUMBER).getStringCellValue())
-                .append("_")
-                .append(row.getCell(EEL_COL_NUMBER).getStringCellValue())
-                .append("_")
-                .append(row.getCell(STATION_COL_NUMBER).getStringCellValue())
-                .append("_")
-                .append(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
-                .append("_")
-                .append(getCellStringValue(row.getCell(dcNumberColNumber)))
-                .append("_")
-                .append(getCellStringValue(row.getCell(monthColumnIndex)))
+        return new StringJoiner("_")
+                .add(row.getCell(REGION_COL_NUMBER).getStringCellValue())
+                .add(row.getCell(EEL_COL_NUMBER).getStringCellValue())
+                .add(row.getCell(STATION_COL_NUMBER).getStringCellValue())
+                .add(row.getCell(SUBSTATION_COL_NUMBER).getStringCellValue())
+                .add(getCellStringValue(row.getCell(dcNumberColNumber)))
+                .add(getCellStringValue(row.getCell(monthColumnIndex)))
                 .toString();
     }
 

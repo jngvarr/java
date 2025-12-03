@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static org.example.ExcelSplitter.findColumnIndex;
+
 // Добавление данных профилей в свод ИИК
 public class DataFiller {
     private static final String ORDER_MONTH = LocalDate.now()
@@ -59,7 +61,7 @@ public class DataFiller {
             for (Row summaryRow : summarySheet) {
                 // Extract date from the month column
                 Cell monthCell = summaryRow.getCell(monthColumnIndex); // Get cell in the month column
-                Cell counterCell = summaryRow.getCell(10);
+                Cell counterCell = summaryRow.getCell(findColumnIndex(summarySheet, "Номер счетчика", 0));
                 if (monthCell != null) {
                     String monthValue = monthCell.getStringCellValue(); // Assuming "Фамилия_дата"
                     String[] parts = monthValue.split("_");
@@ -95,14 +97,14 @@ public class DataFiller {
             Sheet summarySheet = summaryWorkbook.getSheetAt(0);
 
             for (Row summaryRow : summarySheet) {
-                Cell counterCell = summaryRow.getCell(10); // Номер счетчика
+                Cell counterCell = summaryRow.getCell(findColumnIndex(summarySheet, "Номер счетчика", 0)); // Номер счетчика
                 String counterNumber = getCellStringValue(counterCell); // Получаем значение счетчика
 
                 // Проверяем, если есть данные для этого счетчика
                 if (counterNumber != null) {
                     String key = counterNumber.trim() + "_" + dateByCounters.get(counterNumber.trim()); // Используем номер счетчика как ключ
                     if (profileData.containsKey(key)) {
-                        Cell adCell = summaryRow.createCell(27); // Создаем или получаем AD ячейку
+                        Cell adCell = summaryRow.createCell(summaryRow.getLastCellNum()); // Создаем или получаем AD ячейку
                         adCell.setCellValue(profileData.get(key)); // Заполняем ячейку числовым значением
                     }
                 }
@@ -214,9 +216,8 @@ public class DataFiller {
             Sheet profileSheet = profileWorkbook.getSheetAt(0);
 
             for (Row profileRow : profileSheet) {
-                Cell counterCell = profileRow.getCell(2); // Столбец с номером счетчика (C)
-                Cell valueCell = profileRow.getCell(16); // Столбец с показаниями (Q)
-
+                Cell counterCell = profileRow.getCell(findColumnIndex(profileSheet, "№ счетчика", null)); // Столбец с номером счетчика (C)
+                Cell valueCell = profileRow.getCell(findColumnIndex(profileSheet, "12:00", null)); // Столбец с показаниями (Q) на 12:00
                 String counterNumber = getCellStringValue(counterCell); // Получаем номер счетчика
                 Double value = getCellNumericValue(valueCell); // Получаем значение
 

@@ -45,6 +45,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
     private static final Map<String, Integer> iikCount = new HashMap<>();
     static Map<String, String> synchroMap = new HashMap<>();
+    static Set<String> changedRows = new HashSet<>();
 
     private static final boolean needSynchronize = isSynchronizeNeeded();
 
@@ -109,6 +110,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 planPTOWorkbook.close();
                 ExcelSplitter.main(args);
                 deleteSummaryFiles();
+                synchronize(otoIikSheet);
             }
             EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
@@ -355,6 +357,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static boolean needToSyncRow(Row row) {
         String eel = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), EEL_CELL, 1)));
         return eel.contains("ЭЭЛ-");
+    }
+    private static boolean rowHasChange(String iikId) {
+        return changedRows.contains(iikId);
     }
 
     private static void synchronizeRow(String key, Row row) {
