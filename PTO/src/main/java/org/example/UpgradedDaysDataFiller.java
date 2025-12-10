@@ -43,7 +43,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
     }
 
-    private static final Map<String, Integer> iikCount = new HashMap<>();
+    private static final Map<String, Integer> iikCountMap = new HashMap<>();
+    private static final Map<String, String> iikStatesMap = new HashMap<>();
     static Map<String, String> synchroMap = new HashMap<>();
     static Set<String> changedRows = new HashSet<>();
 
@@ -197,7 +198,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 if (file.getName().contains("Состав ИИК")) {
                     String dcNum = getCellStringValue(row.getCell(
                             findColumnIndex(sheet, "Сер. ном. УСПД", 1)));
-                    iikCount.put(dcNum, iikCount.getOrDefault(dcNum, 0) + 1);
+                    iikCountMap.put(dcNum, iikCountMap.getOrDefault(dcNum, 0) + 1);
                     if (needSynchronize) {// TODO что-то здесь надо доделать // синхронизируется весь файл
                         if (!needToSyncRow(row)) continue;
                         synchroMapCreating(row);
@@ -259,11 +260,12 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         for (Row row : worksheet) {
             String key = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), COUNTER_NUMBER_CELL, null)));
             if (key == null) continue;
+            fillIiksStateMap(row, worksheet);
             String dcNum = getCellStringValue(row.getCell(dcCellNumber));
-            if (iikCount.containsKey(dcNum) && !dcNum.isEmpty()) {
+            if (iikCountMap.containsKey(dcNum) && !dcNum.isEmpty()) {
                 Cell cell = row.getCell(iikQuantityCellNumber);
                 cell = cell == null ? row.createCell(iikQuantityCellNumber) : cell;
-                int value = iikCount.getOrDefault(dcNum, 0);
+                int value = iikCountMap.getOrDefault(dcNum, 0);
                 cell.setCellValue(value);
                 cell.setCellStyle(commonCS);
             }
@@ -322,6 +324,12 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         setTopRowProperties(firstRow, lastColumnNum, enabledCount);
     }
 
+    private static void fillIiksStateMap(Row row, Sheet worksheet) {
+        int iiksCurrentStateCellNumber = findColumnIndex(worksheet, "Текущее состояние", null);
+        int iiksIdCellNumber = findColumnIndex(worksheet, "ID", null);
+        iikStatesMap.put(getCellStringValue(row.getCell(iiksIdCellNumber)), getCellStringValue(row.getCell(iiksCurrentStateCellNumber)));
+    }
+
     private static void synchronize(Sheet worksheet) {
         synchronizeDb();
         synchronizeExcel(worksheet);
@@ -358,6 +366,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         String eel = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), EEL_CELL, 1)));
         return eel.contains("ЭЭЛ-");
     }
+
     private static boolean rowHasChange(String iikId) {
         return changedRows.contains(iikId);
     }
@@ -377,6 +386,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     }
 
     private static void addAdditionalCell(Row row) {
+        String iiksId = getCellStringValue(row.getCell(findColumnIndex(row.getSheet(), "ID", null)));
         Cell iikTypeCell = row.createCell(findColumnIndex(row.getSheet(), "Тип ИИК", null));
         Cell notStatusCell = row.createCell(findColumnIndex(row.getSheet(), "Статус (НОТ)", null));
 //        logger.info("358 строка номер {}", row.getRowNum());
@@ -396,9 +406,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 };
 
         iikTypeCell.setCellValue(iikType);
-        String notStatus = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(meterNum);
-        notStatus = notStatus != null && notStatus.toLowerCase().trim().equals("да") ? "НОТ" : "В работе";
-        notStatusCell.setCellValue(notStatus);
+//        String notStatus = dataMaps.get(DataType.NORMALLY_TURNED_OFF).get(meterNum);
+//        notStatus = notStatus != null && notStatus.toLowerCase().trim().equals("да") ? "НОТ" : "В работе";
+        notStatusCell.setCellValue(iikStatesMap.get(iiksId));
     }
 
 
@@ -467,7 +477,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 if (dataMaps.get(DataType.CONNECTION_DIAG).containsKey(key)) {
                     Cell connectionDiagCol = row.createCell(connectionDiagCellIndex);
                     Cell iikQuantity = row.getCell(iikQuantityCellIndex);
-                    iikQuantity.setCellValue(iikCount.getOrDefault(key, 0));
+                    iikQuantity.setCellValue(iikCountMap.getOrDefault(key, 0));
                     String dateString = dataMaps.get(DataType.CONNECTION_DIAG).get(key);
                     // Попытка преобразовать строку в дату
                     try {
