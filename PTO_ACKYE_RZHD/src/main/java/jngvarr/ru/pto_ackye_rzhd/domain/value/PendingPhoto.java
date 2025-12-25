@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 
 @Data
 @Slf4j
@@ -15,12 +16,14 @@ public class PendingPhoto {
     private final String type; // "counter" или "concentrator"  или "tt"
     private final Path tempFilePath;
     private String deviceNumber;
+    private LocalDateTime creationDate;
     private String additionalInfo; //показания счетчика или номер трансформатора тока
 
-    public PendingPhoto(String type, Path tempFilePath, String deviceNumber) {
+    public PendingPhoto(String type, Path tempFilePath, String deviceNumber, LocalDateTime date) {
         this.type = type;
         this.tempFilePath = tempFilePath;
         this.deviceNumber = deviceNumber;
+        this.creationDate = date;
     }
 }
 //

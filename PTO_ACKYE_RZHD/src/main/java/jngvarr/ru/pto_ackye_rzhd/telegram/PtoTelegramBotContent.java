@@ -171,7 +171,8 @@ public class PtoTelegramBotContent {
     public static final Map<String, Map<String, String>> MODES = Map.of(
             "pto", Map.of(
                     "Добавление фото счетчика", "ptoIIK",
-                    "Добавление фото ИВКЭ", "ptoIVKE"),
+                    "Добавление фото ИВКЭ", "ptoIVKE",
+                    "Добавление фото ТП/КТП", "KTP"),
             "oto", Map.of(
                     "ОТО ИИК", "otoIIK",
                     "ОТО ИВКЭ", "otoIVKE"),

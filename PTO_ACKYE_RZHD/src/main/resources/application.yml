@@ -16,8 +16,8 @@ spring:
 
 telegram:
   bot:
-    name: PTO_ACKYE_bot
-    token: 8194636492:AAHSLFyUa6XOA-J7io3ukSc2-N3uhzSDGsg
+    name: ACKYE_bot
+    token: 8409445913:AAG5joeDB5aob6_fgAT4u7b3oUUd4KunwJQ
     owner: 199867696
 
 #cron:

@@ -60,14 +60,17 @@ public class CallbackQueryHandler implements UpdateHandler {
             }
 
             // Обработка выбора для ПТО счетчика и концентратора
-            case "ptoIIK", "ptoIVKE" -> {
+            case "ptoIIK", "ptoIVKE", "KTP" -> {
                 String textToSend;
                 if ("ptoIIK".equals(callbackData)) {
                     textToSend = "Пожалуйста, загрузите фото счетчика и введите показания.";
                     conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_METER_PHOTO);
-                } else {
+                } else if ("ptoIVKE".equals(callbackData)) {
                     textToSend = "Пожалуйста, загрузите фото концентратора и введите его номер.";
                     conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_DC_PHOTO);
+                } else {
+                    textToSend = "Пожалуйста, загрузите фото подстанции и введите номер установленного на ней концентратора.";
+                    conversationStateService.setProcessState(userId, ProcessState.WAITING_FOR_KTP_PHOTO);
                 }
                 tBotMessageService.editMessage(chatId, userId, textToSend);
             }

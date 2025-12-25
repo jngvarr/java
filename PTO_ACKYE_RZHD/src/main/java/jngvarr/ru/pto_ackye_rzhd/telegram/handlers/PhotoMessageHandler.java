@@ -1,19 +1,23 @@
 package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
 import jngvarr.ru.pto_ackye_rzhd.application.services.PhotoPathService;
-import jngvarr.ru.pto_ackye_rzhd.telegram.*;
+import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
+import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.OtoType;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PendingPhoto;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.PhotoState;
 import jngvarr.ru.pto_ackye_rzhd.domain.value.ProcessState;
-import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
-import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
+import jngvarr.ru.pto_ackye_rzhd.telegram.UpdateHandler;
 import jngvarr.ru.pto_ackye_rzhd.telegram.service.TBotMessageService;
 import jngvarr.ru.pto_ackye_rzhd.telegram.service.TelegramFileService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.imageio.ImageIO;
@@ -24,7 +28,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
+import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.*;
 
 @Data
@@ -56,14 +64,54 @@ public class PhotoMessageHandler implements UpdateHandler {
         }
         tBotMessageService.sendMessage(chatId, userId, "Подождите, идёт обработка фото....");
         ProcessState currentState = conversationStateService.getProcessState(userId);
+
         // Получаем самое большое фото
-        var photos = update.getMessage().getPhoto();
-        var photo = photos.get(photos.size() - 1);
-        String fileId = photo.getFileId();
+//        var photos = update.getMessage().getPhoto();
+//        var photo = photos.get(photos.size() - 1);
+//        String fileId = photo.getFileId();
+
+        Message message = update.getMessage();
+
+        String fileId;
+
+        if (message.hasPhoto()) {
+            var photos = message.getPhoto();
+            fileId = photos.get(photos.size() - 1).getFileId();
+        } else {
+            fileId = message.getDocument().getFileId();
+        }
 
         try {
             // Скачивание файла с сервера Telegram
             File downloadedFile = telegramFileService.downloadFile(fileId);
+
+            LocalDateTime exifDate = null;
+
+            if (message.hasDocument()) {
+                Metadata metadata = ImageMetadataReader.readMetadata(downloadedFile);
+                ExifSubIFDDirectory subIfd =
+                        metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+
+                Date date = null;
+
+                if (subIfd != null) {
+                    date = subIfd.getDateOriginal();
+
+                    if (date == null) {
+                        date = subIfd.getDate(ExifSubIFDDirectory.TAG_DATETIME_DIGITIZED);
+                    }
+                }
+
+                if (date != null) {
+                    exifDate = date.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime();
+                } else {
+                    exifDate = TODAY.atStartOfDay(); // fallback
+                }
+            }
+
+//            BufferedImage bufferedImage = ImageIO.read(downloadedFile);
 
             // 3. Читаем изображение
             BufferedImage bufferedImage = ImageIO.read(downloadedFile);
@@ -92,11 +140,12 @@ public class PhotoMessageHandler implements UpdateHandler {
                 case WAITING_FOR_METER_PHOTO -> "counter";
                 case WAITING_FOR_DC_PHOTO -> "concentrator";
                 case WAITING_FOR_TT_PHOTO -> "tt";
+                case WAITING_FOR_KTP_PHOTO -> "ktp";
                 default -> throw new IllegalStateException("Неизвестный тип оборудования: " + currentState);
             };
 
             // 6. Создаём объект для хранения фото
-            PendingPhoto pendingPhoto = new PendingPhoto(type, downloadedFile.toPath(), barcodeText);
+            PendingPhoto pendingPhoto = new PendingPhoto(type, downloadedFile.toPath(), barcodeText, exifDate);
             conversationStateService.setPendingPhoto(userId, pendingPhoto);
             if (type.equals("counter")) {
                 if (manualInput != null) pendingPhoto.setAdditionalInfo(manualInput.trim());
@@ -128,10 +177,16 @@ public class PhotoMessageHandler implements UpdateHandler {
                 }
             } else {
                 if (manualInput != null) {
+//                    if (type.equals("ktp")) {
+//                        String dcNum = manualInput.trim();
+//                        String[] ktpName = photoPathService.getSavingPaths().get(dcNum).split("\\\\");
+//                        pendingPhoto.setDeviceNumber(ktpName[1] + "_" + ktpName[2]);
+//                    } else pendingPhoto.setDeviceNumber(dcNum);
                     pendingPhoto.setDeviceNumber(manualInput.trim());
                     savePhoto(userId, chatId, pendingPhoto);
                 } else {
-                    pendingPhoto.setAdditionalInfo("Данные не требуются.");
+                    pendingPhoto.setAdditionalInfo("");
+//                    pendingPhoto.setAdditionalInfo("Данные не требуются.");
 //                    PhotoState photoState = conversationStateService.getPhotoStates().get(userId);
 //                    OtoType otoType = conversationStateService.getOtoType(userId);
                     tBotMessageService.sendMessage(chatId, userId, "❌ Номер концентратора не обнаружен!! Пожалуйста введите еще раз:");
@@ -258,6 +313,13 @@ public class PhotoMessageHandler implements UpdateHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return update.getMessage().hasPhoto();
+        if (!update.hasMessage()) {
+            return false;
+        }
+        var message = update.getMessage();
+        return message.hasPhoto()
+                || (message.hasDocument()
+                && message.getDocument().getMimeType() != null
+                && message.getDocument().getMimeType().startsWith("image/"));
     }
 }

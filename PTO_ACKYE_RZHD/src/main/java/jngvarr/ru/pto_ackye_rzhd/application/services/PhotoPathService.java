@@ -16,9 +16,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.FORMATTED_CURRENT_DATE;
-import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.TODAY;
+import static jngvarr.ru.pto_ackye_rzhd.application.util.DateUtils.*;
 import static jngvarr.ru.pto_ackye_rzhd.telegram.PtoTelegramBotContent.PHOTO_SUBDIRS_NAME;
+
 @Data
 @Component
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class PhotoPathService {
     private static final String WORKING_FOLDER =
             "\\" + TODAY.getYear() + "\\" + TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     public static final String PHOTO_PATH =
-            "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;
+            "d:\\YandexDisk\\ПТО РРЭ РЖД\\ФОТО (Подтверждение работ)\\" + WORKING_FOLDER;  //TODO папка создается текущего месяца, надо ли привязать к EXIF файла?
     private final Map<String, String> savingPaths = new HashMap<>();
 
     @PostConstruct
@@ -40,21 +40,38 @@ public class PhotoPathService {
         String tempPath = "";
         OtoType operationType = conversationStateService.getOtoType(userId);
         String baseDir = PHOTO_PATH + File.separator;
-        String path = savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown");
+        String path = sanitizeFileName(savingPaths.getOrDefault(pending.getDeviceNumber(), "unknown"));
 
         if (operationType != null) {
             if (PHOTO_SUBDIRS_NAME.containsKey(operationType)) {
                 baseDir += PHOTO_SUBDIRS_NAME.get(operationType) + File.separator;
             }
-        } else if (!conversationStateService.getProcessState(userId).equals(ProcessState.WAITING_FOR_DC_PHOTO))
+        } else if (!conversationStateService.getProcessState(userId).equals(ProcessState.WAITING_FOR_DC_PHOTO)) {
             path = path.substring(0, path.lastIndexOf("\\"));
+        }
+        if (conversationStateService.getProcessState(userId).equals(ProcessState.WAITING_FOR_KTP_PHOTO)) {
+            String[] ktpName = path.split("\\\\");
+            pending.setDeviceNumber(ktpName[1] + "_" + ktpName[2]);
+        }
 
         if (conversationStateService.getPhotoState(userId).getUploadedPhotos().isEmpty()) tempPath = path;
         else if (conversationStateService.getPhotoState(userId).getUploadedPhotos().size() < 2) path = tempPath;
         return baseDir + path;
     }
 
-    public String createNewFileName(PendingPhoto pending, Long userId, TBotConversationStateService conversationStateService) {
+    private String sanitizeFileName(String input) {
+        if (input == null) {
+            return "unknown";
+        }
+
+        return input
+                .replaceAll("\"", "")
+//                .replaceAll("[\\\\/:*?\"<>|]", "")
+                .trim();
+    }
+
+    public String createNewFileName(PendingPhoto pending, Long userId, TBotConversationStateService
+            conversationStateService) {
         OtoType operationType = conversationStateService.getOtoType(userId);
         String photoSuffix = "";
         String additionalInfo = pending.getAdditionalInfo() != null ? "_" + pending.getAdditionalInfo() : "";
@@ -67,7 +84,7 @@ public class PhotoPathService {
                 additionalInfo = "";
             }
         }
-        return FORMATTED_CURRENT_DATE + "_" + getSavingPhotoPrefix(pending.getType()) + pending.getDeviceNumber() +
+        return pending.getCreationDate().format(YYYY_MM_DD) + "_" + getSavingPhotoPrefix(pending.getType()) + pending.getDeviceNumber() +
                 additionalInfo + photoSuffix + ".jpg";
     }
 
@@ -76,6 +93,7 @@ public class PhotoPathService {
             case "counter" -> "ИИК_";
             case "concentrator" -> "ИВКЭ_";
             case "tt" -> "ТТ_";
+            case "ktp" -> "ТП_";
             default -> "unknown_";
         };
     }

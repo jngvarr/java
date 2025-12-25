@@ -48,7 +48,7 @@ public class TBotConversationStateService {
         otoTypes.put(userId, type);
     }
 
-    public void clearOtoLog(){
+    public void clearOtoLog() {
         otoLog.clear();
     }
 
@@ -67,6 +67,7 @@ public class TBotConversationStateService {
     public void decrementSequenceNumber(Long userId) {
         sequenceNumbers.put(userId, getSequenceNumber(userId) - 1);
     }
+
     public void increaseSequenceNumber(Long userId, int value) {
         sequenceNumbers.put(userId, getSequenceNumber(userId) + value);
     }
@@ -75,22 +76,24 @@ public class TBotConversationStateService {
         sequenceNumbers.put(userId, 0);
     }
 
-    public boolean getPtoFlag(Long userId){
+    public boolean getPtoFlag(Long userId) {
         return ptoFlags.get(userId);
     }
 
-    public void setPtoFlags(Long userId, boolean flag){
+    public void setPtoFlags(Long userId, boolean flag) {
         ptoFlags.put(userId, flag);
     }
 
-    public void clearPtoFlags(Long userId){
+    public void clearPtoFlags(Long userId) {
         ptoFlags.put(userId, false);
     }
 
     public String getProcessInfo(Long userId) {
         return processInfos.getOrDefault(userId, "");
-    }    public void clearProcessInfo(Long userId) {
-         processInfos.remove(userId);
+    }
+
+    public void clearProcessInfo(Long userId) {
+        processInfos.remove(userId);
     }
 
     public void appendProcessInfo(Long userId, String value) {

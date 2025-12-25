@@ -108,6 +108,7 @@ public class ExcelFileService {
                 String meterNum = ExcelUtil.getCellStringValue(row.getCell(meterNumberColumnIndex));
                 String dcNum = ExcelUtil.getCellStringValue(row.getCell(dcNumberColumnIndex));
                 if (meterNum != null) {
+//                    log.info("Row num: {}, meter num: {}", row.getRowNum() + 1, meterNum);
                     paths.put(meterNum,
                             EEL_TO_NTEL.get(row.getCell(eelColumnIndex).getStringCellValue()) + "\\" +
                                     row.getCell(stationColumnIndex).getStringCellValue() + "\\" +
@@ -313,7 +314,6 @@ public class ExcelFileService {
 //        Map<Long, MeteringPoint> newMeteringPoints = new HashMap<>();
 
 
-
         for (Row row : sheet) {
             if (row.getRowNum() < 4) {
                 // Пропускаем первую строку, это заголовок
@@ -349,7 +349,7 @@ public class ExcelFileService {
                 }
                 newIik.setMeter(newMeter);
 //                newMeteringPoints.put(newIik.getId(), newIik);
-                meteringPointService.create( newIik);
+                meteringPointService.create(newIik);
                 entityCache.get(EntityType.METERING_POINT).put(String.valueOf(newIik.getId()), newIik);
             }
         }

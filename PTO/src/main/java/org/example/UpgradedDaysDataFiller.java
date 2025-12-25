@@ -39,6 +39,15 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final String TASK_CELL = "Задание на ОТО от диспетчера";
     private static final String CONNECTION_DATE_CELL = "Дата получения статуса";
 
+    private static final String DATA_CONTROL_METER_NUMBER_COLUMN_NAME = "Счетчик";
+    private static final String DATA_CONTROL_DATA_COLUMN_NAME = "Достоверность";
+    private static final String NORMALLY_TURNED_OFF_METER_NUMBER_COLUMN_NAME = "Сер. номер ПУ";
+    private static final String NORMALLY_TURNED_OFF_DATA_COLUMN_NAME = "Нор. откл.";
+    private static final String IIK_STATUS_METER_NUMBER_COLUMN_NAME = "Серийный номер ПУ";
+    private static final String IIK_STATUS_DATA_COLUMN_NAME = "Статус";
+    private static final String CONNECTION_DIAG_DC_NUMBER_COLUMN_NAME = "Серийный номер";
+    private static final String CONNECTION_DIAG_DATA_COLUMN_NAME = "Дата успешной проверки";
+
     private enum DataType {
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
     }
@@ -169,13 +178,13 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         String fileName = file.getName();
         try {
             if (fileName.startsWith("Контроль поступления данных")) {
-                dataMaps.get(DataType.DATA_CONTROL).putAll(fillingMapWithData(1, 5, file));
+                dataMaps.get(DataType.DATA_CONTROL).putAll(fillingMapWithData(DATA_CONTROL_METER_NUMBER_COLUMN_NAME, DATA_CONTROL_DATA_COLUMN_NAME, file));
             } else if (fileName.startsWith("Состав ИИК")) {
-                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(14, 9, file));
+                dataMaps.get(DataType.NORMALLY_TURNED_OFF).putAll(fillingMapWithData(NORMALLY_TURNED_OFF_METER_NUMBER_COLUMN_NAME, NORMALLY_TURNED_OFF_DATA_COLUMN_NAME, file));
             } else if (fileName.startsWith("Статусы ПУ")) {
-                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(11, 12, file));
+                dataMaps.get(DataType.IIK_STATUS).putAll(fillingMapWithData(IIK_STATUS_METER_NUMBER_COLUMN_NAME, IIK_STATUS_DATA_COLUMN_NAME, file));
             } else if (fileName.startsWith("Диагностика связи")) {
-                dataMaps.get(DataType.CONNECTION_DIAG).putAll(fillingMapWithData(9, 11, file));
+                dataMaps.get(DataType.CONNECTION_DIAG).putAll(fillingMapWithData(CONNECTION_DIAG_DC_NUMBER_COLUMN_NAME, CONNECTION_DIAG_DATA_COLUMN_NAME, file));
             }
             logger.info("Processed file: " + fileName);
         } catch (Exception e) {
@@ -183,16 +192,19 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         }
     }
 
-    private static Map<String, String> fillingMapWithData(int meterColumn, int neededDataColumn, File file) {
+    private static Map<String, String> fillingMapWithData(String deviceNumberColumnName, String neededDataColumnName, File file) {
         Map<String, String> workMap = new HashMap<>();
         try (Workbook workbook = new XSSFWorkbook(new FileInputStream(file))) {
             Sheet sheet = workbook.getSheetAt(0);
+            int headersRowNum = getHeaderIndex(file.getName());
+            int deviceNumberColumnIndex = findColumnIndex(sheet, deviceNumberColumnName, headersRowNum);
+            int neededDataColumnIndex = findColumnIndex(sheet, neededDataColumnName, headersRowNum);
             boolean isStatusPUFile = file.getName().contains("Статусы ПУ");
             for (Row row : sheet) {
-                String key = getCellStringValue(row.getCell(meterColumn));
-                String value = getCellStringValue(row.getCell(neededDataColumn));
+                String key = getCellStringValue(row.getCell(deviceNumberColumnIndex));
+                String value = getCellStringValue(row.getCell(neededDataColumnIndex));
                 if (isStatusPUFile) {
-                    Cell statusDateCell = row.getCell(neededDataColumn + 1);
+                    Cell statusDateCell = row.getCell(neededDataColumnIndex + 1);
                     value += "_" + (statusDateCell != null ? getCellStringValue(statusDateCell) : "");
                 }
                 if (file.getName().contains("Состав ИИК")) {
@@ -213,6 +225,21 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         }
 //        synchronizeData(synchroMap);
         return workMap;
+    }
+
+    private static int getHeaderIndex(String name) {
+        Map<String, Integer> headerRows = Map.of(
+                "Контроль поступления данных c", 0,
+                "Состав ИИК ", 1,
+                "Статусы ПУ (Echelon)", 3,
+                "Диагностика связи с УСПД-ПУ", 4
+        );
+
+        return headerRows.entrySet().stream()
+                .filter(e -> name.startsWith(e.getKey()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(" файла: " + name))
+                .getValue();
     }
 
     private static void synchroMapCreating(Row row) {
