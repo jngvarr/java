@@ -12,11 +12,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.example.ExcelSplitter.findColumnIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Добавление данных профилей в свод ИИК
 public class DataFiller {
-    private static final String ORDER_MONTH = LocalDate.now()
-            .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
+    private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
+
+    private static final String ORDER_MONTH = "ЯНВАРЬ";
     private static final String ORDER_YEAR = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("yyyy", Locale.forLanguageTag("ru-RU")));
     private static final String FOLDER_PATH = new StringBuilder().append("d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
@@ -63,6 +66,7 @@ public class DataFiller {
                 Cell monthCell = summaryRow.getCell(monthColumnIndex); // Get cell in the month column
                 Cell counterCell = summaryRow.getCell(findColumnIndex(summarySheet, "Номер счетчика", 0));
                 if (monthCell != null) {
+//                    logger.info(" Строка {}", summaryRow.getRowNum());
                     String monthValue = monthCell.getStringCellValue(); // Assuming "Фамилия_дата"
                     String[] parts = monthValue.split("_");
                     if (parts.length > 1) {

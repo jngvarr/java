@@ -27,13 +27,14 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final LocalDate TODAY = LocalDate.now();
     private static final String PRESENT_MONTH_IN_RUSSIAN = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
     static final String PLAN_PTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
-    private static final String PLAN_PTO = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ 2025_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
+    private static final String PLAN_PTO = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ 2026_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
     private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + TODAY.format(DATE_FORMATTER_DDMMYYYY);
     private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
     private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ РРЭ\\Архив заданий на ОТО\\";
     private static final String COUNTER_NUMBER_CELL = "Номер счетчика";
     private static final String ID_CELL = "ID";
     private static final String EEL_CELL = "ЭЭЛ";
+    private static final String IIK_CURRENT_STATE_CELL = "Текущее состояние";
     private static final String IIK_STATUS_CELL = "Статус счетчика";
     private static final String NORMALLY_TURNED_OFF_CELL = "Счетчик в Горизонте отмечен как НОТ";
     private static final String TASK_CELL = "Задание на ОТО от диспетчера";
@@ -312,6 +313,10 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     iikStatusCell.setCellValue(iikStatus); // TODO : разобраться со статусами и выставлением заданий
                     iikStatusCell.setCellStyle(commonCS);
                     connectionDateCell.setCellValue(iikStatusValues[1]);
+                    if ("В работе".equals(iikStatus)) {
+                        Cell iikCurrentStateCell = row.getCell(findColumnIndex(row.getSheet(), IIK_CURRENT_STATE_CELL, null));
+                        iikCurrentStateCell.setCellValue(iikStatus);
+                    }
 
                     // Устанавливаем стиль даты
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");

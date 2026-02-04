@@ -3,6 +3,7 @@ package jngvarr.ru.pto_ackye_rzhd.telegram.handlers;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.drew.metadata.exif.GpsDirectory;
 import jngvarr.ru.pto_ackye_rzhd.application.services.PhotoPathService;
 import jngvarr.ru.pto_ackye_rzhd.application.services.PreparingPhotoService;
 import jngvarr.ru.pto_ackye_rzhd.application.services.TBotConversationStateService;
@@ -91,7 +92,8 @@ public class PhotoMessageHandler implements UpdateHandler {
                 Metadata metadata = ImageMetadataReader.readMetadata(downloadedFile);
                 ExifSubIFDDirectory subIfd =
                         metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-
+                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+                gpsDirectory
                 Date date = null;
 
                 if (subIfd != null) {
