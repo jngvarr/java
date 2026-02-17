@@ -34,7 +34,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int STATION_COL_NUMBER = 5;
     private static final int EEL_COL_NUMBER = 2;
     private static final int SUBSTATION_COL_NUMBER = 6;
-    private static final int COUNTER_TYPE_COL_NUMBER = 9;
+    private static final int COUNTER_TYPE_COL_NUMBER = 11;
     private static final int SUMM_ROW_NUMBER = 12;
     private static final int IVKE_CELL_NUMBER = 5;
     private static final int METER1021_CELL_NUMBER = 7;
@@ -416,7 +416,8 @@ public class ExcelMerger { // Объединение нескольких ана
             Row targetRow = resultSheet.getRow(i);
             Cell targetRowCell = targetRow.getCell(monthColumnIndex);
             if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
-                String counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
+//                logger.info("Номер строки: {}, ячейка {}",targetRowCell.getRow().getRowNum(), i);
+                String counterType = !"ИВКЭ".equals(source)? targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue() : targetRow.getCell(9).getStringCellValue();
                 String key = setKey(targetRow, monthColumnIndex);
 
                 if (path.contains("ИВКЭ")) dc++;
