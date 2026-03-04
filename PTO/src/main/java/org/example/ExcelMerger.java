@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.example.DataFiller.findMonthColumnIndex;
+import static org.example.addProfileDataToSummaryPage.findMonthColumnIndex;
 
 public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
@@ -146,7 +146,7 @@ public class ExcelMerger { // Объединение нескольких ана
                         dateCellStyle, horizontalAlignmentCellStyle);
             }
 
-            setSummRow(scheduleSheet);
+            setSumRow(scheduleSheet);
 
             Path directoryPath = Paths.get("d:\\Downloads\\пто\\month_reports\\"
                     + orderMonth);
@@ -162,6 +162,16 @@ public class ExcelMerger { // Объединение нескольких ана
         }
     }
 
+    /** Создание строки в таблице графика
+     *
+     * @param scheduleSheet
+     * @param dc
+     * @param currentRowNum
+     * @param ordersFirstRowNum
+     * @param commonCellStyle
+     * @param dateCellStyle
+     * @param horizontalAlignmentCellStyle
+     */
     private static void insertRow(Sheet scheduleSheet, Map.Entry<String, DCEntry> dc, int currentRowNum,
                                   int ordersFirstRowNum, CellStyle commonCellStyle,
                                   CellStyle dateCellStyle, CellStyle horizontalAlignmentCellStyle) {
@@ -172,7 +182,7 @@ public class ExcelMerger { // Объединение нескольких ана
         if (currentRowNum <= lastRowNum) {
             scheduleSheet.shiftRows(currentRowNum, lastRowNum, 1);
         }
-        // Создаём новую строку в таблице
+        // Создаём новую строку в таблице графика
         Row newRow = scheduleSheet.createRow(currentRowNum++);
 
         final int pointsCellNum = 0;
@@ -218,7 +228,11 @@ public class ExcelMerger { // Объединение нескольких ана
         cell.setCellStyle(style);
     }
 
-    private static void setSummRow(Sheet scheduleSheet) {
+    /** Создание строки с итоговым количеством компанентов АСКУЭ
+     *
+     * @param scheduleSheet - создаваемая страница графика
+     */
+    private static void setSumRow(Sheet scheduleSheet) {
         Row summRow = scheduleSheet.createRow(SUMM_ROW_NUMBER);
         CellStyle sumCellStyle = createSumCellStyle(scheduleSheet);
 
@@ -322,8 +336,8 @@ public class ExcelMerger { // Объединение нескольких ана
 
 
                 // Копируем данные, пропуская пустые строки
-                int й = sheet.getLastRowNum();
-                for (int i = 1; i <=й ; i++) {
+                int n = sheet.getLastRowNum();
+                for (int i = 1; i <=n ; i++) {
                     Row sourceRow = sheet.getRow(i);
 //                    if (sourceRow == null || isRowEmpty(sourceRow)) continue; // Пропуск пустых строк
                     if (sourceRow == null || isCellEmpty(sourceRow.getCell(1)))

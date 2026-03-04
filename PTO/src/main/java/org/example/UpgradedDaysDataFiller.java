@@ -25,9 +25,10 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMM = DateTimeFormatter.ofPattern("dd MMMM", new Locale("ru"));
     private static final String PLAN_OTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
     private static final LocalDate TODAY = LocalDate.now();
-    private static final String PRESENT_MONTH_IN_RUSSIAN = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
+    static final String PRESENT_MONTH_IN_RUSSIAN = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase();
+    static final String PRESENT_YEAR = String.valueOf(TODAY.getYear());
     static final String PLAN_PTO_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\";
-    private static final String PLAN_PTO = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ 2026_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
+    private static final String PLAN_PTO = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ПТО\\СВОД_ИИК ПТО РРЭ " + PRESENT_YEAR + "_" + PRESENT_MONTH_IN_RUSSIAN + ".xlsx";
     private static final String FOLDER_PATH = "d:\\Downloads\\пто\\reports\\" + TODAY.format(DATE_FORMATTER_DDMMYYYY);
     private static final String RESERVE_FILE_DATE = TODAY.format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU"))).toUpperCase() + " " + TODAY.getYear();
     private static final String CLOUD_PATH = "d:\\YandexDisk\\ПТО РРЭ РЖД\\АРХИВ РРЭ\\Архив заданий на ОТО\\";
@@ -39,7 +40,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final String NORMALLY_TURNED_OFF_CELL = "Счетчик в Горизонте отмечен как НОТ";
     private static final String TASK_CELL = "Задание на ОТО от диспетчера";
     private static final String CONNECTION_DATE_CELL = "Дата получения статуса";
-
     private static final String DATA_CONTROL_METER_NUMBER_COLUMN_NAME = "Счетчик";
     private static final String DATA_CONTROL_DATA_COLUMN_NAME = "Достоверность";
     private static final String NORMALLY_TURNED_OFF_METER_NUMBER_COLUMN_NAME = "Сер. номер ПУ";
@@ -48,6 +48,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final String IIK_STATUS_DATA_COLUMN_NAME = "Статус";
     private static final String CONNECTION_DIAG_DC_NUMBER_COLUMN_NAME = "Серийный номер";
     private static final String CONNECTION_DIAG_DATA_COLUMN_NAME = "Дата успешной проверки";
+    private static int iikQuantityCellNumber;
 
     private enum DataType {
         DATA_CONTROL, NORMALLY_TURNED_OFF, IIK_STATUS, CONNECTION_DIAG
@@ -315,6 +316,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     connectionDateCell.setCellValue(iikStatusValues[1]);
                     if ("В работе".equals(iikStatus)) {
                         Cell iikCurrentStateCell = row.getCell(findColumnIndex(row.getSheet(), IIK_CURRENT_STATE_CELL, null));
+                        if (iikCurrentStateCell == null) logger.info("Строка №{}", row.getRowNum());
                         iikCurrentStateCell.setCellValue(iikStatus);
                     }
 

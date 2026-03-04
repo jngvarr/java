@@ -21,26 +21,34 @@ import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class OFOGTemplateFiller {
+import static org.example.ExcelSplitter.findColumnIndex;
+import static org.example.UpgradedDaysDataFiller.PRESENT_MONTH_IN_RUSSIAN;
+import static org.example.UpgradedDaysDataFiller.PRESENT_YEAR;
+
+public class MonthReportsFiller {
     private static final LocalDate today = LocalDate.now();
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMYYYY = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private static final Logger logger = LoggerFactory.getLogger(OFOGTemplateFiller.class);
+    private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
+  
     private static int iReportRows;
 
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
         String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
+        String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\.xlsx";
+        String adAzPathSuffix = "\\АД-АЗ\\.xlsx";
         // Путь для сохранения нового файла
         String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
         String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
+        String outputFilePathAdAz = adAzPathPrefix + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + adAzPathSuffix;
         String pdfFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\templates\\ОФОЖ.pdf";       // Результирующий файл PDF
         String pdfFilePathIReport = "d:\\Downloads\\пто\\month_reports\\templates\\Акт осмотра.pdf";       // Результирующий файл PDF
-        int dateColumnIndex = 16;
-        int faultReasonColNum = 18;
+        String dateColumn = "Дата регистрации";
+        String faultReasonColNum = "Причина неисправности";
         int reportRows = 0;
         int ofLogSheetInsertPosition = 8;
         int iReportSheetInsertPosition = 10;
@@ -60,8 +68,8 @@ public class OFOGTemplateFiller {
                 setIReportDate(iReportSheet);
 
                 for (Row row : dataSheet) {
-                    Cell dateCell = row.getCell(dateColumnIndex);
-                    Cell faultReasonCell = row.getCell(faultReasonColNum);
+                    Cell dateCell = row.getCell(findColumnIndex(dataSheet, dateColumn, 0));
+                    Cell faultReasonCell = row.getCell(findColumnIndex(dataSheet, faultReasonColNum, 0));
 
                     // Проверяем, является ли ячейка датой
                     if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
@@ -212,8 +220,8 @@ public class OFOGTemplateFiller {
                 restorationDate.format(DATE_FORMATTER_DDMMYYYY),
                 generateRandomTime(9, 17),
                 getCellStringValue(sourceRow.getCell(18)),
-                sourceRow.getCell(20).getStringCellValue().contains("ЭЛ")? getCellStringValue(sourceRow.getCell(20)):
-                getCellStringValue(sourceRow.getCell(20)) + ", инженер ООО \"УК СТС\""
+                sourceRow.getCell(20).getStringCellValue().contains("ЭЛ") ? getCellStringValue(sourceRow.getCell(20)) :
+                        getCellStringValue(sourceRow.getCell(20)) + ", инженер ООО \"УК СТС\""
         };
     }
 

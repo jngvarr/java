@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Добавление данных профилей в свод ИИК
-public class DataFiller {
+public class addProfileDataToSummaryPage {
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
 
     private static final String ORDER_MONTH = "ЯНВАРЬ";
