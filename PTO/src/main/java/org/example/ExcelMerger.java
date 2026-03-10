@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.example.addProfileDataToSummaryPage.findMonthColumnIndex;
+import static org.example.AddProfileDataToSummaryPage.findMonthColumnIndex;
 
 public class ExcelMerger { // Объединение нескольких аналогичных файлов в один
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);

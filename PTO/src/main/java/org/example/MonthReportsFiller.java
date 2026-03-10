@@ -32,19 +32,19 @@ public class MonthReportsFiller {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
-  
+
     private static int iReportRows;
 
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
-        String dataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
-        String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\.xlsx";
-        String adAzPathSuffix = "\\АД-АЗ\\.xlsx";
+        String oZhDataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
+        String dbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация.xlsx";
+        String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + "\\АД-АЗ\\";
         // Путь для сохранения нового файла
         String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
         String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
-        String outputFilePathAdAz = adAzPathPrefix + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + adAzPathSuffix;
+        String outputFilePathAdAz = adAzPathPrefix + /*adAzFileName +*/ ".xlsx";
         String pdfFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\templates\\ОФОЖ.pdf";       // Результирующий файл PDF
         String pdfFilePathIReport = "d:\\Downloads\\пто\\month_reports\\templates\\Акт осмотра.pdf";       // Результирующий файл PDF
         String dateColumn = "Дата регистрации";
@@ -56,64 +56,72 @@ public class MonthReportsFiller {
         // Открываем файл-шаблон
         try (FileInputStream templateFis = new FileInputStream(templatePath);
              XSSFWorkbook templateWorkbook = new XSSFWorkbook(templateFis)) {
-            try (FileInputStream dataFis = new FileInputStream(dataPath);
+            try (FileInputStream dataFis = new FileInputStream(oZhDataPath);
                  XSSFWorkbook dataWorkbook = new XSSFWorkbook(dataFis)) {
+                try (FileInputStream dbDefection = new FileInputStream(dbDefectionPath);
+                     XSSFWorkbook dbDefectionWorkbook = new XSSFWorkbook(dbDefection)) {
 
-                // Получаем первый лист
-                XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
-                XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
-                XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
-                CellStyle commonCellStyle = createCommonCellStyle(ofLogSheet);
+                    // Получаем первый лист
+                    XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
+                    XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
+                    XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
+                    CellStyle commonCellStyle = createCommonCellStyle(ofLogSheet);
 
-                setIReportDate(iReportSheet);
+                    setIReportDate(iReportSheet);
 
-                for (Row row : dataSheet) {
-                    Cell dateCell = row.getCell(findColumnIndex(dataSheet, dateColumn, 0));
-                    Cell faultReasonCell = row.getCell(findColumnIndex(dataSheet, faultReasonColNum, 0));
+                    for (Row row : dataSheet) {
+                        Cell dateCell = row.getCell(findColumnIndex(dataSheet, dateColumn, 0));
+                        Cell faultReasonCell = row.getCell(findColumnIndex(dataSheet, faultReasonColNum, 0));
 
-                    // Проверяем, является ли ячейка датой
-                    if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
-                        // Получаем значение даты
-                        Date cellDate = dateCell.getDateCellValue();
-                        LocalDate localDate = cellDate.toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate();
+                        // Проверяем, является ли ячейка датой
+                        if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
+                            // Получаем значение даты
+                            Date cellDate = dateCell.getDateCellValue();
+                            LocalDate localDate = cellDate.toInstant()
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate();
 //                        int year = LocalDate.now().getYear();
 //                        int month = LocalDate.now().getMonthValue();
 
-                        //Задаем месяц отчета в ручную
-                        int year = 2026;
-                        int month = 1;
+                            //Задаем месяц отчета в ручную
+                            int year = 2026;
+                            int month = 1;
 
-                        int eventYear = localDate.getYear();
-                        int eventMonth = localDate.getMonthValue();
-                        if (month == eventMonth && year == eventYear) {
-                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
-                            reportRows++;
-                            // Копируем строку в целевой лист
-                            if (faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
+                            int eventYear = localDate.getYear();
+                            int eventMonth = localDate.getMonthValue();
+                            if (month == eventMonth && year == eventYear) {
+//                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
+                                reportRows++;
+                                // Копируем строку в целевой лист
+                                if (faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
 
-                                String faultReason = faultReasonCell.getStringCellValue().trim()
-                                        .replace("\u00A0", "")
-                                        .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
-                                if (!faultReason.contains("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
-                                    copyRowsData(row, ofLogSheet, ofLogSheetInsertPosition++, commonCellStyle, true);
-                                } else {
-                                    copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
+                                    String faultReason = faultReasonCell.getStringCellValue().trim()
+                                            .replace("\u00A0", "")
+                                            .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
+                                    if (!faultReason.contains("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
+                                        copyRowsData(row, ofLogSheet, ofLogSheetInsertPosition++, commonCellStyle, true);
+                                    } else {
+                                        copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
+                                    }
+                                    if (faultReason.toLowerCase().contains("заменили")
+                                            || faultReason.toLowerCase().contains("заменен")
+                                            || faultReason.toLowerCase().contains("заменён")) {
+
+                                    }
+
                                 }
                             }
                         }
                     }
-                }
 
-                // Сохраняем новый файл
-                try (FileOutputStream fos = new FileOutputStream(outputFilePathOFlog)) {
-                    templateWorkbook.write(fos);
-                }
-                try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
-                    templateWorkbook.write(fos2);
-                }
-                System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
+                    // Сохраняем новый файл
+                    try (FileOutputStream fos = new FileOutputStream(outputFilePathOFlog)) {
+                        templateWorkbook.write(fos);
+                    }
+                    try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
+                        templateWorkbook.write(fos2);
+                    }
+                    System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
 
 
 //                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
@@ -122,9 +130,9 @@ public class MonthReportsFiller {
 //                Document document = new Document(new com.itextpdf.kernel.pdf.PdfDocument(pdfWriter1));
 
 //TODO: доделать преобразование в pdf
-                // Создаем таблицу PDF
+                    // Создаем таблицу PDF
 // Берем первый лист из Excel
-                int numberOfColumns = ofLogSheet.getRow(0).getLastCellNum();
+                    int numberOfColumns = ofLogSheet.getRow(0).getLastCellNum();
 
 //                Table table = new Table(numberOfColumns);
 //                XSSFTable table = new XSSFTable (numberOfColumns);
@@ -132,11 +140,11 @@ public class MonthReportsFiller {
 //                // Добавляем таблицу в PDF документ
 //                document.add(table);
 
-                System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
+                    System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
 
 
-                templateWorkbook.close(); // Закрываем Workbook
-
+                    templateWorkbook.close(); // Закрываем Workbook
+                } catch ()
             } catch (IOException e) {
                 logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
                 e.printStackTrace();
@@ -144,8 +152,7 @@ public class MonthReportsFiller {
         } catch (
                 FileNotFoundException e) {
             logger.error("Файл не найден: {}", e.getMessage());
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             logger.error("Ошибка чтения/записи файла: {}", e.getMessage());
             e.printStackTrace();
 

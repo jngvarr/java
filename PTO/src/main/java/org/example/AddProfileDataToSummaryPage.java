@@ -16,10 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Добавление данных профилей в свод ИИК
-public class addProfileDataToSummaryPage {
+public class AddProfileDataToSummaryPage {
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
 
-    private static final String ORDER_MONTH = "ЯНВАРЬ";
+//    private static final String ORDER_MONTH = "МАРТ";
+    private static final String ORDER_MONTH = LocalDate.now()
+            .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
     private static final String ORDER_YEAR = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("yyyy", Locale.forLanguageTag("ru-RU")));
     private static final String FOLDER_PATH = new StringBuilder().append("d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
