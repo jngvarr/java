@@ -14,11 +14,12 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.example.ExcelSplitter.findColumnIndex;
@@ -30,28 +31,34 @@ public class MonthReportsFiller {
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMYYYY = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final String DATE_COLUMN = "Дата регистрации";
+    private static final String ZHD_STATION = "Железнодорожная станция";
+    private static final String SUBSTATION = "ТП/КТП";
+    private static final String METERING_POINT = "Точка учёта";
+    private static final String FAULT_REASON_COL_NUM = "Причина неисправности";
 
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
 
     private static int iReportRows;
+    private static final Map<String, String> echelonProductionDateByNumber = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
         String oZhDataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
         String dbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация.xlsx";
+        String productRangePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\Номенклатура KNUM(EM).xlsx";
         String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + "\\АД-АЗ\\";
         // Путь для сохранения нового файла
         String outputFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\filled_operational_failure_log.xlsx";
-        String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
+//        String outputFilePathOfogIr = "d:\\Downloads\\filled_inspection_report.xlsx";
         String outputFilePathAdAz = adAzPathPrefix + /*adAzFileName +*/ ".xlsx";
         String pdfFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\templates\\ОФОЖ.pdf";       // Результирующий файл PDF
         String pdfFilePathIReport = "d:\\Downloads\\пто\\month_reports\\templates\\Акт осмотра.pdf";       // Результирующий файл PDF
-        String dateColumn = "Дата регистрации";
-        String faultReasonColNum = "Причина неисправности";
         int reportRows = 0;
         int ofLogSheetInsertPosition = 8;
         int iReportSheetInsertPosition = 10;
+        fillEchelonProductionDateByNumber(productRangePath);
 
         // Открываем файл-шаблон
         try (FileInputStream templateFis = new FileInputStream(templatePath);
@@ -65,21 +72,28 @@ public class MonthReportsFiller {
                     XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
                     XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
                     XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
+                    XSSFSheet defectionDbSheet = dbDefectionWorkbook.getSheet("БД");
                     CellStyle commonCellStyle = createCommonCellStyle(ofLogSheet);
 
                     setIReportDate(iReportSheet);
 
+                    int dateColIndex = findColumnIndex(dataSheet, DATE_COLUMN, 0);
+                    int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON_COL_NUM, 0);
+
                     for (Row row : dataSheet) {
-                        Cell dateCell = row.getCell(findColumnIndex(dataSheet, dateColumn, 0));
-                        Cell faultReasonCell = row.getCell(findColumnIndex(dataSheet, faultReasonColNum, 0));
+                        Cell dateCell = row.getCell(dateColIndex);
+                        Cell faultReasonCell = row.getCell(reasonColIndex);
 
                         // Проверяем, является ли ячейка датой
                         if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
                             // Получаем значение даты
-                            Date cellDate = dateCell.getDateCellValue();
-                            LocalDate localDate = cellDate.toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate();
+//                            Date cellDate = dateCell.getDateCellValue();
+//                            LocalDate localDate = cellDate.toInstant()
+//                                    .atZone(ZoneId.systemDefault())
+//                                    .toLocalDate();
+                            LocalDate localDate = dateCell.getLocalDateTimeCellValue().toLocalDate();
+
+
 //                        int year = LocalDate.now().getYear();
 //                        int month = LocalDate.now().getMonthValue();
 
@@ -93,7 +107,7 @@ public class MonthReportsFiller {
 //                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                                 reportRows++;
                                 // Копируем строку в целевой лист
-                                if (faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
+                                if (faultReasonCell != null && faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
 
                                     String faultReason = faultReasonCell.getStringCellValue().trim()
                                             .replace("\u00A0", "")
@@ -103,9 +117,15 @@ public class MonthReportsFiller {
                                     } else {
                                         copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
                                     }
-                                    if (faultReason.toLowerCase().contains("заменили")
-                                            || faultReason.toLowerCase().contains("заменен")
-                                            || faultReason.toLowerCase().contains("заменён")) {
+
+                                    String reasonLower = faultReason.toLowerCase();
+
+                                    if (reasonLower.contains("заменили")
+                                            || reasonLower.contains("заменен")
+                                            || reasonLower.contains("заменён")) {
+                                        String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
+                                        fillBdDefection(row, defectionDbSheet);
+
 
                                     }
 
@@ -118,9 +138,9 @@ public class MonthReportsFiller {
                     try (FileOutputStream fos = new FileOutputStream(outputFilePathOFlog)) {
                         templateWorkbook.write(fos);
                     }
-                    try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
-                        templateWorkbook.write(fos2);
-                    }
+//                    try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
+//                        templateWorkbook.write(fos2);
+//                    }
                     System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
 
 
@@ -144,7 +164,10 @@ public class MonthReportsFiller {
 
 
                     templateWorkbook.close(); // Закрываем Workbook
-                } catch ()
+                } catch (IOException e) {
+                    logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
+                    e.printStackTrace();
+                }
             } catch (IOException e) {
                 logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
                 e.printStackTrace();
@@ -158,6 +181,53 @@ public class MonthReportsFiller {
 
         }
         logger.info("Совпавших строк в отчете {}:", reportRows);
+    }
+
+    private static void fillEchelonProductionDateByNumber(String productRangePath) {
+        try (FileInputStream prodRangeFis = new FileInputStream(productRangePath);
+             XSSFWorkbook prodRangeWorkbook = new XSSFWorkbook(prodRangeFis)) {
+            XSSFSheet prodRangeSheet = prodRangeWorkbook.getSheet("Свод");
+            for (Row currentRow : prodRangeSheet) {
+                echelonProductionDateByNumber.put(getCellStringValue(currentRow.getCell(1)),
+                        getCellStringValue(currentRow.getCell(2)) + "_" +
+                                getCellStringValue(currentRow.getCell(3)));
+            }
+        } catch (
+                FileNotFoundException e) {
+            logger.error("Файл не найден: {}", e.getMessage());
+        } catch (IOException e) {
+            logger.error("Ошибка чтения/записи файла: {}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static String createDbDefectionRowDataString(Row row, LocalDate localDate, String faultReason) {
+        String changedEquipmentType = faultReason.toLowerCase().contains("концентратор") ? "Концентратор" : "Электросчётчик";
+        Sheet worksheet = row.getSheet();
+        return new StringJoiner("_")
+                .add("РРЭ РЖД")
+                .add(localDate.format(DATE_FORMATTER_DDMMYYYY))
+                .add(String.valueOf(localDate.getYear()))
+                .add("ст. " + getCellStringValue(row.getCell(findColumnIndex(worksheet, ZHD_STATION, 0))) + " "
+                        + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
+                        + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
+                )
+                .add(changedEquipmentType)
+                .add()
+                .add(getEquipmentType(faultReason)
+
+
+                        .toString();
+
+    }
+
+    private static String getEquipmentType(String faultReason) {
+    }
+
+    private static void fillBdDefection(String row, Sheet defectionDbSheet) {
+        Row lastDbRow = defectionDbSheet.createRow(defectionDbSheet.getLastRowNum() + 1);
+        lastDbRow.getCell(0).setCellValue("РРЭ РЖД");
+        lastDbRow.getCell(1).setCellValue("РРЭ РЖД");
     }
 
     private static void setIReportDate(Sheet sheet) {
@@ -250,7 +320,7 @@ public class MonthReportsFiller {
             if (cell != null) {
                 String cellValue = getCellStringValue(cell);
                 if (cellValue != null && !cellValue.isEmpty()) {
-                    if (concatenatedData.length() > 0) {
+                    if (!concatenatedData.isEmpty()) {
                         concatenatedData.append("/");
                     }
                     concatenatedData.append(cellValue);
