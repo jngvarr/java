@@ -212,19 +212,25 @@ public class MonthReportsFiller {
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
                 )
-                .add(changedEquipmentType)
+                .add(getChangedEquipmentModelAndNumber(row, changedEquipmentType))
                 .add()
-                .add(getEquipmentType(faultReason)
+//                .add(getEquipmentType(faultReason)
+                .toString();
+    }
 
-
-                        .toString();
+    private static CharSequence getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
+        Sheet worksheet = row.getSheet();
+        return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704" + getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0)))
+                : getCellStringValue(row.getCell(findColumnIndex(worksheet, "Марка счётчика", 0))) + "_" +
+                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0)));
 
     }
 
     private static String getEquipmentType(String faultReason) {
+        return faultReason;
     }
 
-    private static void fillBdDefection(String row, Sheet defectionDbSheet) {
+    private static void fillBdDefection(Row row, Sheet defectionDbSheet) {
         Row lastDbRow = defectionDbSheet.createRow(defectionDbSheet.getLastRowNum() + 1);
         lastDbRow.getCell(0).setCellValue("РРЭ РЖД");
         lastDbRow.getCell(1).setCellValue("РРЭ РЖД");
