@@ -99,11 +99,12 @@ public class MonthReportsFiller {
 
                             //Задаем месяц отчета в ручную
                             int year = 2026;
-                            int month = 1;
+                            int month = 2;
 
                             int eventYear = localDate.getYear();
                             int eventMonth = localDate.getMonthValue();
-                            if (month == eventMonth && year == eventYear) {
+                            if (month == eventMonth - 1 && year == eventYear) {
+//                            if (month == eventMonth && year == eventYear) {
 //                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                                 reportRows++;
                                 // Копируем строку в целевой лист
@@ -124,7 +125,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-                                        fillBdDefection(row, defectionDbSheet);
+//                                        fillBdDefection(row, defectionDbSheet);
 
 
                                     }
@@ -213,7 +214,7 @@ public class MonthReportsFiller {
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
                 )
                 .add(getChangedEquipmentModelAndNumber(row, changedEquipmentType))
-                .add()
+//                .add()
 //                .add(getEquipmentType(faultReason)
                 .toString();
     }
@@ -239,7 +240,7 @@ public class MonthReportsFiller {
     private static void setIReportDate(Sheet sheet) {
         String iReportNumber = "№ " + today.getMonthValue() + " от " + today.with(TemporalAdjusters.lastDayOfMonth())
                 .format(DATE_FORMATTER_DDMMMYYYY);
-        System.out.println(iReportNumber);
+        logger.info("Дата отчёта: {}", iReportNumber);
         sheet.getRow(6).getCell(0).setCellValue(iReportNumber);
     }
 
