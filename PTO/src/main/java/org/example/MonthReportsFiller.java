@@ -29,17 +29,23 @@ import static org.example.UpgradedDaysDataFiller.PRESENT_YEAR;
 public class MonthReportsFiller {
     private static final LocalDate today = LocalDate.now();
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER_MM = DateTimeFormatter.ofPattern("MM");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMYYYY = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final String DATE_COLUMN = "Дата регистрации";
+    private static final String EEL = "Линейный отдел";
     private static final String ZHD_STATION = "Железнодорожная станция";
     private static final String SUBSTATION = "ТП/КТП";
     private static final String METERING_POINT = "Точка учёта";
-    private static final String FAULT_REASON_COL_NUM = "Причина неисправности";
+    private static final String METERING_POINT_MOUNT_DATE = "Дата монтажа ТУ";
+    private static final String FAULT_REASON = "Причина неисправности";
+    private static final String INFORMER_FIO = "ФИО информатора";
 
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
 
     private static int iReportRows;
+    private static Integer actCounter;
+
     private static final Map<String, String> echelonProductionDateByNumber = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
@@ -78,7 +84,7 @@ public class MonthReportsFiller {
                     setIReportDate(iReportSheet);
 
                     int dateColIndex = findColumnIndex(dataSheet, DATE_COLUMN, 0);
-                    int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON_COL_NUM, 0);
+                    int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON, 0);
 
                     for (Row row : dataSheet) {
                         Cell dateCell = row.getCell(dateColIndex);
@@ -99,12 +105,11 @@ public class MonthReportsFiller {
 
                             //Задаем месяц отчета в ручную
                             int year = 2026;
-                            int month = 2;
+                            int month = 1;
 
                             int eventYear = localDate.getYear();
                             int eventMonth = localDate.getMonthValue();
-                            if (month == eventMonth - 1 && year == eventYear) {
-//                            if (month == eventMonth && year == eventYear) {
+                            if (month == eventMonth && year == eventYear) {
 //                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                                 reportRows++;
                                 // Копируем строку в целевой лист
@@ -125,7 +130,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-//                                        fillBdDefection(row, defectionDbSheet);
+                                        fillBdDefection(row, defectionDbSheet);
 
 
                                     }
@@ -190,8 +195,9 @@ public class MonthReportsFiller {
             XSSFSheet prodRangeSheet = prodRangeWorkbook.getSheet("Свод");
             for (Row currentRow : prodRangeSheet) {
                 echelonProductionDateByNumber.put(getCellStringValue(currentRow.getCell(1)),
-                        getCellStringValue(currentRow.getCell(2)) + "_" +
-                                getCellStringValue(currentRow.getCell(3)));
+                        getCellStringValue(currentRow.getCell(3)) + "_" +
+                                getCellStringValue(currentRow.getCell(0)) + "_" +
+                                getCellStringValue(currentRow.getCell(2)));
             }
         } catch (
                 FileNotFoundException e) {
@@ -205,30 +211,49 @@ public class MonthReportsFiller {
     private static String createDbDefectionRowDataString(Row row, LocalDate localDate, String faultReason) {
         String changedEquipmentType = faultReason.toLowerCase().contains("концентратор") ? "Концентратор" : "Электросчётчик";
         Sheet worksheet = row.getSheet();
+        String date = localDate.format(DATE_FORMATTER_DDMMYYYY);
+        String changedEquipmentModelAndNumber = getChangedEquipmentModelAndNumber(row, changedEquipmentType);
+        String actNumber = getActNumber(localDate);
         return new StringJoiner("_")
                 .add("РРЭ РЖД")
-                .add(localDate.format(DATE_FORMATTER_DDMMYYYY))
+                .add(date)
                 .add(String.valueOf(localDate.getYear()))
                 .add("ст. " + getCellStringValue(row.getCell(findColumnIndex(worksheet, ZHD_STATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
                 )
-                .add(getChangedEquipmentModelAndNumber(row, changedEquipmentType))
-//                .add()
-//                .add(getEquipmentType(faultReason)
+                .add(changedEquipmentModelAndNumber)
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT_MOUNT_DATE, 0))))
+                .add("Фирма \"Echelon Corporation\"")
+                .add("12 месяцев")
+                .add(changedEquipmentType.equals("Концентратор") ? "ИВКЭ" : "ИИК")
+                .add("Изделие в сборе")
+                .add("Не используются")
+                .add("Постгарантийное обслуживание")
+                .add("Не гарантийный")
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, INFORMER_FIO, 0))))
+                .add(faultReason)
+                .add("Выполнить замену")
+                .add(date)
+                .add(actNumber)
+                .add("-_-_-")
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, EEL, 0))))
+                .add(" ")
+                .add(date)
+                .add(actNumber)
                 .toString();
     }
 
-    private static CharSequence getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
-        Sheet worksheet = row.getSheet();
-        return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704" + getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0)))
-                : getCellStringValue(row.getCell(findColumnIndex(worksheet, "Марка счётчика", 0))) + "_" +
-                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0)));
-
+    private static String getActNumber(LocalDate localDate) {
+        return "РРЭ" + localDate.format(DATE_FORMATTER_MM) + ++actCounter;
     }
 
-    private static String getEquipmentType(String faultReason) {
-        return faultReason;
+    private static String getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
+        Sheet worksheet = row.getSheet();
+        return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
+                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_2011"
+                : echelonProductionDateByNumber.get(getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0))));
+
     }
 
     private static void fillBdDefection(Row row, Sheet defectionDbSheet) {
@@ -240,7 +265,7 @@ public class MonthReportsFiller {
     private static void setIReportDate(Sheet sheet) {
         String iReportNumber = "№ " + today.getMonthValue() + " от " + today.with(TemporalAdjusters.lastDayOfMonth())
                 .format(DATE_FORMATTER_DDMMMYYYY);
-        logger.info("Дата отчёта: {}", iReportNumber);
+        System.out.println(iReportNumber);
         sheet.getRow(6).getCell(0).setCellValue(iReportNumber);
     }
 

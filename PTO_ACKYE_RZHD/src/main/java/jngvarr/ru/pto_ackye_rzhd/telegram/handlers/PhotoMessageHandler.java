@@ -263,14 +263,12 @@ public class PhotoMessageHandler implements UpdateHandler {
             conversationStateService.appendProcessInfo(userId, pending.getDeviceNumber() + "_" + pending.getAdditionalInfo() + "_");
         } else
             conversationStateService.appendProcessInfo(userId, pending.getType().equals("concentrator") ? pending.getDeviceNumber() + "_" : pending.getAdditionalInfo() + "_");
-
     }
 
     public void changeReasonInput(long chatId, long userId, OtoType operationType) {
         tBotMessageService.editMessage(chatId, userId, "Введите причину замены: ");
         conversationStateService.setSequenceNumber(userId, REPLACED_EQUIPMENT_DATUM.get(operationType).size());
         conversationStateService.clearProcessState(userId);
-
     }
 
     private void setProcessState(OtoType operationType, long userId) {
