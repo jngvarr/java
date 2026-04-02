@@ -44,9 +44,10 @@ public class MonthReportsFiller {
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
 
     private static int iReportRows;
-    private static Integer actCounter;
+    private static Integer actCounter = 0;
 
     private static final Map<String, String> echelonProductionDateByNumber = new HashMap<>();
+    private static boolean isIReportDateSet = false;
 
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
@@ -62,7 +63,7 @@ public class MonthReportsFiller {
         String pdfFilePathOFlog = "d:\\Downloads\\пто\\month_reports\\templates\\ОФОЖ.pdf";       // Результирующий файл PDF
         String pdfFilePathIReport = "d:\\Downloads\\пто\\month_reports\\templates\\Акт осмотра.pdf";       // Результирующий файл PDF
         int reportRows = 0;
-        int ofLogSheetInsertPosition = 8;
+        int ofLogSheetInsertPosition = 7;
         int iReportSheetInsertPosition = 10;
         fillEchelonProductionDateByNumber(productRangePath);
 
@@ -81,11 +82,9 @@ public class MonthReportsFiller {
                     XSSFSheet defectionDbSheet = dbDefectionWorkbook.getSheet("БД");
                     CellStyle commonCellStyle = createCommonCellStyle(ofLogSheet);
 
-                    setIReportDate(iReportSheet);
-
                     int dateColIndex = findColumnIndex(dataSheet, DATE_COLUMN, 0);
                     int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON, 0);
-
+                    LocalDate localDate = null;
                     for (Row row : dataSheet) {
                         Cell dateCell = row.getCell(dateColIndex);
                         Cell faultReasonCell = row.getCell(reasonColIndex);
@@ -97,7 +96,7 @@ public class MonthReportsFiller {
 //                            LocalDate localDate = cellDate.toInstant()
 //                                    .atZone(ZoneId.systemDefault())
 //                                    .toLocalDate();
-                            LocalDate localDate = dateCell.getLocalDateTimeCellValue().toLocalDate();
+                            localDate = dateCell.getLocalDateTimeCellValue().toLocalDate();
 
 
 //                        int year = LocalDate.now().getYear();
@@ -105,11 +104,13 @@ public class MonthReportsFiller {
 
                             //Задаем месяц отчета в ручную
                             int year = 2026;
-                            int month = 1;
+                            int month = 3;
 
                             int eventYear = localDate.getYear();
                             int eventMonth = localDate.getMonthValue();
+
                             if (month == eventMonth && year == eventYear) {
+                                if (!isIReportDateSet) setIReportDate(iReportSheet, localDate);
 //                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
                                 reportRows++;
                                 // Копируем строку в целевой лист
@@ -130,7 +131,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-                                        fillBdDefection(row, defectionDbSheet);
+//                                        fillBdDefection(row, defectionDbSheet);
 
 
                                     }
@@ -262,11 +263,12 @@ public class MonthReportsFiller {
         lastDbRow.getCell(1).setCellValue("РРЭ РЖД");
     }
 
-    private static void setIReportDate(Sheet sheet) {
-        String iReportNumber = "№ " + today.getMonthValue() + " от " + today.with(TemporalAdjusters.lastDayOfMonth())
+    private static void setIReportDate(Sheet sheet, LocalDate localDate) {
+        String iReportNumber = "№ " + localDate.getMonthValue() + " от " + localDate.with(TemporalAdjusters.lastDayOfMonth())
                 .format(DATE_FORMATTER_DDMMMYYYY);
         System.out.println(iReportNumber);
         sheet.getRow(6).getCell(0).setCellValue(iReportNumber);
+        isIReportDateSet = true;
     }
 
     private static void copyRowsData(Row sourceRow, XSSFSheet sheet, int insertPosition, CellStyle style, boolean ofog) {
