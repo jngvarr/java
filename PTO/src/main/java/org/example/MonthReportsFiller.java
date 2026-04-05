@@ -131,7 +131,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-//                                        fillBdDefection(row, defectionDbSheet);
+                                        fillBdDefection(dbDefectionRowDataString, defectionDbSheet);
 
 
                                     }
@@ -246,7 +246,7 @@ public class MonthReportsFiller {
     }
 
     private static String getActNumber(LocalDate localDate) {
-        return "РРЭ" + localDate.format(DATE_FORMATTER_MM) + ++actCounter;
+        return "РРЭ-" + localDate.format(DATE_FORMATTER_MM) + "-" + ++actCounter;
     }
 
     private static String getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
@@ -257,10 +257,12 @@ public class MonthReportsFiller {
 
     }
 
-    private static void fillBdDefection(Row row, Sheet defectionDbSheet) {
+    private static void fillBdDefection(String row, Sheet defectionDbSheet) {
         Row lastDbRow = defectionDbSheet.createRow(defectionDbSheet.getLastRowNum() + 1);
-        lastDbRow.getCell(0).setCellValue("РРЭ РЖД");
-        lastDbRow.getCell(1).setCellValue("РРЭ РЖД");
+        String[] data = row.split("_");
+        for (int i = 0; i < lastDbRow.getLastCellNum(); i++) {
+            lastDbRow.createCell(i).setCellValue(data[i]);
+        }
     }
 
     private static void setIReportDate(Sheet sheet, LocalDate localDate) {
