@@ -116,6 +116,7 @@ public class MonthReportsFiller {
                                 // Копируем строку в целевой лист
                                 if (faultReasonCell != null && faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
 
+
                                     String faultReason = faultReasonCell.getStringCellValue().trim()
                                             .replace("\u00A0", "")
                                             .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
