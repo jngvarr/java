@@ -30,6 +30,7 @@ public class MonthReportsFiller {
     private static final LocalDate today = LocalDate.now();
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_MM = DateTimeFormatter.ofPattern("MM");
+    private static final DateTimeFormatter DATE_FORMATTER_YYYY = DateTimeFormatter.ofPattern("yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_DDMMMYYYY = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final String DATE_COLUMN = "Дата регистрации";
@@ -38,6 +39,7 @@ public class MonthReportsFiller {
     private static final String SUBSTATION = "ТП/КТП";
     private static final String METERING_POINT = "Точка учёта";
     private static final String METERING_POINT_MOUNT_DATE = "Дата монтажа ТУ";
+    private static final String FAULT_MANIFESTATION = "Проявление неисправности";
     private static final String FAULT_REASON = "Причина неисправности";
     private static final String INFORMER_FIO = "ФИО информатора";
 
@@ -54,6 +56,7 @@ public class MonthReportsFiller {
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
         String oZhDataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
         String dbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация.xlsx";
+        String outputDbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация2.xlsx";
         String productRangePath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\Номенклатура KNUM(EM).xlsx";
         String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + "\\АД-АЗ\\";
         // Путь для сохранения нового файла
@@ -104,7 +107,7 @@ public class MonthReportsFiller {
 
                             //Задаем месяц отчета в ручную
                             int year = 2026;
-                            int month = 3;
+                            int month = 4;
 
                             int eventYear = localDate.getYear();
                             int eventMonth = localDate.getMonthValue();
@@ -133,10 +136,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
                                         fillBdDefection(dbDefectionRowDataString, defectionDbSheet);
-
-
                                     }
-
                                 }
                             }
                         }
@@ -149,7 +149,11 @@ public class MonthReportsFiller {
 //                    try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
 //                        templateWorkbook.write(fos2);
 //                    }
+                    try (FileOutputStream fos2 = new FileOutputStream(outputDbDefectionPath)) {
+                        dbDefectionWorkbook.write(fos2);
+                    }
                     System.out.println("Данные успешно добавлены и сохранены в файл: " + outputFilePathOFlog);
+                    System.out.println("Данные успешно добавлены и сохранены в файл: " + outputDbDefectionPath);
 
 
 //                PdfWriter pdfWriter1 = new PdfWriter(pdfFilePathOFlog);
@@ -168,7 +172,7 @@ public class MonthReportsFiller {
 //                // Добавляем таблицу в PDF документ
 //                document.add(table);
 
-                    System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
+//                    System.out.println("Excel файл успешно преобразован в PDF: " + pdfFilePathOFlog);
 
 
                     templateWorkbook.close(); // Закрываем Workbook
@@ -224,6 +228,7 @@ public class MonthReportsFiller {
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
                 )
+                .add(changedEquipmentType)
                 .add(changedEquipmentModelAndNumber)
                 .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT_MOUNT_DATE, 0))))
                 .add("Фирма \"Echelon Corporation\"")
@@ -234,6 +239,7 @@ public class MonthReportsFiller {
                 .add("Постгарантийное обслуживание")
                 .add("Не гарантийный")
                 .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, INFORMER_FIO, 0))))
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, FAULT_MANIFESTATION, 0))))
                 .add(faultReason)
                 .add("Выполнить замену")
                 .add(date)
@@ -253,15 +259,16 @@ public class MonthReportsFiller {
     private static String getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
         Sheet worksheet = row.getSheet();
         return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
-                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_2011"
+                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_" +  LocalDate.of(Integer.parseInt("2011"),1,1)
                 : echelonProductionDateByNumber.get(getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0))));
 
     }
 
     private static void fillBdDefection(String row, Sheet defectionDbSheet) {
         Row lastDbRow = defectionDbSheet.createRow(defectionDbSheet.getLastRowNum() + 1);
-        String[] data = row.split("_");
-        for (int i = 0; i < lastDbRow.getLastCellNum(); i++) {
+        String[] data = row.split("_", -1);
+//        for (int i = 0; i < lastDbRow.getLastCellNum(); i++) {
+        for (int i = 0; i < data.length; i++) {
             lastDbRow.createCell(i).setCellValue(data[i]);
         }
     }
