@@ -46,7 +46,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static String orderMonth;
     private static String orderYear;
 
-    private static final int[] meters = new int [3];
+    private static final int[] meters = new int[3];
 
     private static int dc = 0;
 
@@ -70,6 +70,12 @@ public class ExcelMerger { // Объединение нескольких ана
             counts[index]++;
         }
     }
+
+    static final Map<String, Integer> typeMap = Map.of(
+            "1021", 0,
+            "1023", 1,
+            "2023", 2
+    );
 
 
     public static void main(String[] args) throws IOException {
@@ -419,46 +425,61 @@ public class ExcelMerger { // Объединение нескольких ана
 
     private static void setMonthSchedule(String path, Sheet resultSheet) {
         String monthFromFileName = extractMonthFromFileName(path.toLowerCase());
-        String source;
         int monthColumnIndex = findMonthColumnIndex(resultSheet, monthFromFileName);
         if (monthColumnIndex == -1) {
             System.out.println("Month column not found.");
             return;
         }
-        if (path.contains("ИВКЭ")) {
-            dcNumberColNumber = DC_COLUMN_NUMBER_DC_SHEET;
-            source = "ИВКЭ";
-        } else {
-            source = "ИИК";
-            dcNumberColNumber = DC_COLUMN_NUMBER_METER_SHEET;
-        }
 
+        boolean isIvke = path.contains("ИВКЭ");
+        String source = isIvke ? "ИВКЭ" : "ИИК";
+        dcNumberColNumber = isIvke ? DC_COLUMN_NUMBER_DC_SHEET : DC_COLUMN_NUMBER_METER_SHEET;
 
         for (int i = 1; i <= resultSheet.getLastRowNum(); i++) {
             Row targetRow = resultSheet.getRow(i);
+            if (targetRow == null) continue;
+
             Cell targetRowCell = targetRow.getCell(monthColumnIndex);
-            if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
 //                logger.info("Номер строки: {}, ячейка {}",targetRowCell.getRow().getRowNum(), i);
-                String counterType = !"ИВКЭ".equals(source) ? targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue() : targetRow.getCell(9).getStringCellValue();
-                String key = setKey(targetRow, monthColumnIndex);
+            String monthValue = getCellStringValue(targetRowCell);
+            if (monthValue == null || monthValue.isEmpty()) continue;
 
-                if (path.contains("ИВКЭ")) dc++;
+            String key = setKey(targetRow, monthColumnIndex);
+            DCEntry entry = DC.computeIfAbsent(key, k -> new DCEntry(source));
 
-                DC.putIfAbsent(key, new DCEntry(source));
-                DCEntry entry = DC.get(key);
+            if (!isIvke) {
+                Cell counterCell = targetRow.getCell(COUNTER_TYPE_COL_NUMBER);
+                String counterType = getCellStringValue(counterCell);
 
-                if (counterType.contains("1021")) {
-                    entry.incrementCount(0);
-                    meters[0]++;
-                } else if (counterType.contains("1023")) {
-                    entry.incrementCount(1);
-                    meters[1]++;
-                } else if (counterType.contains("2023")) {
-                    entry.incrementCount(2);
-                    meters[2]++;
+                if (counterType == null) continue;
+
+                for (Map.Entry<String, Integer> e : typeMap.entrySet()) {
+                    if (counterType.contains(e.getKey())) {
+                        entry.incrementCount(e.getValue());
+                        meters[e.getValue()]++;
+                        break;
+                    }
                 }
+            } else dc++;
 
-            }
+//            if (getCellStringValue(targetRowCell) != null && !getCellStringValue(targetRowCell).isEmpty()) {
+//
+//                if (!"ИВКЭ".equals(source)) {
+//                    counterType = targetRow.getCell(COUNTER_TYPE_COL_NUMBER).getStringCellValue();
+//                } else dc++;
+//
+//
+//                if (counterType.contains("1021")) {
+//                    entry.incrementCount(0);
+//                    meters[0]++;
+//                } else if (counterType.contains("1023")) {
+//                    entry.incrementCount(1);
+//                    meters[1]++;
+//                } else if (counterType.contains("2023")) {
+//                    entry.incrementCount(2);
+//                    meters[2]++;
+//                }
+//            }
         }
     }
 
