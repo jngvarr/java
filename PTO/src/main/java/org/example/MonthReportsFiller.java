@@ -42,6 +42,7 @@ public class MonthReportsFiller {
     private static final String FAULT_MANIFESTATION = "Проявление неисправности";
     private static final String FAULT_REASON = "Причина неисправности";
     private static final String INFORMER_FIO = "ФИО информатора";
+    private static final String IMPLEMENTOR_COMMENTS = "Комментарии от бригады или НТЭЛ";
 
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
 
@@ -220,10 +221,11 @@ public class MonthReportsFiller {
         String date = localDate.format(DATE_FORMATTER_DDMMYYYY);
         String changedEquipmentModelAndNumber = getChangedEquipmentModelAndNumber(row, changedEquipmentType);
         String actNumber = getActNumber(localDate);
+        String implementorComments = getCellStringValue(row.getCell(findColumnIndex(worksheet, IMPLEMENTOR_COMMENTS, 0)));
         return new StringJoiner("_")
                 .add("РРЭ РЖД")
                 .add(date)
-                .add(String.valueOf(localDate.getYear()))
+                .add(localDate.format(DATE_FORMATTER_YYYY))
                 .add("ст. " + getCellStringValue(row.getCell(findColumnIndex(worksheet, ZHD_STATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
@@ -244,11 +246,18 @@ public class MonthReportsFiller {
                 .add("Выполнить замену")
                 .add(date)
                 .add(actNumber)
-                .add("-_-_-")
+                .add("")
+                .add("")
+                .add("")
                 .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, EEL, 0))))
-                .add(" ")
+                .add(getChangedEquipmentModelAndNumber(implementorComments))
+                .add("1")
+                .add("")
                 .add(date)
                 .add(actNumber)
+                .add("")
+                .add("")
+                .add(implementorComments)
                 .toString();
     }
 
@@ -259,8 +268,19 @@ public class MonthReportsFiller {
     private static String getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
         Sheet worksheet = row.getSheet();
         return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
-                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_" +  LocalDate.of(Integer.parseInt("2011"),1,1)
+                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_" + LocalDate.of(Integer.parseInt("2011"), 1, 1)
                 : echelonProductionDateByNumber.get(getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0))));
+
+    }
+
+    private static String getChangedEquipmentModelAndNumber(String implementorComments) {
+        int firstIndex = implementorComments.indexOf("на");
+        String secondMeterNumber = implementorComments.substring(firstIndex + 3, firstIndex + 13);
+
+
+        return implementorComments.contains("Концентратор".toLowerCase()) ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
+                secondMeterNumber
+                : echelonProductionDateByNumber.get(secondMeterNumber);
 
     }
 
