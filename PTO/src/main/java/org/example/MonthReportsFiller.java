@@ -216,7 +216,8 @@ public class MonthReportsFiller {
     }
 
     private static String createDbDefectionRowDataString(Row row, LocalDate localDate, String faultReason) {
-        String changedEquipmentType = faultReason.toLowerCase().contains("концентратор") ? "Концентратор" : "Электросчётчик";
+        boolean isIvke = faultReason.toLowerCase().contains("концентратор");
+        String changedEquipmentType = isIvke ? "Концентратор" : "Электросчётчик";
         Sheet worksheet = row.getSheet();
         String date = localDate.format(DATE_FORMATTER_DDMMYYYY);
         String changedEquipmentModelAndNumber = getChangedEquipmentModelAndNumber(row, changedEquipmentType);
@@ -255,10 +256,15 @@ public class MonthReportsFiller {
                 .add("")
                 .add(date)
                 .add(actNumber)
-                .add("")
-                .add("")
+                .add(isIvke ? "-" : getIndication(implementorComments, 1))
+                .add(isIvke ? "-" : getIndication(implementorComments, 2))
                 .add(implementorComments)
                 .toString();
+    }
+
+    private static CharSequence getIndication(String implementorComments, int i) {
+        return i == 1 ? implementorComments.substring(implementorComments.indexOf("(") + 1, implementorComments.indexOf(")") - 1).trim() :
+        implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")") - 1).trim();
     }
 
     private static String getActNumber(LocalDate localDate) {
@@ -280,8 +286,11 @@ public class MonthReportsFiller {
 
         return implementorComments.contains("Концентратор".toLowerCase()) ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
                 secondMeterNumber
-                : echelonProductionDateByNumber.get(secondMeterNumber);
+                : cutTheDate(echelonProductionDateByNumber.getOrDefault(secondMeterNumber, "-_№" + secondMeterNumber + "_"));
+    }
 
+    private static String cutTheDate(String data) {
+        return data.substring(0, data.lastIndexOf("_"));
     }
 
     private static void fillBdDefection(String row, Sheet defectionDbSheet) {
