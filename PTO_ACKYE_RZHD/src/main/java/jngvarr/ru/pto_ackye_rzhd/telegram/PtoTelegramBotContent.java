@@ -154,6 +154,7 @@ public class PtoTelegramBotContent {
             "ЭЭЛ-4", "НТЭЛ-4"
     );
 
+
     public static final Map<String, String> DISCONNECT_REASON = Map.of(
             "Потребитель отключен.", "NOT",
             "Сезонный потребитель.", "seasonNOT",

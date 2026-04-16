@@ -44,6 +44,18 @@ public class MonthReportsFiller {
     private static final String INFORMER_FIO = "ФИО информатора";
     private static final String IMPLEMENTOR_COMMENTS = "Комментарии от бригады или НТЭЛ";
 
+    public static final Map<String, String> PERSONAL = Map.of(
+            "ЭЭЛ-1", "Баяскин Д.Н._ведущий инженер-электрик ООО \"Проект №7\"_Щербак В.Н._начальник НТЭЛ-1",
+            "НЭЭЛ-1", "Сороковых А.Е._Начальник отдела АСКУЭ_Щербак В.Н._начальник НТЭЛ-1",
+            "ЭЭЛ-2", "Брусенин В.В._ведущий инженер-электрик ООО \"Проект №7\"_Макаров А.Ю._начальник НТЭЛ-2",
+            "ЭЭЛ-2.1", "Сороковых А.Е._Начальник отдела АСКУЭ_Бадажкова Н.Ю._начальник НТЭЛ-2.1",
+            "ЭЭЛ-3", "Грицына В.Г._ведущий инженер-электрик ООО \"Проект №7\"_Тараканов С.В._начальник НТЭЛ-3",
+            "ЭЭЛ-3.1", "Стрекалов О.Ю._ведущий инженер-электрик ООО \"Проект №7\"_Пивненко Д.А._начальник НТЭЛ-3.1",
+            "ЭЭЛ-3.2", "Сальников С.И._инженер-электрик ООО \"Проект №7\"_Монташева С.А._начальник НТЭЛ-3.2",
+            "ЭЭЛ-3.3", "Попов А.В._ведущий инженер-электрик ООО \"Проект №7\"_Иванова В.П._начальник НТЭЛ-3.3",
+            "ЭЭЛ-4", "Козлов В.С._электромонтажник ООО \"Проект №7\"_Столяров С.В._начальник НТЭЛ-4"
+    );
+
     private static final Logger logger = LoggerFactory.getLogger(MonthReportsFiller.class);
 
     private static int iReportRows;
@@ -55,6 +67,7 @@ public class MonthReportsFiller {
     public static void main(String[] args) throws IOException {
         // Путь к вашему шаблону
         String templatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_report_template.xlsx";
+        String actsTemplatePath = "d:\\Downloads\\пто\\month_reports\\templates\\month_ad_az_template.xlsx";
         String oZhDataPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\План ОТО\\ОЖ.xlsx";
         String dbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация.xlsx";
         String outputDbDefectionPath = "d:\\YandexDisk\\ПТО РРЭ РЖД\\ДЕФЕКТАЦИЯ\\БД-Дефектация2.xlsx";
@@ -137,6 +150,7 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
                                         fillBdDefection(dbDefectionRowDataString, defectionDbSheet);
+                                        createDefectionAct(dbDefectionRowDataString, actsTemplatePath);
                                     }
                                 }
                             }
@@ -194,6 +208,33 @@ public class MonthReportsFiller {
 
         }
         logger.info("Совпавших строк в отчете {}:", reportRows);
+    }
+
+    private static void createDefectionAct(String defectionDbRowData, String actsTemplatePath) {
+        String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + "\\АД-АЗ\\";
+
+        try (FileInputStream templateFis = new FileInputStream(actsTemplatePath);
+             XSSFWorkbook actsTemplateWorkbook = new XSSFWorkbook(templateFis)) {
+            Sheet actSheet = actsTemplateWorkbook.getSheet("АД-АЗ");
+            String[] data = defectionDbRowData.split("_");
+            String[] personalData = PERSONAL.get(data[25]).split("_");
+            String adAzPath = adAzPathPrefix + data[21] + " " + personalData[0] + ".xlsx";
+            actSheet.getRow(6).getCell(3).setCellValue(data[21]);
+            actSheet.getRow(6).getCell(7).setCellValue(data[1]);
+//            actSheet.getRow(10).getCell(7).setCellValue("АИИС КУЭ" + data[0].substring(data[0].indexOf(0, 3)) + " ОАО РЖД");
+            actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
+            actSheet.getRow(10).getCell(16).setCellValue(data[3]);
+            actSheet.getRow(11).getCell(1).setCellValue(personalData[1] + " " + personalData[0]);
+            actSheet.getRow(13).getCell(16).setCellValue(data[4] + " " + data[5]);
+            actSheet.getRow(14).getCell(1).setCellValue(personalData[3] + " " + personalData[2]);
+
+            try (FileOutputStream fos = new FileOutputStream(adAzPath)) {
+                actsTemplateWorkbook.write(fos);
+            }
+        } catch (IOException e) {
+            logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static void fillEchelonProductionDateByNumber(String productRangePath) {
@@ -264,8 +305,20 @@ public class MonthReportsFiller {
 
     private static CharSequence getIndication(String implementorComments, int i) {
         return i == 1 ? implementorComments.substring(implementorComments.indexOf("(") + 1, implementorComments.indexOf(")") - 1).trim() :
-        implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")") - 1).trim();
+                implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")") - 1).trim();
     }
+
+//    private static String getIndication(String text, int index) {
+//        Matcher m = Pattern.compile("\\(([^)]+)\\)").matcher(text);
+//
+//        int i = 0;
+//        while (m.find()) {
+//            if (i++ == index) {
+//                return m.group(1).trim();
+//            }
+//        }
+//        return "-";
+//    }
 
     private static String getActNumber(LocalDate localDate) {
         return "РРЭ-" + localDate.format(DATE_FORMATTER_MM) + "-" + ++actCounter;
