@@ -220,13 +220,55 @@ public class MonthReportsFiller {
             String[] personalData = PERSONAL.get(data[25]).split("_");
             String adAzPath = adAzPathPrefix + data[21] + " " + personalData[0] + ".xlsx";
             actSheet.getRow(6).getCell(3).setCellValue(data[21]);
+            actSheet.getRow(6).getCell(18).setCellValue(data[21]);
             actSheet.getRow(6).getCell(7).setCellValue(data[1]);
-//            actSheet.getRow(10).getCell(7).setCellValue("АИИС КУЭ" + data[0].substring(data[0].indexOf(0, 3)) + " ОАО РЖД");
-            actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
+            actSheet.getRow(6).getCell(22).setCellValue(data[1]);
+            actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0].substring(0, 3) + " ОАО «РЖД»");
+            actSheet.getRow(7).getCell(19).setCellValue("АИИС КУЭ " + data[0].substring(0, 3) + " ОАО «РЖД»");
+//            actSheet.getRow(7).getCell(19).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
+//            actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
             actSheet.getRow(10).getCell(16).setCellValue(data[3]);
             actSheet.getRow(11).getCell(1).setCellValue(personalData[1] + " " + personalData[0]);
-            actSheet.getRow(13).getCell(16).setCellValue(data[4] + " " + data[5]);
+            actSheet.getRow(13).getCell(16).setCellValue(data[4]);
             actSheet.getRow(14).getCell(1).setCellValue(personalData[3] + " " + personalData[2]);
+            actSheet.getRow(17).getCell(5).setCellValue(data[4]);
+            actSheet.getRow(18).getCell(5).setCellValue(data[5]);
+            actSheet.getRow(19).getCell(7).setCellValue(data[6]);
+            actSheet.getRow(19).getCell(17).setCellValue(data[5] + " " + data[6]);
+            actSheet.getRow(19).getCell(29).setCellValue(data[28]); // Количество
+            if (data[32].trim().equals("кВтч") || data[32].trim().equals("-")) {
+                actSheet.getRow(20).getCell(17).setCellValue("");
+            } else {
+                actSheet.getRow(20).getCell(17).setCellValue("Конечные показания: " + data[32]);
+            }//Конечные показания:
+            actSheet.getRow(20).getCell(7).setCellValue(data[7]);
+            actSheet.getRow(21).getCell(7).setCellValue(data[9]);
+            actSheet.getRow(22).getCell(7).setCellValue(data[10]);
+            actSheet.getRow(23).getCell(7).setCellValue(data[8]);
+            actSheet.getRow(24).getCell(9).setCellValue(data[14]); // Гарантийное/ Постгарантийное обслуживание
+            actSheet.getRow(25).getCell(7).setCellValue(data[12]); // комплектность
+            actSheet.getRow(26).getCell(7).setCellValue(data[3]); // Место установки (ТП, фидер, ИВК и т.д.):
+            actSheet.getRow(27).getCell(9).setCellValue(data[11]); // В составе функционального узла
+            actSheet.getRow(27).getCell(17).setCellValue(data[26] + " " + data[27]); // Наименование и серийный номер оборудования
+            actSheet.getRow(27).getCell(29).setCellValue(data[28]); // Количество
+            if (data[33].trim().equals("кВтч") || data[33].trim().equals("-")) {
+                actSheet.getRow(28).getCell(17).setCellValue("");
+            } else {
+                actSheet.getRow(28).getCell(17).setCellValue("Начальные показания: " + data[33]); // Начальные показания:
+            }
+            actSheet.getRow(29).getCell(7).setCellValue(data[17]); // Основание для составления акта
+            actSheet.getRow(30).getCell(7).setCellValue(data[13]); // Прилагаемые материалы
+            actSheet.getRow(31).getCell(4).setCellValue(data[19]); // Выводы
+            actSheet.getRow(31).getCell(16).setCellValue(personalData[3] + ", " + personalData[2]); // Заказчик
+            actSheet.getRow(33).getCell(4).setCellValue(data[15]); // Случай отказа
+            actSheet.getRow(37).getCell(1).setCellValue(personalData[3]); // Заказчик
+            actSheet.getRow(37).getCell(16).setCellValue(personalData[3]); // Заказчик
+            actSheet.getRow(37).getCell(10).setCellValue(personalData[1]); // Исполнитель
+            actSheet.getRow(37).getCell(25).setCellValue(personalData[1]); // Исполнитель
+            actSheet.getRow(39).getCell(13).setCellValue("/ " + personalData[0]); // Исполнитель ФИО
+            actSheet.getRow(39).getCell(28).setCellValue("/ " + personalData[0]); // Исполнитель ФИО
+            actSheet.getRow(39).getCell(4).setCellValue("/ " + personalData[2]); // Заказчик ФИО
+            actSheet.getRow(39).getCell(19).setCellValue("/ " + personalData[2]); // Заказчик ФИО
 
             try (FileOutputStream fos = new FileOutputStream(adAzPath)) {
                 actsTemplateWorkbook.write(fos);
@@ -304,8 +346,8 @@ public class MonthReportsFiller {
     }
 
     private static CharSequence getIndication(String implementorComments, int i) {
-        return i == 1 ? implementorComments.substring(implementorComments.indexOf("(") + 1, implementorComments.indexOf(")") - 1).trim() :
-                implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")") - 1).trim();
+        return i == 1 ? implementorComments.substring(implementorComments.indexOf("(") + 1, implementorComments.indexOf(")")).trim() :
+                implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")")).trim();
     }
 
 //    private static String getIndication(String text, int index) {

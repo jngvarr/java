@@ -154,14 +154,14 @@ public class PtoTelegramBotContent {
             "ЭЭЛ-4", "НТЭЛ-4"
     );
 
-
     public static final Map<String, String> DISCONNECT_REASON = Map.of(
             "Потребитель отключен.", "NOT",
             "Сезонный потребитель.", "seasonNOT",
             "Низкий уровень PLC сигнала", "lowPLC",
             "Прибор учета демонтирован (НОТ3)", "NOT3",
             "Прибор учета сгорел (НОТ2)", "NOT2",
-            "Местонахождения ПУ неизвестно (НОТ1 украден?)", "NOT1");
+            "Местонахождения ПУ неизвестно (НОТ1 украден?)", "NOT1"
+    );
 
     public static final Map<String, String> START_MENU_BUTTONS = Map.of(
             "ПТО", "pto",
