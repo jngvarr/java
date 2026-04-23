@@ -82,6 +82,8 @@ public class MonthReportsFiller {
         int reportRows = 0;
         int ofLogSheetInsertPosition = 7;
         int iReportSheetInsertPosition = 10;
+
+
         fillEchelonProductionDateByNumber(productRangePath);
 
         // Открываем файл-шаблон
@@ -92,7 +94,7 @@ public class MonthReportsFiller {
                 try (FileInputStream dbDefection = new FileInputStream(dbDefectionPath);
                      XSSFWorkbook dbDefectionWorkbook = new XSSFWorkbook(dbDefection)) {
 
-                    // Получаем первый лист
+                    // Получаем нужный лист книги
                     XSSFSheet ofLogSheet = templateWorkbook.getSheet("ОФОЖ");
                     XSSFSheet iReportSheet = templateWorkbook.getSheet("Акт осмотра ИИК-ИВКЭ");
                     XSSFSheet dataSheet = dataWorkbook.getSheet("ОЖ");
@@ -161,9 +163,6 @@ public class MonthReportsFiller {
                     try (FileOutputStream fos = new FileOutputStream(outputFilePathOFlog)) {
                         templateWorkbook.write(fos);
                     }
-//                    try (FileOutputStream fos2 = new FileOutputStream(outputFilePathOfogIr)) {
-//                        templateWorkbook.write(fos2);
-//                    }
                     try (FileOutputStream fos2 = new FileOutputStream(outputDbDefectionPath)) {
                         dbDefectionWorkbook.write(fos2);
                     }
@@ -225,8 +224,6 @@ public class MonthReportsFiller {
             actSheet.getRow(6).getCell(22).setCellValue(data[1]);
             actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0].substring(0, 3) + " ОАО «РЖД»");
             actSheet.getRow(7).getCell(19).setCellValue("АИИС КУЭ " + data[0].substring(0, 3) + " ОАО «РЖД»");
-//            actSheet.getRow(7).getCell(19).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
-//            actSheet.getRow(8).getCell(7).setCellValue("АИИС КУЭ " + data[0] + " ОАО РЖД");
             actSheet.getRow(10).getCell(16).setCellValue(data[3]);
             actSheet.getRow(11).getCell(1).setCellValue(personalData[1] + " " + personalData[0]);
             actSheet.getRow(13).getCell(16).setCellValue(data[4]);
