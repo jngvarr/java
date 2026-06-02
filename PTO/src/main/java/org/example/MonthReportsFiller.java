@@ -6,10 +6,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -103,7 +100,10 @@ public class MonthReportsFiller {
 
                     int dateColIndex = findColumnIndex(dataSheet, DATE_COLUMN, 0);
                     int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON, 0);
-                    LocalDate localDate = null;
+                    LocalDate localDate;
+                    //Задаем месяц отчета в ручную
+                    int year = 2026;
+                    int month = 5;
                     for (Row row : dataSheet) {
                         Cell dateCell = row.getCell(dateColIndex);
                         Cell faultReasonCell = row.getCell(reasonColIndex);
@@ -121,9 +121,6 @@ public class MonthReportsFiller {
 //                        int year = LocalDate.now().getYear();
 //                        int month = LocalDate.now().getMonthValue();
 
-                            //Задаем месяц отчета в ручную
-                            int year = 2026;
-                            int month = 4;
 
                             int eventYear = localDate.getYear();
                             int eventMonth = localDate.getMonthValue();
@@ -134,7 +131,6 @@ public class MonthReportsFiller {
                                 reportRows++;
                                 // Копируем строку в целевой лист
                                 if (faultReasonCell != null && faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
-
 
                                     String faultReason = faultReasonCell.getStringCellValue().trim()
                                             .replace("\u00A0", "")
@@ -209,6 +205,49 @@ public class MonthReportsFiller {
         logger.info("Совпавших строк в отчете {}:", reportRows);
     }
 
+//    private static void someMethod(XSSFSheet dataSheet, int year, int month) {
+//        int dateColIndex = findColumnIndex(dataSheet, DATE_COLUMN, 0);
+//        int reasonColIndex = findColumnIndex(dataSheet, FAULT_REASON, 0);
+//        LocalDate localDate;
+//        for (Row row : dataSheet) {
+//            Cell dateCell = row.getCell(dateColIndex);
+//            Cell faultReasonCell = row.getCell(reasonColIndex);
+//            if (dateCell != null && dateCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(dateCell)) {
+//                localDate = dateCell.getLocalDateTimeCellValue().toLocalDate();
+//                int eventYear = localDate.getYear();
+//                int eventMonth = localDate.getMonthValue();
+//                if (month == eventMonth && year == eventYear) {
+//                    if (!isIReportDateSet) setIReportDate(iReportSheet, localDate);
+////                            logger.info("Содержание строки №{}, {}", row.getRowNum(), faultReasonCell.getStringCellValue());
+//                    reportRows++;
+//                    // Копируем строку в целевой лист
+//                    if (faultReasonCell != null && faultReasonCell.getCellType() == CellType.STRING && !faultReasonCell.getStringCellValue().trim().isEmpty()) {
+//
+//
+//                        String faultReason = faultReasonCell.getStringCellValue().trim()
+//                                .replace("\u00A0", "")
+//                                .replaceAll("\\s+", " "); // Убираем неразрывные пробелы и лишние пробелы
+//                        if (!faultReason.contains("Уточнение реквизитов ТУ (подана заявка на корректировку НСИ)")) {
+//                            copyRowsData(row, ofLogSheet, ofLogSheetInsertPosition++, commonCellStyle, true);
+//                        } else {
+//                            copyRowsData(row, iReportSheet, iReportSheetInsertPosition++, commonCellStyle, false);
+//                        }
+//
+//                        String reasonLower = faultReason.toLowerCase();
+//
+//                        if (reasonLower.contains("заменили")
+//                                || reasonLower.contains("заменен")
+//                                || reasonLower.contains("заменён")) {
+//                            String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
+//                            fillBdDefection(dbDefectionRowDataString, defectionDbSheet);
+//                            createDefectionAct(dbDefectionRowDataString, actsTemplatePath);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
     private static void createDefectionAct(String defectionDbRowData, String actsTemplatePath) {
         String adAzPathPrefix = "d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\" + PRESENT_YEAR + "\\" + PRESENT_MONTH_IN_RUSSIAN + "\\АД-АЗ\\";
 
@@ -267,12 +306,21 @@ public class MonthReportsFiller {
             actSheet.getRow(39).getCell(4).setCellValue("/ " + personalData[2]); // Заказчик ФИО
             actSheet.getRow(39).getCell(19).setCellValue("/ " + personalData[2]); // Заказчик ФИО
 
+            checkOrCreateDir(adAzPathPrefix);
+
             try (FileOutputStream fos = new FileOutputStream(adAzPath)) {
                 actsTemplateWorkbook.write(fos);
             }
         } catch (IOException e) {
             logger.error("Ошибка при работе с данными файла: {}", e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private static void checkOrCreateDir(String adAzPath) throws IOException {
+        File directory = new File(adAzPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
         }
     }
 
@@ -402,7 +450,8 @@ public class MonthReportsFiller {
         isIReportDateSet = true;
     }
 
-    private static void copyRowsData(Row sourceRow, XSSFSheet sheet, int insertPosition, CellStyle style, boolean ofog) {
+    private static void copyRowsData(Row sourceRow, XSSFSheet sheet, int insertPosition, CellStyle style,
+                                     boolean ofog) {
         String[] dates;
         if (ofog) {
             dates = prepareOfogData(sourceRow);

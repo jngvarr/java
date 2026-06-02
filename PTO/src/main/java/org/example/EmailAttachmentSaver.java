@@ -53,7 +53,7 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
             inbox.open(Folder.READ_ONLY);
 
             Message[] messages = inbox.search(dateFilter); // Получаем только сообщения, соответствующие дате
-            for (Message message : messages) {
+            for (Message message :  messages) {
                 if (!isFromAllowedSender(message, allowedSenders)) continue;
                 if (!new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals(today)) continue;
 

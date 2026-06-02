@@ -124,7 +124,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 deleteSummaryFiles();
                 synchronize(otoIikSheet);
             }
-            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
 
         } catch (IOException ex) {
@@ -232,7 +232,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static int getHeaderIndex(String name) {
         Map<String, Integer> headerRows = Map.of(
                 "Контроль поступления данных c", 0,
-                "Состав ИИК ", 1,
+                "Состав ИИК", 1,
                 "Статусы ПУ (Echelon)", 3,
                 "Диагностика связи с УСПД-ПУ", 4
         );
@@ -316,7 +316,11 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     connectionDateCell.setCellValue(iikStatusValues[1]);
                     if ("В работе".equals(iikStatus)) {
                         Cell iikCurrentStateCell = row.getCell(findColumnIndex(row.getSheet(), IIK_CURRENT_STATE_CELL, null));
-                        if (iikCurrentStateCell == null) logger.info("Строка №{}", row.getRowNum());
+                        if (iikCurrentStateCell == null) {
+                            logger.info("Строка № {}", row.getRowNum());
+                            logger.info("Счетчик № {}", key);
+                            continue;
+                        }
                         iikCurrentStateCell.setCellValue(iikStatus);
                     }
 
