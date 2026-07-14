@@ -30,6 +30,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final LocalDate TODAY = LocalDate.now();
     private static final Map<String, DCEntry> DC = new HashMap<>();
+    private static final int ID_COL_NUMBER = 0;
     private static final int REGION_COL_NUMBER = 1;
     private static final int STATION_COL_NUMBER = 5;
     private static final int EEL_COL_NUMBER = 2;
@@ -317,6 +318,8 @@ public class ExcelMerger { // Объединение нескольких ана
 
         int rowCount = 0;
         boolean headerCopied = false;
+        CellStyle newCellStyle = resultWorkbook.createCellStyle();
+        CellStyle dateCellStyle = createDateCellStyle(resultWorkbook);
 
         for (File file : inputFiles) {
             try (FileInputStream fis = new FileInputStream(file);
@@ -325,7 +328,7 @@ public class ExcelMerger { // Объединение нескольких ана
 
                 XSSFSheet sheet = workbook.getSheetAt(0);
 
-                int columnCount = sheet.getRow(0).getLastCellNum();
+                final int columnCount = sheet.getRow(0).getLastCellNum();
 
                 // Копируем заголовок только один раз
                 if (!headerCopied) {
@@ -334,21 +337,29 @@ public class ExcelMerger { // Объединение нескольких ана
                     headerCopied = true;
                 }
 
-                CellStyle newCellStyle = resultWorkbook.createCellStyle();
                 Row sampleRow = sheet.getRow(1);
                 if (sampleRow != null && sampleRow.getCell(0) != null) {
                     newCellStyle.cloneStyleFrom(sampleRow.getCell(0).getCellStyle());
                 }
-                CellStyle dateCellStyle = createDateCellStyle(resultWorkbook);
 
 
                 // Копируем данные, пропуская пустые строки
                 int n = sheet.getLastRowNum();
+                Set<String> iikIds = new HashSet<>();
                 for (int i = 1; i <= n; i++) {
                     Row sourceRow = sheet.getRow(i);
+                    if (sourceRow == null || isCellEmpty(sourceRow.getCell(1))) {
+                        continue;// Пропуск строки если пуста первая ячейка
+                    }
+                    String iikId = "";
+                    if (!outputFilePath.contains("ИВКЭ")) {
+                        iikId = getCellStringValue(sourceRow.getCell(ID_COL_NUMBER));
+                        if (!iikIds.add(iikId)) {
+                            continue;
+                        }
+                    }
+
 //                    if (sourceRow == null || isRowEmpty(sourceRow)) continue; // Пропуск пустых строк
-                    if (sourceRow == null || isCellEmpty(sourceRow.getCell(1)))
-                        continue; // Пропуск строки если пуста первая ячейка
 
                     Row targetRow = resultSheet.createRow(rowCount++);
                     copyRow(sourceRow, targetRow, columnCount, newCellStyle, dateCellStyle);

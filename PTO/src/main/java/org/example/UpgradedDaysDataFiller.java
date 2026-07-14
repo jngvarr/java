@@ -62,7 +62,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     private static final boolean needSynchronize = isSynchronizeNeeded();
 
     private static boolean isSynchronizeNeeded() {
-        return true;
+        return false;
         //        return !synchroMap.isEmpty();
     }
 
@@ -124,7 +124,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 deleteSummaryFiles();
                 synchronize(otoIikSheet);
             }
-//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
 
         } catch (IOException ex) {

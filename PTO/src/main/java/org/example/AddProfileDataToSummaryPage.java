@@ -19,9 +19,9 @@ import org.slf4j.LoggerFactory;
 public class AddProfileDataToSummaryPage {
     private static final Logger logger = LoggerFactory.getLogger(ExcelMerger.class);
 
-    private static final String ORDER_MONTH = "МАЙ";
-//    private static final String ORDER_MONTH = LocalDate.now()
-//            .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
+//    private static final String ORDER_MONTH = "МАЙ";
+    private static final String ORDER_MONTH = LocalDate.now()
+            .format(DateTimeFormatter.ofPattern("LLLL", Locale.forLanguageTag("ru-RU")));
     private static final String ORDER_YEAR = LocalDate.now()
             .format(DateTimeFormatter.ofPattern("yyyy", Locale.forLanguageTag("ru-RU")));
     private static final String FOLDER_PATH = new StringBuilder().append("d:\\YandexDisk\\Отчеты ПТО АСКУЭ\\РРЭ\\")
