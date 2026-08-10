@@ -9,9 +9,9 @@ spring:
       dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
   datasource:
-    url: jdbc:postgresql://62.76.142.52:5433/ackyedb
-    username: ackye
-    password: ackyepass
+    url: jdbc:postgresql://46.8.21.184:5432/ackyedb
+    username: user
+    password: ihu378
     driver-class-name: org.postgresql.Driver
 
 telegram:

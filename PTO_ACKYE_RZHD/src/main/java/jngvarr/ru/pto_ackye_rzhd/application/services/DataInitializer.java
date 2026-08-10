@@ -29,12 +29,12 @@ public class DataInitializer implements ApplicationListener<ApplicationReadyEven
                 return;
             }
 
-//            String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
+            String filePath = "d:\\\\Downloads\\\\пто\\\\Контроль ПУ РРЭ (Задания на ОТО РРЭ).xlsx";
 
             for (File file : files) {
                 if (file.getName().startsWith("Состав ИИК")) {
                     try {
-//                excelFileService.addDataFromExcelFile(filePath);
+                excelFileService.addDataFromExcelFile(filePath);
                         String path = file.getPath();
                         long startTime = System.currentTimeMillis();
                         excelFileService.addDataFromIikContent(path);

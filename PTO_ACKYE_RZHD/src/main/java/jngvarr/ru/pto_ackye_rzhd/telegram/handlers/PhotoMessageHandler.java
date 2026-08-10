@@ -93,7 +93,7 @@ public class PhotoMessageHandler implements UpdateHandler {
                 ExifSubIFDDirectory subIfd =
                         metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
                 GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
-                gpsDirectory
+//                gpsDirectory
                 Date date = null;
 
                 if (subIfd != null) {

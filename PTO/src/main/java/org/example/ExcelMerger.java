@@ -42,6 +42,7 @@ public class ExcelMerger { // Объединение нескольких ана
     private static final int METER1023_CELL_NUMBER = 8;
     private static final int METER2023_CELL_NUMBER = 9;
     private static int dcNumberColNumber;
+
     private static final int DC_COLUMN_NUMBER_METER_SHEET = 13;
     private static final int DC_COLUMN_NUMBER_DC_SHEET = 9;
     private static String orderMonth;

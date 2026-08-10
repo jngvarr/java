@@ -124,7 +124,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 deleteSummaryFiles();
                 synchronize(otoIikSheet);
             }
-            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
+//            EmailSenderMultipleRecipients.main(args); // рассылка "Контроль ПУ РРЭ"
 
 
         } catch (IOException ex) {
@@ -218,7 +218,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                         synchroMapCreating(row);
                     }
                 }
-                if (key != null && value != null) {
+                if (key != null && !key.isEmpty() && value != null) {
                     workMap.put(key.trim(), value);
                 }
             }
@@ -317,9 +317,9 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                     if ("В работе".equals(iikStatus)) {
                         Cell iikCurrentStateCell = row.getCell(findColumnIndex(row.getSheet(), IIK_CURRENT_STATE_CELL, null));
                         if (iikCurrentStateCell == null) {
-                            logger.info("Строка № {}", row.getRowNum());
+                            logger.info("Строка № {}", row.getRowNum() + 1);
                             logger.info("Счетчик № {}", key);
-                            continue;
+                            continue; // исправить если не стоит текущее состояние не обновляется статус в контроле пу
                         }
                         iikCurrentStateCell.setCellValue(iikStatus);
                     }
@@ -342,12 +342,14 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
                 cell.setCellStyle(commonCS);
                 isNormallyTurnedOff = normallyTurnedOff.equals("Да");
             }
-            if (dataMaps.get(DataType.DATA_CONTROL).containsKey(key)) {
+            if ((dataMaps.get(DataType.DATA_CONTROL).containsKey(key))) {
                 Cell cell = row.createCell(lastColumnNum);
                 int ind = findColumnIndex(row.getSheet(), TASK_CELL, null);
 //                logger.info("291 строка номер {}", row.getRowNum());
                 Cell taskCell = row.createCell(ind);
                 String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
+                logger.info("номер ПУ:{}", key);
+                logger.info("Статус профиля:{}", profile);
                 if ("Достоверные".equals(profile)) {
                     taskCell.setCellValue("");
                     enabledCount++;

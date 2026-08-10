@@ -148,8 +148,8 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-                                        fillBdDefection(dbDefectionRowDataString, defectionDbSheet);
-                                        createDefectionAct(dbDefectionRowDataString, actsTemplatePath);
+//                                        fillBdDefection(dbDefectionRowDataString, defectionDbSheet);        // заполнение БД дефектации
+//                                        createDefectionAct(dbDefectionRowDataString, actsTemplatePath); // создание актов дефектации
                                     }
                                 }
                             }
