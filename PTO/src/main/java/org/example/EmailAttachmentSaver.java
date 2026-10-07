@@ -14,6 +14,7 @@ import javax.mail.search.ComparisonTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SentDateTerm;
 import java.io.*;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -40,6 +41,8 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
 
         // Устанавливаем дату для фильтрации
         Date targetDate = Date.from(localDateToday.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//        Date targetDate = Date.from(
+//                LocalDate.parse("2026-07-24").atStartOfDay(ZoneId.systemDefault()).toInstant());
 
         // Создаём фильтр по дате
         SearchTerm dateFilter = new SentDateTerm(ComparisonTerm.EQ, targetDate);
@@ -86,9 +89,9 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
         properties.put("mail.imap.port", "993");
         properties.put("mail.imap.ssl.enable", "true");
         properties.put("mail.imap.partialfetch", "false");
-        properties.put("mail.imap.connectiontimeout", "5000");
-        properties.put("mail.imap.timeout", "5000");
-        properties.put("mail.imap.writetimeout", "5000");
+        properties.put("mail.imap.connectiontimeout", "30000");
+        properties.put("mail.imap.timeout", "120000");
+        properties.put("mail.imap.writetimeout", "120000");
         properties.put("mail.debug", "false");
         return properties;
     }

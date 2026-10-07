@@ -13,10 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.example.ExcelSplitter.findColumnIndex;
@@ -104,7 +101,7 @@ public class MonthReportsFiller {
                     LocalDate localDate;
                     //Задаем месяц отчета в ручную
                     int year = 2026;
-                    int month = 6;
+                    int month = 10;
                     for (Row row : dataSheet) {
                         Cell dateCell = row.getCell(dateColIndex);
                         Cell faultReasonCell = row.getCell(reasonColIndex);
@@ -148,8 +145,8 @@ public class MonthReportsFiller {
                                             || reasonLower.contains("заменен")
                                             || reasonLower.contains("заменён")) {
                                         String dbDefectionRowDataString = createDbDefectionRowDataString(row, localDate, faultReason);
-//                                        fillBdDefection(dbDefectionRowDataString, defectionDbSheet);        // заполнение БД дефектации
-//                                        createDefectionAct(dbDefectionRowDataString, actsTemplatePath); // создание актов дефектации
+                                        fillBdDefection(dbDefectionRowDataString, defectionDbSheet);        // заполнение БД дефектации
+                                        createDefectionAct(dbDefectionRowDataString, actsTemplatePath); // создание актов дефектации
                                     }
                                 }
                             }
@@ -344,51 +341,70 @@ public class MonthReportsFiller {
         }
     }
 
+    private static final Map<String, String> EQUIPMENT_TYPE = Map.of(
+            "концентратор", "Концентратор",
+            "счетчик", "Электросчётчик",
+            "трансформатор", "Трансформатор тока");
+
     private static String createDbDefectionRowDataString(Row row, LocalDate localDate, String faultReason) {
-        boolean isIvke = faultReason.toLowerCase().contains("концентратор");
-        String changedEquipmentType = isIvke ? "Концентратор" : "Электросчётчик";
+        boolean isMeter = faultReason.toLowerCase().contains("счетчик");
+
+//        String changedEquipmentType = isMeter ? "Концентратор" : "Электросчётчик";
+//        String changedEquipmentType = switch (equipmentType.)
+
+        String changedEquipmentType = EQUIPMENT_TYPE.entrySet().stream()
+                .filter(entry -> faultReason.toLowerCase(Locale.ROOT).contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Неизвестный тип оборудования: " + faultReason
+                ));
+
+
         Sheet worksheet = row.getSheet();
         String date = localDate.format(DATE_FORMATTER_DDMMYYYY);
         String changedEquipmentModelAndNumber = getChangedEquipmentModelAndNumber(row, changedEquipmentType);
         String actNumber = getActNumber(localDate);
         String implementorComments = getCellStringValue(row.getCell(findColumnIndex(worksheet, IMPLEMENTOR_COMMENTS, 0)));
-        return new StringJoiner("_")
-                .add("РРЭ РЖД")
-                .add(date)
-                .add(localDate.format(DATE_FORMATTER_YYYY))
-                .add("ст. " + getCellStringValue(row.getCell(findColumnIndex(worksheet, ZHD_STATION, 0))) + " "
+        String string = new StringJoiner("_")
+
+                /*1*/.add("РРЭ РЖД")
+                /*2*/.add(date)
+                /*3*/.add(localDate.format(DATE_FORMATTER_YYYY))
+                /*4*/.add("ст. " + getCellStringValue(row.getCell(findColumnIndex(worksheet, ZHD_STATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, SUBSTATION, 0))) + " "
                         + getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT, 0)))
                 )
-                .add(changedEquipmentType)
-                .add(changedEquipmentModelAndNumber)
-                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT_MOUNT_DATE, 0))))
-                .add("Фирма \"Echelon Corporation\"")
+                .add(changedEquipmentType) /*5 тип оборудования*/
+                .add(changedEquipmentModelAndNumber)/*6,7,8 модель, номер, дата изготовления оборудования*/
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, METERING_POINT_MOUNT_DATE, 0))))/*9 дата установки*/
+                .add(isMeter ? "Фирма \"Echelon Corporation\"" : "-")/*10 завод изготовитель*/
                 .add("12 месяцев")
-                .add(changedEquipmentType.equals("Концентратор") ? "ИВКЭ" : "ИИК")
+                .add(changedEquipmentType)
                 .add("Изделие в сборе")
                 .add("Не используются")
                 .add("Постгарантийное обслуживание")
                 .add("Не гарантийный")
-                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, INFORMER_FIO, 0))))
-                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, FAULT_MANIFESTATION, 0))))
-                .add(faultReason)
-                .add("Выполнить замену")
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, INFORMER_FIO, 0)))) /*17 ФИО исполнителя*/
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, FAULT_MANIFESTATION, 0))))/*18 Описание проявления неисправности*/
+                .add(faultReason)/* 19 Причины неисправности */
+                .add("Выполнить замену")/* 20*/
+                .add(date) /* 21 дата АД */
+                .add(actNumber)/* 22 Причины неисправности */
+                .add("")
+                .add("")
+                .add("")
+                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, EEL, 0))))/* 26 ЭЭЛ */
+                .add(getChangedEquipmentModelAndNumber(implementorComments))/* 27, 28 марка и номер устанавливаемого оборудования */
+                .add("1") /* 29 количество установленного оборудования */
+                .add("")
                 .add(date)
                 .add(actNumber)
-                .add("")
-                .add("")
-                .add("")
-                .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, EEL, 0))))
-                .add(getChangedEquipmentModelAndNumber(implementorComments))
-                .add("1")
-                .add("")
-                .add(date)
-                .add(actNumber)
-                .add(isIvke ? "-" : getIndication(implementorComments, 1))
-                .add(isIvke ? "-" : getIndication(implementorComments, 2))
+                .add(isMeter ? getIndication(implementorComments, 1) : "-")
+                .add(isMeter ? getIndication(implementorComments, 2) : "-")
                 .add(implementorComments)
                 .toString();
+        return string;
     }
 
     private static CharSequence getIndication(String implementorComments, int i) {
@@ -396,27 +412,21 @@ public class MonthReportsFiller {
                 implementorComments.substring(implementorComments.lastIndexOf("(") + 1, implementorComments.lastIndexOf(")")).trim();
     }
 
-//    private static String getIndication(String text, int index) {
-//        Matcher m = Pattern.compile("\\(([^)]+)\\)").matcher(text);
-//
-//        int i = 0;
-//        while (m.find()) {
-//            if (i++ == index) {
-//                return m.group(1).trim();
-//            }
-//        }
-//        return "-";
-//    }
-
     private static String getActNumber(LocalDate localDate) {
         return "РРЭ-" + localDate.format(DATE_FORMATTER_MM) + "-" + ++actCounter;
     }
 
     private static String getChangedEquipmentModelAndNumber(Row row, String changedEquipmentType) {
         Sheet worksheet = row.getSheet();
-        return changedEquipmentType.equals("Концентратор") ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
-                getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0))) + "_" + LocalDate.of(Integer.parseInt("2011"), 1, 1)
-                : echelonProductionDateByNumber.get(getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0))));
+
+        return switch (changedEquipmentType) {
+            case "Концентратор" ->
+                    "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" + getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер УСПД", 0)))
+                            + "_" + LocalDate.of(Integer.parseInt("2011"), 1, 1);
+            case "Электросчётчик" ->
+                    echelonProductionDateByNumber.get(getCellStringValue(row.getCell(findColumnIndex(worksheet, "Номер счетчика", 0))));
+            default -> "_-_";
+        };
 
     }
 
@@ -424,10 +434,13 @@ public class MonthReportsFiller {
         int firstIndex = implementorComments.indexOf("на");
         String secondMeterNumber = implementorComments.substring(firstIndex + 3, firstIndex + 13);
 
-
-        return implementorComments.contains("Концентратор".toLowerCase()) ? "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
-                secondMeterNumber
-                : cutTheDate(echelonProductionDateByNumber.getOrDefault(secondMeterNumber, "-_№" + secondMeterNumber + "_"));
+        return switch (implementorComments) {
+            case ("Концентратор") -> "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
+                    secondMeterNumber;
+            case "Электросчётчик" ->
+                    cutTheDate(echelonProductionDateByNumber.getOrDefault(secondMeterNumber, "-_№" + secondMeterNumber + "_"));
+            default -> "-_-";
+        };
     }
 
     private static String cutTheDate(String data) {

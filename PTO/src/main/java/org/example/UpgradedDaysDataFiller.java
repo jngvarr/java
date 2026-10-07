@@ -61,10 +61,6 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 
     private static final boolean needSynchronize = isSynchronizeNeeded();
 
-    private static boolean isSynchronizeNeeded() {
-        return false;
-        //        return !synchroMap.isEmpty();
-    }
 
     static Map<DataType, Map<String, String>> dataMaps = new EnumMap<>(DataType.class);
 
@@ -130,6 +126,11 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
         } catch (IOException ex) {
             logger.error("Error processing workbook", ex);
         }
+    }
+
+    private static boolean isSynchronizeNeeded() {
+        return true;
+        //        return !synchroMap.isEmpty();
     }
 
 //    static void deleteSummaryFiles() {
@@ -257,6 +258,7 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
     }
 
     private static String getSyncData(Row row) {
+
         Sheet workSheet = row.getSheet();
         return new StringJoiner("_").
                 add(getCellStringValue(row.getCell(findColumnIndex(workSheet, "Идентификатор ТУ", 1)))).
@@ -348,8 +350,8 @@ public class UpgradedDaysDataFiller { //заполнение файла Конт
 //                logger.info("291 строка номер {}", row.getRowNum());
                 Cell taskCell = row.createCell(ind);
                 String profile = dataMaps.get(DataType.DATA_CONTROL).get(key);
-                logger.info("номер ПУ:{}", key);
-                logger.info("Статус профиля:{}", profile);
+//                logger.info("номер ПУ:{}", key);
+//                logger.info("Статус профиля:{}", profile);
                 if ("Достоверные".equals(profile)) {
                     taskCell.setCellValue("");
                     enabledCount++;
