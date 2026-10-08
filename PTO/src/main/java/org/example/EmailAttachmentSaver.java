@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -53,24 +54,83 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
             store.connect(user, password);
 
             Folder inbox = store.getFolder("Ackye reports");
-            inbox.open(Folder.READ_ONLY);
 
-            Message[] messages = inbox.search(dateFilter); // Получаем только сообщения, соответствующие дате
-            for (Message message :  messages) {
-                if (!isFromAllowedSender(message, allowedSenders)) continue;
-                if (!new SimpleDateFormat("dd.MM.yyyy").format(message.getSentDate()).equals(today)) continue;
+            inbox.open(Folder.READ_ONLY);
+            System.out.println("Папка открыта");
+            System.out.println("Количество писем: " + inbox.getMessageCount());
+            Message[] messages = inbox.getMessages();
+
+//            System.out.println("Количество писем: " + messages.length);
+
+            LocalDate todayDate = LocalDate.now();
+            ZoneId zone = ZoneId.systemDefault();
+
+            for (int i = messages.length - 1; i >= 0; i--) {
+
+                Message message = messages[i];
 
                 try {
-                    MimeMessage mimeMessage = new MimeMessage((MimeMessage) message);
-                    Object content = mimeMessage.getContent();
+                    Date sentDate = message.getSentDate();
+
+                    if (sentDate == null) {
+                        System.out.println(
+                                "Письмо №" + message.getMessageNumber()
+                                        + " без даты — пропускаем"
+                        );
+                        continue;
+                    }
+
+                    LocalDate messageDate = sentDate.toInstant()
+                            .atZone(zone)
+                            .toLocalDate();
+
+                    System.out.println(
+                            "Проверяем письмо №"
+                                    + message.getMessageNumber()
+                                    + " | дата: "
+                                    + messageDate
+                    );
+
+                    // Если дошли до вчерашнего или более старого письма —
+                    // дальше смотреть нет смысла
+                    if (messageDate.isBefore(todayDate)) {
+
+                        System.out.println(
+                                "Дата письма " + messageDate
+                                        + " меньше сегодняшней " + todayDate
+                                        + ". Обработка завершена."
+                        );
+
+                        break;
+                    }
+
+                    // Если вдруг есть письмо с будущей датой —
+                    // просто пропускаем его
+                    if (messageDate.isAfter(todayDate)) {
+                        continue;
+                    }
+
+                    // Здесь письмо именно за сегодня
+                    if (!isFromAllowedSender(message, allowedSenders)) {
+                        continue;
+                    }
+
+                    Object content = message.getContent();
 
                     if (content instanceof Multipart multipart) {
                         processMultipartContent(multipart, saveDirectoryPath);
                     } else {
-                        processSinglePartContent(mimeMessage, saveDirectoryPath);
+                        processSinglePartContent(message, saveDirectoryPath);
                     }
-                } catch (IOException | MessagingException e) {
-                    System.err.println("Ошибка при загрузке сообщения: " + e.getMessage());
+
+                } catch (MessagingException | IOException e) {
+
+                    System.err.println(
+                            "Пропускаем проблемное письмо №"
+                                    + message.getMessageNumber()
+                                    + ": "
+                                    + e.getMessage()
+                    );
                 }
             }
 
@@ -96,14 +156,30 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
         return properties;
     }
 
-    private static boolean isFromAllowedSender(Message message, List<String> allowedSenders) throws MessagingException {
+    private static boolean isFromAllowedSender(
+            Message message,
+            List<String> allowedSenders) throws MessagingException {
+
         Address[] fromAddresses = message.getFrom();
+
+        if (fromAddresses == null) {
+            return false;
+        }
+
         for (Address address : fromAddresses) {
-            String emailAddress = ((InternetAddress) address).getAddress();
-            if (allowedSenders.contains(emailAddress)) {
-                return true;
+
+            if (address instanceof InternetAddress internetAddress) {
+
+                String emailAddress = internetAddress.getAddress();
+
+                if (emailAddress != null &&
+                        allowedSenders.stream()
+                                .anyMatch(x -> x.equalsIgnoreCase(emailAddress))) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
