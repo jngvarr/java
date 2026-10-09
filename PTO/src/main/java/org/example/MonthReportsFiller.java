@@ -395,7 +395,7 @@ public class MonthReportsFiller {
                 .add("")
                 .add("")
                 .add(getCellStringValue(row.getCell(findColumnIndex(worksheet, EEL, 0))))/* 26 ЭЭЛ */
-                .add(getChangedEquipmentModelAndNumber(implementorComments))/* 27, 28 марка и номер устанавливаемого оборудования */
+                .add(getChangedEquipmentModelAndNumber(changedEquipmentType, implementorComments))/* 27, 28 марка и номер устанавливаемого оборудования */
                 .add("1") /* 29 количество установленного оборудования */
                 .add("")
                 .add(date)
@@ -430,17 +430,26 @@ public class MonthReportsFiller {
 
     }
 
-    private static String getChangedEquipmentModelAndNumber(String implementorComments) {
-        int firstIndex = implementorComments.indexOf("на");
-        String secondMeterNumber = implementorComments.substring(firstIndex + 3, firstIndex + 13);
+    private static String getChangedEquipmentModelAndNumber(String equipmentType, String implementorComments) {
+        int firstIndex = implementorComments.indexOf("на ");
+        String secondDeviceNumber = implementorComments.substring(firstIndex + 3, firstIndex + 13);
 
-        return switch (implementorComments) {
+        return switch (equipmentType) {
             case ("Концентратор") -> "DC-1000/SL DATA CONCENTRATOR, model: 78704_№" +
-                    secondMeterNumber;
+                    secondDeviceNumber;
             case "Электросчётчик" ->
-                    cutTheDate(echelonProductionDateByNumber.getOrDefault(secondMeterNumber, "-_№" + secondMeterNumber + "_"));
+                    cutTheDate(echelonProductionDateByNumber.getOrDefault(secondDeviceNumber, "-_№" + secondDeviceNumber + "_"));
+            case "Трансформатор тока" -> getTtModelAndNumber(firstIndex, implementorComments);
             default -> "-_-";
         };
+    }
+
+    private static String getTtModelAndNumber(int firstIndex, String implementorComments) {
+        int lastIndex = implementorComments.indexOf(", ");
+        String ttModel = implementorComments.substring(firstIndex + 3, lastIndex);
+        int numberFirstIndex = implementorComments.indexOf("№");
+        String ttNumber = implementorComments.substring(numberFirstIndex);
+        return ttModel + "_" + ttNumber;
     }
 
     private static String cutTheDate(String data) {

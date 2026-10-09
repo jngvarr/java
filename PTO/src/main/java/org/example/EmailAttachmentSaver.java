@@ -5,27 +5,25 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SentDateTerm;
 import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.io.ByteArrayOutputStream;
 
 public class EmailAttachmentSaver { // загрузка почты SMTP
+    private static final Logger logger = LoggerFactory.getLogger(UpgradedDaysDataFiller.class);
 
     public static void main(String[] args) {
         LocalDate localDateToday = LocalDate.now();
@@ -56,8 +54,8 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
             Folder inbox = store.getFolder("Ackye reports");
 
             inbox.open(Folder.READ_ONLY);
-            System.out.println("Папка открыта");
-            System.out.println("Количество писем: " + inbox.getMessageCount());
+            logger.info("Папка открыта");
+            logger.info("Количество писем: {}", inbox.getMessageCount());
             Message[] messages = inbox.getMessages();
 
 //            System.out.println("Количество писем: " + messages.length);
@@ -73,9 +71,8 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
                     Date sentDate = message.getSentDate();
 
                     if (sentDate == null) {
-                        System.out.println(
-                                "Письмо №" + message.getMessageNumber()
-                                        + " без даты — пропускаем"
+                        logger.info("Письмо № {}", message.getMessageNumber()
+                                + " без даты — пропускаем"
                         );
                         continue;
                     }
@@ -84,23 +81,12 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
                             .atZone(zone)
                             .toLocalDate();
 
-                    System.out.println(
-                            "Проверяем письмо №"
-                                    + message.getMessageNumber()
-                                    + " | дата: "
-                                    + messageDate
-                    );
+                    logger.info("Проверка письма № {}  | дата: {}", message.getMessageNumber(), messageDate);
 
                     // Если дошли до вчерашнего или более старого письма —
                     // дальше смотреть нет смысла
                     if (messageDate.isBefore(todayDate)) {
-
-                        System.out.println(
-                                "Дата письма " + messageDate
-                                        + " меньше сегодняшней " + todayDate
-                                        + ". Обработка завершена."
-                        );
-
+                        logger.info("Дата письма {} раньше сегодняшней {}. Обработка завершена.", messageDate, todayDate);
                         break;
                     }
 
@@ -125,11 +111,8 @@ public class EmailAttachmentSaver { // загрузка почты SMTP
 
                 } catch (MessagingException | IOException e) {
 
-                    System.err.println(
-                            "Пропускаем проблемное письмо №"
-                                    + message.getMessageNumber()
-                                    + ": "
-                                    + e.getMessage()
+                    logger.error("Пропускаем проблемное письмо №{}: {}",
+                            message.getMessageNumber(), e.getMessage()
                     );
                 }
             }
